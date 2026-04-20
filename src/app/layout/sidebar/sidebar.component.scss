@@ -1,0 +1,15 @@
+/* Estilo para los enlaces activos */
+nav a.active {
+  font-weight: normal;
+  color: #15622D !important;
+  background-color: #e6f5f8;
+  border-radius: 5px;
+}
+
+/* Hover en el sidebar */
+nav .nav-link:hover {
+  background-color: #e6f5f8;
+  color: #15622D !important;
+  border-radius: 5px;
+}
+

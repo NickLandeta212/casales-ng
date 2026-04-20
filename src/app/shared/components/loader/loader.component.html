@@ -1,0 +1,10 @@
+<div *ngIf="loading$ | async" class="loader-container">
+  <div class="letters-row">
+    <span *ngFor="let letter of letters; let i = index"
+          class="falling-letter"
+          [style.animation-delay]="(i * 0.3) + 's'"
+          [style.color]="letter.color">
+      {{ letter.char }}
+    </span>
+  </div>
+</div>

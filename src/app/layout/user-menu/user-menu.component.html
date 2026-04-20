@@ -1,0 +1,21 @@
+<!-- user-menu.component.html -->
+<div class="dropdown">
+  <a class="d-flex align-items-center text-decoration-none" href="#" id="userMenu" data-bs-toggle="dropdown"
+    aria-expanded="false">
+    <span class="d-none d-md-inline text-dark">Mi Cuenta</span>
+  </a>
+  <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
+    <ng-container *ngFor="let item of menu">
+      <li class="dropdown-item" *ngIf="canShow(item)">
+        <a *ngIf="item.link" [routerLink]="item.link" routerLinkActive="active" class="dropdown-item">
+          <i [class]="item.icon"></i> {{ item.title }}
+        </a>
+
+        <a *ngIf="item.action" href="#" class="dropdown-item text-danger" (click)="item.action()">
+          <i [class]="item.icon"></i> {{ item.title }}
+        </a>
+      </li>
+    </ng-container>
+
+  </ul>
+</div>

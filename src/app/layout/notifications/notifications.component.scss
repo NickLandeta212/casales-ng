@@ -1,0 +1,10 @@
+/* Botones de iconos como notificaciones */
+.btn {
+  background-color: transparent;
+  border: none;
+}
+
+.btn:focus {
+  outline: none;
+  box-shadow: none;
+}

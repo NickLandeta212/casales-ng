@@ -1,0 +1,27 @@
+<ul class="nav flex-column">
+  <ng-container *ngFor="let item of menu">
+    <li class="nav-item" *ngIf="canShow(item)">
+      <a *ngIf="!item.children" [routerLink]="item.link" routerLinkActive="active" class="nav-link text-dark">
+        <i [class]="item.icon"></i> {{ item.title }}
+      </a>
+
+      <div *ngIf="item.children">
+        <a class="nav-link text-dark" data-bs-toggle="collapse" [attr.href]="'#' + item.title.replace(' ', '')"
+          role="button">
+          <i [class]="item.icon"></i> {{ item.title }}
+        </a>
+        <div class="collapse ps-3" [id]="item.title.replace(' ', '')">
+          <ul class="nav flex-column">
+            <ng-container *ngFor="let child of item.children">
+              <li class="nav-item" *ngIf="canShow(child)">
+                <a [routerLink]="child.link" routerLinkActive="active" class="nav-link text-dark">
+                  <i [class]="child.icon"></i> {{ child.title }}
+                </a>
+              </li>
+            </ng-container>
+          </ul>
+        </div>
+      </div>
+    </li>
+  </ng-container>
+</ul>

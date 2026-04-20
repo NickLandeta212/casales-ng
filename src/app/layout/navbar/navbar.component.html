@@ -1,0 +1,17 @@
+<!-- navbar.component.html -->
+<nav class="navbar navbar-expand-lg shadow-sm px-3 sticky-top" style="background-color: #F3F4F7; z-index: 1040;">
+  <div class="container-fluid">
+    <!-- Botón hamburguesa -->
+    <button class="btn d-lg-none me-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu"
+      aria-controls="sidebarMenu">
+      <i class="bi bi-list fs-3" style="color: #15622D;"></i>
+    </button>
+
+    <span class="navbar-brand fw-semibold">{{title}}</span>
+
+    <div class="d-flex align-items-center gap-3 ms-auto">
+      <!--  <app-notifications></app-notifications>-->
+      <app-user-menu></app-user-menu>
+    </div>
+  </div>
+</nav>

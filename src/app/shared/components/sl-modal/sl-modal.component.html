@@ -1,0 +1,19 @@
+<div class="sl-modal" *ngIf="mostrar">
+  <div class="sl-modal-dialog">
+    <div class="sl-modal-content">
+      <div class="sl-modal-header">
+        <h5 class="sl-modal-title">{{ titulo }}</h5>
+        <button type="button" class="btn-close" (click)="cerrarModal()"></button>
+      </div>
+
+      <div class="sl-modal-body">
+        <ng-content select="[modal-body]"></ng-content>
+      </div>
+
+      <div class="sl-modal-footer" *ngIf="footerVisible">
+        <ng-content select="[modal-footer]"></ng-content>
+      </div>
+    </div>
+  </div>
+</div>
+

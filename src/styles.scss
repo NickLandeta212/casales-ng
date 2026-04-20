@@ -1,0 +1,62 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400&display=swap');
+
+
+body {
+  font-family: 'Poppins', sans-serif;
+}
+
+.action-cell {
+  cursor: pointer;
+  color: #0d6efd; /* azul bootstrap */
+  transition: color 0.3s ease;
+}
+
+.action-cell:hover {
+  color: #0a58ca; /* azul más oscuro */
+  text-decoration: underline;
+}
+
+/* Estilo para los enlaces activos */
+nav a.active {
+  font-weight: normal;
+  color: #15622D !important;
+  background-color: #e6f5f8;
+  border-radius: 5px;
+}
+
+/* Hover en el sidebar */
+nav .nav-link:hover {
+  background-color: #e6f5f8;
+  color: #15622D !important;
+  border-radius: 5px;
+}
+
+
+quill-editor {
+  display: block;
+  width: 100%;
+  min-height: 200px; /* ajusta si quieres más alto */
+}
+
+.ql-container {
+  width: 100%;
+  min-height: 200px;
+  font-family: 'Poppins', sans-serif;
+}
+
+.ql-toolbar {
+  border-radius: 8px 8px 0 0;
+}
+
+.ql-container.ql-snow {
+  border-radius: 0 0 8px 8px;
+}
+
+.sticky-footer {
+  position: sticky;
+  bottom: 0;
+  background: #fff; /* Para que no se mezcle con el fondo */
+  padding: 10px 0;
+  z-index: 100;
+}

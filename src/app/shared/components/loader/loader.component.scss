@@ -1,0 +1,38 @@
+.loader-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  background-color: #F8F9FA; /* tono claro, limpio */
+  z-index: 9999;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+.letters-row {
+  display: flex;
+  gap: 10px; /* separación entre letras */
+}
+
+.falling-letter {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 3rem; /* más pequeña que antes */
+  font-weight: 300; /* delgado */
+  letter-spacing: 2px;
+  animation: fall 1.8s ease forwards;
+}
+
+@keyframes fall {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(110vh);
+    opacity: 0;
+  }
+}
