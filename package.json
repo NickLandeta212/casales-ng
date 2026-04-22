@@ -20,6 +20,7 @@
     "@angular/platform-browser-dynamic": "^19.2.0",
     "@angular/router": "^19.2.0",
     "bootstrap": "^5.3.6",
+    "ng": "^0.0.0",
     "ngx-image-cropper": "^9.1.5",
     "ngx-quill": "^27.1.2",
     "quill": "^2.0.3",
