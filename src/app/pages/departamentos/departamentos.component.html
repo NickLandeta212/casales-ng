@@ -1,1 +1,122 @@
-<p>departamentos works!</p>
+<div class="departamentos-container">
+  <div class="departamentos-header">
+    <div class="filter-section">
+      <select 
+        class="filter-select" 
+        [formControl]="torreFilterControl"
+      >
+        <option value="">Todas las torres</option>
+        <option *ngFor="let torre of torres" [value]="torre.id || torre.numero">
+          Torre {{ torre.numero }}
+        </option>
+      </select>
+    </div>
+
+    <div class="filter-section">
+      <select
+        class="filter-select"
+        [formControl]="tipoFilterControl"
+      >
+        <option value="">Todos los tipos</option>
+        <option *ngFor="let tipo of tiposDisponibles" [value]="tipo">
+          {{ tipo }}
+        </option>
+      </select>
+    </div>
+
+    <div class="filter-section">
+      <select
+        class="filter-select"
+        [formControl]="numeroFilterControl"
+      >
+        <option value="">Todos los números</option>
+        <option *ngFor="let numero of numerosDisponibles" [value]="numero">
+          {{ numero }}
+        </option>
+      </select>
+    </div>
+
+    <button class="btn-limpiar" (click)="limpiarFiltros()">Limpiar filtros</button>
+  </div>
+
+  <div class="departamentos-content">
+    <div class="table-section">
+      <table class="departamentos-table">
+        <thead>
+          <tr>
+            <th>Torre</th>
+            <th>Tipo</th>
+            <th>Número de Departamento</th>
+            <th>Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let depto of listaFiltrada; let i = index" [class.even]="i % 2 === 0">
+            <td>{{ depto.torre }}</td>
+            <td>{{ depto.tipo }}</td>
+            <td>{{ depto.numero }}</td>
+            <td>
+              <button class="btn-inspeccionar" (click)="seleccionarDepartamento(depto)">
+                Inspeccionar
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="details-section" *ngIf="departamentoSeleccionado">
+      <div class="details-header">
+        <h3>Detalles del Departamento {{ departamentoSeleccionado.numero }}</h3>
+        <button class="btn-cerrar" (click)="cerrarDetalles()">✕</button>
+      </div>
+      
+      <div class="details-content">
+        <div class="detail-item">
+          <label>Torre:</label>
+          <span class="detail-value">{{ departamentoSeleccionado.torre }}</span>
+        </div>
+
+        <div class="detail-item">
+          <label>Tipo:</label>
+          <span class="detail-value">{{ departamentoSeleccionado.tipo }}</span>
+        </div>
+
+        <div class="detail-item">
+          <label>Número de Departamento:</label>
+          <span class="detail-value">{{ departamentoSeleccionado.numero }}</span>
+        </div>
+
+        <div class="detail-item" *ngIf="departamentoSeleccionado.piso">
+          <label>Piso:</label>
+          <span class="detail-value">{{ departamentoSeleccionado.piso }}</span>
+        </div>
+
+        <div class="detail-item" *ngIf="departamentoSeleccionado.id">
+          <label>ID:</label>
+          <span class="detail-value">{{ departamentoSeleccionado.id }}</span>
+        </div>
+
+        <div class="detail-item" *ngIf="departamentoSeleccionado.estado">
+          <label>Estado:</label>
+          <span class="detail-value">{{ departamentoSeleccionado.estado }}</span>
+        </div>
+
+        <div class="detail-item" *ngIf="departamentoSeleccionado.descripcion">
+          <label>Descripción:</label>
+          <span class="detail-value">{{ departamentoSeleccionado.descripcion }}</span>
+        </div>
+      </div>
+
+      <div class="details-actions">
+        <button class="btn-action btn-primary" disabled>Editar</button>
+        <button class="btn-action btn-danger" disabled>Eliminar</button>
+      </div>
+    </div>
+
+    <div class="permissions-section" *ngIf="!departamentoSeleccionado">
+      <h3>Solo lectura</h3>
+      <p>No tienes permisos para modificar este módulo.</p>
+    </div>
+  </div>
+</div>

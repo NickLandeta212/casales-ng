@@ -1,1 +1,84 @@
-<a>Hello</a>
+<div class="home-container">
+  <div class="home-header">
+    <h1>Bienvenido, Admin General</h1>
+    <p class="subtitle">Vista rápida del sistema y actividad reciente.</p>
+  </div>
+
+  <!-- Tarjetas de Estadísticas -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon torres-icon">🏢</div>
+      <div class="stat-content">
+        <h3>Torres</h3>
+        <p class="stat-number">{{ totalTorres }}</p>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon departamentos-icon">🚪</div>
+      <div class="stat-content">
+        <h3>Departamentos</h3>
+        <p class="stat-number">{{ totalDepartamentos }}</p>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon condominos-icon">👥</div>
+      <div class="stat-content">
+        <h3>Condominos</h3>
+        <p class="stat-number">{{ totalCondominos }}</p>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon usuarios-icon">🧑‍💼</div>
+      <div class="stat-content">
+        <h3>Usuarios</h3>
+        <p class="stat-number">{{ totalUsuarios }}</p>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon reservas-icon">📅</div>
+      <div class="stat-content">
+        <h3>Reservas</h3>
+        <p class="stat-number">{{ totalReservas }}</p>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon multas-icon">⚠️</div>
+      <div class="stat-content">
+        <h3>Multas</h3>
+        <p class="stat-number">{{ totalMultas }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sección de Actividad Reciente -->
+  <div class="activity-section">
+    <div class="activity-card">
+      <h3>Reservas recientes</h3>
+      <p class="activity-message" *ngIf="reservasRecientes.length === 0">
+        No hay reservas registradas.
+      </p>
+      <div *ngIf="reservasRecientes.length > 0" class="activity-list">
+        <div *ngFor="let reserva of reservasRecientes" class="activity-item">
+          {{ reserva }}
+        </div>
+      </div>
+    </div>
+
+    <div class="activity-card">
+      <h3>Multas registradas</h3>
+      <p class="activity-message" *ngIf="multasRecientes.length === 0">
+        No hay multas registradas.
+      </p>
+      <div *ngIf="multasRecientes.length > 0" class="activity-list">
+        <div *ngFor="let multa of multasRecientes" class="activity-item">
+          {{ multa }}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
