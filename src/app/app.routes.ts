@@ -7,6 +7,10 @@ import { AuthGuard } from './guards/auth.guard';
 export const routes: Routes = [
      { path: '', component: LoginComponent }, // Ruta raíz
      {
+          path: 'reserva',
+          loadComponent: () => import('./pages/reserva/reserva.component').then(m => m.ReservaComponent)
+     },
+     {
           path: 'dashboard', component: DashboardComponent, children: [
                { path: '', redirectTo: 'home', pathMatch: 'full' },
                {
@@ -16,6 +20,12 @@ export const routes: Routes = [
                },
                {
                     path: 'torres', loadComponent: () => import('./pages/torres/torres.component').then(m => m.TorresComponent),
+                    canActivate: [AuthGuard, AuthGuard, RoleGuard],
+                    data: { roles: ['admin_general'] }
+               },
+               {
+                    path: 'torres/pagos-alicuota',
+                    loadComponent: () => import('./pages/torre-pagos-alicuota/torre-pagos-alicuota.component').then(m => m.TorrePagosAlicuotaComponent),
                     canActivate: [AuthGuard, AuthGuard, RoleGuard],
                     data: { roles: ['admin_general'] }
                },
@@ -33,6 +43,12 @@ export const routes: Routes = [
                {
                     path: 'departamentos/:id/personas',
                     loadComponent: () => import('./pages/departamento-personas/departamento-personas.component').then(m => m.DepartamentoPersonasComponent),
+                    canActivate: [AuthGuard, AuthGuard, RoleGuard],
+                    data: { roles: ['admin_general'] }
+               },
+               {
+                    path: 'reservas',
+                    loadComponent: () => import('./pages/reservas/reservas.component').then(m => m.ReservasComponent),
                     canActivate: [AuthGuard, AuthGuard, RoleGuard],
                     data: { roles: ['admin_general'] }
                },

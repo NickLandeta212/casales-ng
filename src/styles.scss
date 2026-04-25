@@ -1,6 +1,27 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400&display=swap');
 
+:root {
+  --sl-color-primary: #4caf50;
+  --sl-color-primary-hover: #45a049;
+  --sl-color-primary-dark: #15622d;
+  --sl-color-primary-soft: #f4fbf4;
+  --sl-color-danger: #b42318;
+  --sl-color-surface: #ffffff;
+  --sl-color-page: #f5f5f5;
+  --sl-color-muted: #777777;
+  --sl-color-text: #333333;
+  --sl-color-text-soft: #555555;
+  --sl-color-border: #dddddd;
+  --sl-color-border-soft: #eeeeee;
+  --sl-radius-sm: 4px;
+  --sl-radius-md: 6px;
+  --sl-radius-lg: 8px;
+  --sl-shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --sl-shadow-md: 0 2px 8px rgba(0, 0, 0, 0.15);
+  --sl-focus-ring: 0 0 0 3px rgba(76, 175, 80, 0.18);
+}
+
 
 body {
   font-family: 'Poppins', sans-serif;

@@ -1,0 +1,118 @@
+<div class="reservas-container">
+  <div class="reservas-header">
+    <div>
+      <h2>Reservas</h2>
+      <p>Revisa las solicitudes registradas desde el formulario publico.</p>
+    </div>
+    <button class="btn-recargar" type="button" (click)="cargarReservas()" [disabled]="cargando">
+      <i class="bi bi-arrow-clockwise"></i>
+      {{ cargando ? 'Cargando...' : 'Actualizar' }}
+    </button>
+  </div>
+
+  <div class="alert-error" *ngIf="errorMessage">
+    {{ errorMessage }}
+  </div>
+
+  <div class="alert-success" *ngIf="successMessage">
+    {{ successMessage }}
+  </div>
+
+  <div class="reservas-content">
+    <div class="table-section">
+      <table class="reservas-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Fecha</th>
+            <th>Torre</th>
+            <th>Departamento</th>
+            <th>Estado</th>
+            <th class="acciones-header">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let reserva of reservas; let i = index" [class.even]="i % 2 === 0">
+            <td>{{ i + 1 }}</td>
+            <td>{{ reserva.fecha }}</td>
+            <td>{{ reserva.torre_numero || '-' }}</td>
+            <td>{{ reserva.departamento_numero || reserva.departamento_id }}</td>
+            <td>
+              <span class="estado-badge" [class.en-proceso]="reserva.estado === 'en_proceso'" [class.reservado]="reserva.estado === 'reservado'">
+                {{ getEstadoLabel(reserva.estado) }}
+              </span>
+            </td>
+            <td class="acciones-cell">
+              <button
+                class="btn-aprobar"
+                type="button"
+                [disabled]="reserva.estado === 'reservado' || approvingId === reserva.id"
+                (click)="aprobarReserva(reserva)"
+              >
+                {{ reserva.estado === 'reservado' ? 'Aprobada' : approvingId === reserva.id ? 'Aprobando...' : 'Aprobar' }}
+              </button>
+              <button class="btn-inspeccionar" type="button" (click)="seleccionarReserva(reserva)">
+                Ver
+              </button>
+            </td>
+          </tr>
+
+          <tr *ngIf="!reservas.length && !cargando">
+            <td colspan="6" class="empty-cell">No hay reservas registradas.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="details-section" *ngIf="reservaSeleccionada">
+      <div class="details-header">
+        <h3>Detalle de reserva</h3>
+        <button class="btn-cerrar" type="button" (click)="cerrarDetalles()">x</button>
+      </div>
+
+      <div class="details-content">
+        <div class="detail-item">
+          <label>Fecha</label>
+          <span class="detail-value">{{ reservaSeleccionada.fecha }}</span>
+        </div>
+
+        <div class="detail-item">
+          <label>Torre</label>
+          <span class="detail-value">{{ reservaSeleccionada.torre_numero || '-' }}</span>
+        </div>
+
+        <div class="detail-item">
+          <label>Departamento</label>
+          <span class="detail-value">{{ reservaSeleccionada.departamento_numero || reservaSeleccionada.departamento_id }}</span>
+        </div>
+
+        <div class="detail-item">
+          <label>Estado</label>
+          <span class="detail-value">{{ getEstadoLabel(reservaSeleccionada.estado) }}</span>
+        </div>
+
+        <div class="detail-item" *ngIf="reservaSeleccionada.observaciones">
+          <label>Observaciones</label>
+          <span class="detail-value">{{ reservaSeleccionada.observaciones }}</span>
+        </div>
+
+        <div class="detail-item" *ngIf="tieneComprobante(reservaSeleccionada)">
+          <label>Comprobante</label>
+          <a
+            class="detail-link"
+            [href]="getComprobanteUrl(reservaSeleccionada)"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Ver comprobante de pago
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="permissions-section" *ngIf="!reservaSeleccionada">
+      <h3>Inspeccionar reserva</h3>
+      <p>Selecciona una reserva desde la tabla para revisar sus datos y observaciones.</p>
+    </div>
+  </div>
+</div>

@@ -26,14 +26,40 @@ export class SidebarMenuComponent implements OnInit {
     {
       title: 'Torres',
       icon: 'bi bi-building',
-      link: '/dashboard/torres',
-      roles: ['admin_general']
+      roles: ['admin_general'],
+      children: [
+        {
+          title: 'Todos',
+          icon: 'bi bi-list-ul',
+          link: '/dashboard/torres',
+          roles: ['admin_general']
+        },
+        {
+          title: 'Aprobar pagos',
+          icon: 'bi bi-receipt-cutoff',
+          link: '/dashboard/torres/pagos-alicuota',
+          roles: ['admin_general']
+        }
+      ]
     },
     {
       title: 'Departamentos',
       icon: 'bi bi-door-open',
       link: '/dashboard/departamentos',
       roles: ['admin_general']
+    },
+    {
+      title: 'Reservas',
+      icon: 'bi bi-calendar-check',
+      roles: ['admin_general'],
+      children: [
+        {
+          title: 'Todas',
+          icon: 'bi bi-list-ul',
+          link: '/dashboard/reservas',
+          roles: ['admin_general']
+        }
+      ]
     },
     {
       title: 'Personas',

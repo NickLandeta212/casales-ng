@@ -1,0 +1,22 @@
+.app-navbar {
+  background: linear-gradient(90deg, #0f3d24 0%, #15622d 58%, #1f7a3f 100%);
+  color: #ffffff;
+  z-index: 1040;
+}
+
+.navbar-brand {
+  color: #ffffff;
+  letter-spacing: 0;
+}
+
+.app-navbar__toggle {
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+.app-navbar__toggle:hover,
+.app-navbar__toggle:focus {
+  color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.16);
+}

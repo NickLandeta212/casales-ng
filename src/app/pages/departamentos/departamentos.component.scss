@@ -144,6 +144,75 @@
   }
 }
 
+.empty-cell {
+  text-align: center !important;
+  color: #777;
+  padding: 28px 15px !important;
+}
+
+.pagination-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 15px;
+  border-top: 1px solid #eee;
+  background-color: #fff;
+  flex-wrap: wrap;
+}
+
+.pagination-summary {
+  color: #555;
+  font-size: 13px;
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.page-size-select {
+  min-width: 72px;
+  padding: 7px 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background-color: #fff;
+  font-size: 13px;
+}
+
+.pagination-btn {
+  min-width: 36px;
+  min-height: 34px;
+  padding: 7px 11px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background-color: #fff;
+  color: #333;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 13px;
+  transition: all 0.2s ease;
+
+  &:hover:not(:disabled) {
+    border-color: #4caf50;
+    color: #2f7d32;
+    background-color: #f4fbf4;
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  &.active {
+    border-color: #4caf50;
+    background-color: #4caf50;
+    color: #fff;
+  }
+}
+
 .btn-inspeccionar {
   padding: 6px 12px;
   background-color: #4caf50;
@@ -370,5 +439,15 @@
   .btn-inspeccionar {
     padding: 5px 10px;
     font-size: 11px;
+  }
+
+  .pagination-section,
+  .pagination-controls {
+    justify-content: center;
+  }
+
+  .pagination-summary {
+    width: 100%;
+    text-align: center;
   }
 }

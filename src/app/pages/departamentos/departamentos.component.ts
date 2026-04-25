@@ -19,6 +19,8 @@ export class DepartamentosComponent implements OnInit {
   torres: any[] = [];
   tiposDisponibles: string[] = [];
   numerosDisponibles: string[] = [];
+  paginaActual = 1;
+  elementosPorPagina = 10;
   
   torreFilterControl = new FormControl('');
   tipoFilterControl = new FormControl('');
@@ -81,6 +83,7 @@ export class DepartamentosComponent implements OnInit {
       this.listaFiltrada = normalizados;
       this.tiposDisponibles = Array.from(new Set(normalizados.map(item => item.tipo))).sort();
       this.actualizarNumerosDisponibles();
+      this.irAPagina(1);
       console.log('Departamentos cargados:', normalizados);
     }, () => {
       this.lista = [];
@@ -181,6 +184,8 @@ export class DepartamentosComponent implements OnInit {
 
       return cumpleTorre && cumpleTipo && cumpleNumero;
     });
+
+    this.irAPagina(1);
   }
 
   limpiarFiltros() {
@@ -188,6 +193,49 @@ export class DepartamentosComponent implements OnInit {
     this.tipoFilterControl.setValue('');
     this.numeroFilterControl.setValue('');
     this.listaFiltrada = this.lista;
+    this.irAPagina(1);
+  }
+
+  get totalPaginas(): number {
+    return Math.max(Math.ceil(this.listaFiltrada.length / this.elementosPorPagina), 1);
+  }
+
+  get listaPaginada(): any[] {
+    const inicio = (this.paginaActual - 1) * this.elementosPorPagina;
+    return this.listaFiltrada.slice(inicio, inicio + this.elementosPorPagina);
+  }
+
+  get inicioRegistro(): number {
+    if (!this.listaFiltrada.length) {
+      return 0;
+    }
+
+    return (this.paginaActual - 1) * this.elementosPorPagina + 1;
+  }
+
+  get finRegistro(): number {
+    return Math.min(this.paginaActual * this.elementosPorPagina, this.listaFiltrada.length);
+  }
+
+  get paginasVisibles(): number[] {
+    const maxBotones = 5;
+    const mitad = Math.floor(maxBotones / 2);
+    let inicio = Math.max(this.paginaActual - mitad, 1);
+    const fin = Math.min(inicio + maxBotones - 1, this.totalPaginas);
+
+    inicio = Math.max(fin - maxBotones + 1, 1);
+
+    return Array.from({ length: fin - inicio + 1 }, (_, index) => inicio + index);
+  }
+
+  irAPagina(pagina: number) {
+    this.paginaActual = Math.min(Math.max(pagina, 1), this.totalPaginas);
+  }
+
+  cambiarElementosPorPagina(event: Event) {
+    const select = event.target as HTMLSelectElement;
+    this.elementosPorPagina = Number(select.value);
+    this.irAPagina(1);
   }
 
   seleccionarDepartamento(depto: any) {

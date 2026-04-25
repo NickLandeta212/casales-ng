@@ -1,28 +1,23 @@
 <app-navbar></app-navbar>
 
-<!-- Contenedor general -->
 <div class="container-fluid">
   <div class="row">
-    
-    <!-- Sidebar (Offcanvas para móviles) -->
-    <div class="offcanvas offcanvas-start d-lg-none" tabindex="-1" id="sidebarMenu" aria-labelledby="sidebarMenuLabel"
-      style="background-color: #F3F4F7;">
+    <div class="offcanvas offcanvas-start d-lg-none dashboard-offcanvas" tabindex="-1" id="sidebarMenu"
+      aria-labelledby="sidebarMenuLabel">
       <div class="offcanvas-header">
         <h5 id="sidebarMenuLabel">Menú</h5>
-        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
       </div>
       <div class="offcanvas-body p-3">
         <app-sidebar-menu></app-sidebar-menu>
       </div>
     </div>
 
-    <!-- Sidebar visible en escritorio -->
-    <nav class="col-lg-2 d-none d-lg-block p-3 min-vh-100" style="background-color: #F3F4F7;">
+    <nav class="col-lg-2 d-none d-lg-block p-3 min-vh-100 dashboard-sidebar">
       <app-sidebar></app-sidebar>
     </nav>
 
-    <!-- Área de contenido -->
-    <main class="col-12 col-lg-10 p-4" style="background-color: #fff;">
+    <main class="col-12 col-lg-10 p-4 dashboard-content">
       <router-outlet></router-outlet>
     </main>
   </div>

@@ -1,0 +1,129 @@
+<main class="reserva-page">
+  <section class="reserva-shell">
+    <header class="reserva-header">
+      <div>
+        <span class="section-kicker">Casales San Pedro</span>
+        <h1>Reserva de zona</h1>
+        <p>Completa tus datos, selecciona tu departamento y elige una fecha disponible.</p>
+      </div>
+    </header>
+
+    <section class="reserva-card">
+      <form class="reserva-form" [formGroup]="reservaForm" (ngSubmit)="guardarReserva()">
+        <div class="feedback-message success" *ngIf="successMessage">
+          {{ successMessage }}
+        </div>
+
+        <div class="feedback-message error" *ngIf="errorMessage">
+          {{ errorMessage }}
+        </div>
+
+        <div class="form-grid">
+          <label>
+            Nombre
+            <input type="text" formControlName="nombre" autocomplete="given-name">
+            <span *ngIf="reservaForm.get('nombre')?.invalid && reservaForm.get('nombre')?.touched">Ingresa tu nombre.</span>
+          </label>
+
+          <label>
+            Apellido
+            <input type="text" formControlName="apellido" autocomplete="family-name">
+            <span *ngIf="reservaForm.get('apellido')?.invalid && reservaForm.get('apellido')?.touched">Ingresa tu apellido.</span>
+          </label>
+
+          <label>
+            Telefono
+            <input type="tel" formControlName="telefono" autocomplete="tel">
+            <span *ngIf="reservaForm.get('telefono')?.invalid && reservaForm.get('telefono')?.touched">Ingresa tu telefono.</span>
+          </label>
+
+          <label>
+            Torre
+            <select formControlName="torre">
+              <option value="">Seleccionar torre</option>
+              <option *ngFor="let torre of torres" [value]="torre.id">Torre {{ torre.numero }}</option>
+            </select>
+            <span *ngIf="reservaForm.get('torre')?.invalid && reservaForm.get('torre')?.touched">Selecciona una torre.</span>
+          </label>
+
+          <label>
+            Departamento
+            <select formControlName="departamento" [disabled]="!departamentosFiltrados.length">
+              <option value="">Seleccionar departamento</option>
+              <option *ngFor="let departamento of departamentosFiltrados" [value]="departamento.id">
+                {{ departamento.numero }}
+              </option>
+            </select>
+            <span *ngIf="reservaForm.get('departamento')?.invalid && reservaForm.get('departamento')?.touched">Selecciona un departamento.</span>
+          </label>
+
+          <label class="file-field">
+            Evidencia de pago
+            <input id="comprobantePago" type="file" accept="image/png,image/jpeg,image/webp" (change)="onComprobanteChange($event)">
+            <span class="file-button">
+              <i class="bi bi-image"></i>
+              {{ comprobanteName || 'Subir imagen' }}
+            </span>
+            <small>PNG, JPG o WEBP hasta 4MB.</small>
+          </label>
+        </div>
+
+        <div class="calendar-section">
+          <div class="calendar-header">
+            <button type="button" class="calendar-nav" (click)="previousMonth()" aria-label="Mes anterior">
+              <i class="bi bi-chevron-left"></i>
+            </button>
+            <h2>{{ monthLabel }}</h2>
+            <button type="button" class="calendar-nav" (click)="nextMonth()" aria-label="Mes siguiente">
+              <i class="bi bi-chevron-right"></i>
+            </button>
+          </div>
+
+          <div class="weekdays">
+            <span>Dom</span>
+            <span>Lun</span>
+            <span>Mar</span>
+            <span>Mie</span>
+            <span>Jue</span>
+            <span>Vie</span>
+            <span>Sab</span>
+          </div>
+
+          <div class="calendar-grid">
+            <button
+              *ngFor="let day of calendarDays"
+              type="button"
+              class="calendar-day"
+              [class.muted]="day.muted"
+              [class.today]="day.today"
+              [class.past]="day.past"
+              [class.reserved]="day.reserved"
+              [class.selected]="isSelected(day)"
+              [disabled]="day.past || day.reserved"
+              (click)="selectDate(day)"
+            >
+              {{ day.label }}
+            </button>
+          </div>
+
+          <div class="selected-date" [class.empty]="!selectedDate">
+            Fecha seleccionada: <strong>{{ selectedDate || 'Sin seleccionar' }}</strong>
+          </div>
+          <div class="calendar-legend">
+            <span><i class="legend-dot available"></i> Disponible</span>
+            <span><i class="legend-dot reserved"></i> Reservada</span>
+          </div>
+          <div class="date-error" *ngIf="submitted && !selectedDate">
+            Selecciona una fecha disponible para continuar.
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn-primary" [disabled]="submitting">
+            {{ submitting ? 'Enviando...' : 'Enviar reserva' }}
+          </button>
+        </div>
+      </form>
+    </section>
+  </section>
+</main>

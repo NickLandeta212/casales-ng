@@ -1,33 +1,56 @@
 <div class="pagos-container">
   <div class="header-row">
     <div>
-      <h2>Pagos alicuota - Torre {{ torreNumero || torreId }}</h2>
-      <p>Registro de pagos de la torre seleccionada.</p>
+      <h2>Pagos alicuota</h2>
+      <p>{{ torreFilterControl.value ? 'Registro de pagos de la torre seleccionada.' : 'Registro de pagos de todas las
+        torres.' }}</p>
     </div>
     <a class="btn-volver" routerLink="/dashboard/torres">Volver a torres</a>
+  </div>
+
+  <div class="filters-row">
+    <label class="filter-field">
+      Torre
+      <select [formControl]="torreFilterControl">
+        <option value="">Todas las torres</option>
+        <option *ngFor="let torre of torres" [value]="torre.numero">
+          Torre {{ torre.numero }}
+        </option>
+      </select>
+    </label>
   </div>
 
   <div class="table-wrapper">
     <table class="pagos-table">
       <thead>
         <tr>
+          <th>Torre</th>
           <th># Pago</th>
-          <th>Fecha</th>
           <th>Descripcion</th>
+          <th>Fecha</th>
           <th>Accion</th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let pago of pagos; let i = index" [class.even]="i % 2 === 0">
+        <tr *ngFor="let pago of pagosFiltrados; let i = index" [class.even]="i % 2 === 0">
+          <td>Torre {{ pago.torreNumero }}</td>
           <td>{{ pago.numeroPago }}</td>
-          <td>{{ pago.fecha }}</td>
           <td>{{ pago.descripcion }}</td>
+          <td>{{ pago.fecha }}</td>
           <td>
-            <select class="estado-select" [value]="pago.estado" (change)="cambiarEstado(i, $any($event.target).value)">
-              <option value="pendiente">Pendiente</option>
-              <option value="aprobado">Aprobado</option>
-            </select>
+            <button
+              class="btn-aprobar"
+              type="button"
+              [disabled]="pago.estado === 'aprobado'"
+              (click)="aprobarPago(i)"
+            >
+              {{ pago.estado === 'aprobado' ? 'Aprobado' : 'Aprobar' }}
+            </button>
           </td>
+        </tr>
+
+        <tr *ngIf="!pagosFiltrados.length">
+          <td colspan="5" class="empty-cell">No hay pagos para la torre seleccionada.</td>
         </tr>
       </tbody>
     </table>

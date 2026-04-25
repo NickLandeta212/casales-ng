@@ -52,14 +52,17 @@ export class UsuariosComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private torresService: TorresService
-  ) {
+  ) { }
+
+  ngOnInit(): void {
     this.route.data.subscribe((data) => {
       const mode = data['mode'];
       this.vistaActual = mode === 'create' ? 'create' : 'list';
+      this.cargarVistaActual();
     });
   }
 
-  ngOnInit(): void {
+  private cargarVistaActual() {
     if (this.vistaActual === 'create') {
       this.cargarTorres();
       return;

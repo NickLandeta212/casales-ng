@@ -1,7 +1,7 @@
 .pagos-container {
   padding: 20px;
-  background-color: #f5f5f5;
-  border-radius: 8px;
+  background-color: var(--sl-color-page);
+  border-radius: var(--sl-radius-lg);
 }
 
 .header-row {
@@ -14,7 +14,7 @@
   h2 {
     margin: 0 0 4px 0;
     font-size: 22px;
-    color: #1f2937;
+    color: var(--sl-color-text);
   }
 
   p {
@@ -26,20 +26,51 @@
 
 .btn-volver {
   padding: 10px 14px;
-  border-radius: 6px;
-  border: 1px solid #d1d5db;
-  background-color: #ffffff;
-  color: #374151;
+  border-radius: var(--sl-radius-md);
+  border: 1px solid var(--sl-color-border);
+  background-color: var(--sl-color-surface);
+  color: var(--sl-color-text);
   text-decoration: none;
   font-weight: 600;
   font-size: 13px;
 }
 
+.filters-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.filter-field {
+  display: grid;
+  gap: 7px;
+  min-width: 220px;
+  color: var(--sl-color-text);
+  font-size: 13px;
+  font-weight: 600;
+
+  select {
+    padding: 10px 12px;
+    border: 1px solid var(--sl-color-border);
+    border-radius: var(--sl-radius-md);
+    background-color: var(--sl-color-surface);
+    color: var(--sl-color-text);
+    font-size: 14px;
+    outline: none;
+
+    &:focus {
+      border-color: var(--sl-color-primary);
+      box-shadow: var(--sl-focus-ring);
+    }
+  }
+}
+
 .table-wrapper {
-  background-color: #fff;
-  border-radius: 6px;
+  background-color: var(--sl-color-surface);
+  border-radius: var(--sl-radius-md);
   overflow: hidden;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--sl-shadow-sm);
 }
 
 .pagos-table {
@@ -55,7 +86,7 @@
       padding: 14px;
       text-align: center;
       font-weight: 600;
-      color: #333;
+      color: var(--sl-color-text);
     }
   }
 
@@ -70,26 +101,52 @@
       td {
         padding: 14px;
         text-align: center;
-        color: #555;
+        color: var(--sl-color-text-soft);
       }
     }
   }
 }
 
-.estado-select {
-  min-width: 120px;
-  padding: 8px 10px;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  background-color: #fff;
-  color: #374151;
+.empty-cell {
+  padding: 26px 14px !important;
+  text-align: center !important;
+  color: var(--sl-color-muted);
+}
+
+.btn-aprobar {
+  min-width: 104px;
+  padding: 8px 12px;
+  border: 1px solid var(--sl-color-primary);
+  border-radius: var(--sl-radius-md);
+  background-color: var(--sl-color-primary);
+  color: #fff;
+  cursor: pointer;
+  font-weight: 600;
   font-size: 13px;
+  transition: all 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background-color: var(--sl-color-primary-hover);
+    box-shadow: 0 2px 6px rgba(76, 175, 80, 0.28);
+  }
+
+  &:disabled {
+    border-color: var(--sl-color-border);
+    background-color: #f3f4f6;
+    color: var(--sl-color-muted);
+    cursor: not-allowed;
+  }
 }
 
 @media (max-width: 768px) {
   .header-row {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .filters-row,
+  .filter-field {
+    width: 100%;
   }
 
   .pagos-table {

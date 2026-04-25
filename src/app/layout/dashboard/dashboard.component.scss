@@ -1,0 +1,27 @@
+.dashboard-sidebar,
+.dashboard-offcanvas {
+  background: linear-gradient(180deg, #0f3d24 0%, #13522f 56%, #0b2f1d 100%);
+  color: #ffffff;
+}
+
+.dashboard-sidebar {
+  box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.1);
+}
+
+.dashboard-offcanvas {
+  border-right: 0;
+}
+
+.dashboard-offcanvas .offcanvas-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.dashboard-offcanvas h5 {
+  color: #ffffff;
+  margin: 0;
+}
+
+.dashboard-content {
+  background-color: #ffffff;
+  min-height: calc(100vh - 56px);
+}

@@ -1,15 +1,18 @@
-/* Estilo para los enlaces activos */
-nav a.active {
-  font-weight: normal;
-  color: #15622D !important;
-  background-color: #e6f5f8;
-  border-radius: 5px;
+.sidebar-title {
+  color: #ffffff;
+  font-size: 1.12rem;
+  font-weight: 700;
+  margin: 0 0 1.5rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
 }
 
-/* Hover en el sidebar */
-nav .nav-link:hover {
-  background-color: #e6f5f8;
-  color: #15622D !important;
-  border-radius: 5px;
+.sidebar-title::after {
+  content: "";
+  display: block;
+  width: 44px;
+  height: 3px;
+  margin-top: 0.65rem;
+  border-radius: 999px;
+  background-color: #d9b44a;
 }
-

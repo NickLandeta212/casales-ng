@@ -12,7 +12,7 @@
         <tbody>
           <tr *ngFor="let torre of listaFiltrada; let i = index" [class.even]="i % 2 === 0">
             <td>{{ torre.numero }}</td>
-            <td>{{ torre.departamentos }}</td>
+            <td>{{ torre.total_departamentos }}</td>
             <td class="acciones-cell">
               <button class="btn-inspeccionar" (click)="seleccionarTorre(torre)">
                 Inspeccionar
