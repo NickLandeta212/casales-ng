@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { TorresService } from '../../services/torres.service';
 
 @Component({
@@ -14,7 +15,10 @@ export class TorresComponent implements OnInit {
   listaFiltrada: any[] = [];
   torreSeleccionada: any = null;
 
-  constructor(private torreService: TorresService) { }
+  constructor(
+    private torreService: TorresService,
+    private router: Router
+  ) { }
 
   ngOnInit(): void {
     this.load();
@@ -29,7 +33,16 @@ export class TorresComponent implements OnInit {
   }
 
   seleccionarTorre(torre: any) {
-    this.torreSeleccionada = torre;
+    const torreId = torre?.id ?? torre?.numero;
+    if (!torreId) {
+      return;
+    }
+
+    this.router.navigate(['/dashboard/torres', torreId, 'pagos-alicuota'], {
+      queryParams: {
+        numero: torre?.numero ?? torreId
+      }
+    });
   }
 
   cerrarDetalles() {

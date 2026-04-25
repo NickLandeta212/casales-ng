@@ -36,6 +36,11 @@
       color: #333;
       text-transform: capitalize;
     }
+
+    .acciones-header {
+      text-align: center;
+      width: 140px;
+    }
   }
 
   tbody {
@@ -58,6 +63,11 @@
         &:last-child {
           text-align: center;
         }
+      }
+
+      .acciones-cell {
+        text-align: center;
+        vertical-align: middle;
       }
     }
   }

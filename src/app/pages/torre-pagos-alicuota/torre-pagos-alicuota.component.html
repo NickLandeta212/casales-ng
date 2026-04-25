@@ -1,0 +1,35 @@
+<div class="pagos-container">
+  <div class="header-row">
+    <div>
+      <h2>Pagos alicuota - Torre {{ torreNumero || torreId }}</h2>
+      <p>Registro de pagos de la torre seleccionada.</p>
+    </div>
+    <a class="btn-volver" routerLink="/dashboard/torres">Volver a torres</a>
+  </div>
+
+  <div class="table-wrapper">
+    <table class="pagos-table">
+      <thead>
+        <tr>
+          <th># Pago</th>
+          <th>Fecha</th>
+          <th>Descripcion</th>
+          <th>Accion</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let pago of pagos; let i = index" [class.even]="i % 2 === 0">
+          <td>{{ pago.numeroPago }}</td>
+          <td>{{ pago.fecha }}</td>
+          <td>{{ pago.descripcion }}</td>
+          <td>
+            <select class="estado-select" [value]="pago.estado" (change)="cambiarEstado(i, $any($event.target).value)">
+              <option value="pendiente">Pendiente</option>
+              <option value="aprobado">Aprobado</option>
+            </select>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

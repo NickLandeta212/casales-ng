@@ -20,9 +20,31 @@ export const routes: Routes = [
                     data: { roles: ['admin_general'] }
                },
                {
+                    path: 'torres/:id/pagos-alicuota',
+                    loadComponent: () => import('./pages/torre-pagos-alicuota/torre-pagos-alicuota.component').then(m => m.TorrePagosAlicuotaComponent),
+                    canActivate: [AuthGuard, AuthGuard, RoleGuard],
+                    data: { roles: ['admin_general'] }
+               },
+               {
                     path: 'departamentos', loadComponent: () => import('./pages/departamentos/departamentos.component').then(m => m.DepartamentosComponent),
                     canActivate: [AuthGuard, AuthGuard, RoleGuard],
                     data: { roles: ['admin_general'] }
+               },
+               {
+                    path: 'departamentos/:id/personas',
+                    loadComponent: () => import('./pages/departamento-personas/departamento-personas.component').then(m => m.DepartamentoPersonasComponent),
+                    canActivate: [AuthGuard, AuthGuard, RoleGuard],
+                    data: { roles: ['admin_general'] }
+               },
+               {
+                    path: 'personas', loadComponent: () => import('./pages/personas/personas.component').then(m => m.PersonasComponent),
+                    canActivate: [AuthGuard, AuthGuard, RoleGuard],
+                    data: { roles: ['admin_general'], mode: 'list' }
+               },
+               {
+                    path: 'personas/crear', loadComponent: () => import('./pages/personas/personas.component').then(m => m.PersonasComponent),
+                    canActivate: [AuthGuard, AuthGuard, RoleGuard],
+                    data: { roles: ['admin_general'], mode: 'create' }
                },
                {
                     path: 'unauthorized',

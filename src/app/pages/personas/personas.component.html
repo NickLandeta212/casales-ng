@@ -1,1 +1,158 @@
-<p>personas works!</p>
+<div class="personas-container">
+	<div class="personas-content" *ngIf="vistaActual === 'list'">
+		<div class="personas-table-wrapper table-section">
+			<table class="personas-table personas-list-table">
+				<thead>
+					<tr>
+						<th>#</th>
+						<th>Nombres</th>
+						<th>Torre/Departamento</th>
+						<th>Cédula</th>
+						<th>Número de Teléfono</th>
+						<th class="acciones-header">Acciones</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr *ngFor="let persona of listaPersonas; let i = index" [class.even]="i % 2 === 0">
+						<td>{{ i + 1 }}</td>
+						<td>{{ getNombreCompleto(persona) }}</td>
+						<td>{{ getDepartamentoEtiqueta(persona) }}</td>
+						<td>{{ persona.cedula }}</td>
+						<td>{{ persona.telefono }}</td>
+						<td class="acciones-cell">
+							<button class="btn-inspeccionar" (click)="seleccionarPersona(persona)">
+								Inspeccionar
+							</button>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+
+			<div class="personas-counter">
+				<span class="counter-label">Personas registradas</span>
+				<span class="counter-value">{{ listaPersonas.length }}</span>
+			</div>
+		</div>
+
+		<div class="details-section" *ngIf="personaSeleccionada">
+			<div class="details-header">
+				<h3>Editar Persona</h3>
+			</div>
+
+			<div class="details-content">
+				<div class="detail-item">
+					<label>Torre</label>
+					<select class="field-select" [formControl]="editTorreControl">
+						<option value="">Seleccionar torre</option>
+						<option *ngFor="let torre of torres" [value]="torre">Torre {{ torre }}</option>
+					</select>
+				</div>
+
+				<div class="detail-item">
+					<label>Departamento</label>
+					<select class="field-select" [formControl]="editDepartamentoControl" [disabled]="!editTorreControl.value">
+						<option value="">Seleccionar departamento</option>
+						<option *ngFor="let departamento of editDepartamentosDisponibles" [value]="departamento.id">
+							{{ departamento.numero }}
+						</option>
+					</select>
+				</div>
+
+				<div class="detail-item">
+					<label>Nombres</label>
+					<input class="field-input" type="text" [formControl]="editNombresControl" />
+				</div>
+
+				<div class="detail-item">
+					<label>Apellidos</label>
+					<input class="field-input" type="text" [formControl]="editApellidosControl" />
+				</div>
+
+				<div class="detail-item">
+					<label>Cédula</label>
+					<input class="field-input" type="text" [formControl]="editCedulaControl" />
+				</div>
+
+				<div class="detail-item">
+					<label>Celular</label>
+					<input class="field-input" type="text" [formControl]="editCelularControl" />
+				</div>
+
+				<div class="detail-item">
+					<label>Tipo</label>
+					<select class="field-select" [formControl]="editTipoControl">
+						<option value="dueno">Dueño</option>
+						<option value="arrendatario">Arrendatario</option>
+					</select>
+				</div>
+			</div>
+
+			<div class="details-actions">
+				<button class="btn-action btn-primary" (click)="guardarEdicionPersona()">Guardar cambios</button>
+				<button class="btn-action btn-danger" (click)="eliminarPersonaSeleccionada()">Eliminar persona</button>
+			</div>
+		</div>
+
+		<div class="permissions-section" *ngIf="!personaSeleccionada">
+			<h3>Inspeccionar persona</h3>
+			<p>Selecciona una persona desde la tabla para editarla o borrarla.</p>
+		</div>
+	</div>
+
+	<div class="personas-table-wrapper" *ngIf="vistaActual === 'create'">
+		<table class="personas-table personas-form-table">
+			<thead>
+				<tr>
+					<th>Torre y Departamento</th>
+					<th>Nombres</th>
+					<th>Apellidos</th>
+					<th>Cédula</th>
+					<th>Celular</th>
+					<th>Tipo</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td>
+						<div class="td-stack">
+							<select class="field-select" [formControl]="torreControl">
+								<option value="">Seleccionar torre</option>
+								<option *ngFor="let torre of torres" [value]="torre">Torre {{ torre }}</option>
+							</select>
+
+							<select class="field-select" [formControl]="departamentoControl" [disabled]="!torreControl.value">
+								<option value="">Seleccionar departamento</option>
+								<option *ngFor="let departamento of departamentosDisponibles" [value]="departamento.id">
+									{{ departamento.numero }}
+								</option>
+							</select>
+						</div>
+					</td>
+					<td>
+						<input class="field-input" type="text" [formControl]="nombresControl" placeholder="Ej: Juan" />
+					</td>
+					<td>
+						<input class="field-input" type="text" [formControl]="apellidosControl" placeholder="Ej: Perez" />
+					</td>
+					<td>
+						<input class="field-input" type="text" [formControl]="cedulaControl" placeholder="Ej: V-12345678" />
+					</td>
+					<td>
+						<input class="field-input" type="text" [formControl]="celularControl" placeholder="Ej: 0412-1234567" />
+					</td>
+					<td>
+						<select class="field-select" [formControl]="tipoControl">
+							<option value="dueno">Dueño</option>
+							<option value="arrendatario">Arrendatario</option>
+						</select>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+
+		<div class="form-actions">
+			<button class="btn-action btn-ghost" (click)="limpiarFormulario()">Limpiar</button>
+			<button class="btn-action btn-primary" (click)="crearPersona()">Guardar persona</button>
+		</div>
+	</div>
+</div>

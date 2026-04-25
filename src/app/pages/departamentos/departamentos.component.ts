@@ -4,6 +4,7 @@ import { TorresService } from '../../services/torres.service';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormControl } from '@angular/forms';
 import { startWith } from 'rxjs/operators';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-departamentos',
@@ -26,12 +27,13 @@ export class DepartamentosComponent implements OnInit {
 
   constructor(
     private departamentoService: DepartamentosService,
-    private torresService: TorresService
+    private torresService: TorresService,
+    private router: Router
   ) { }
 
   ngOnInit(): void {
     this.cargarTorres();
-    this.cargarDepartamentosGenerados();
+    this.cargarDepartamentos();
     this.setupSearch();
   }
 
@@ -57,56 +59,64 @@ export class DepartamentosComponent implements OnInit {
     });
   }
 
-  cargarDepartamentosGenerados() {
-    const generados = this.generarDepartamentos();
-    this.lista = generados;
-    this.listaFiltrada = generados;
-    this.tiposDisponibles = Array.from(new Set(generados.map(item => item.tipo))).sort();
-    this.actualizarNumerosDisponibles();
-    console.log('Departamentos generados:', generados);
+  cargarDepartamentos() {
+    this.departamentoService.list().subscribe((res: any) => {
+      const raw = Array.isArray(res) ? res : res?.data;
+      const departamentos = Array.isArray(raw) ? raw : [];
+
+      const normalizados = departamentos.map((item: any) => {
+        const parsed = this.parseCodigoDepartamento((item?.numero ?? '').toString());
+
+        return {
+          id: Number(item?.id),
+          codigo: (item?.numero ?? '').toString(),
+          torre: Number(item?.torre_numero ?? parsed.torre ?? 0),
+          tipo: parsed.tipo,
+          numero: parsed.numero,
+          piso: parsed.piso
+        };
+      });
+
+      this.lista = normalizados;
+      this.listaFiltrada = normalizados;
+      this.tiposDisponibles = Array.from(new Set(normalizados.map(item => item.tipo))).sort();
+      this.actualizarNumerosDisponibles();
+      console.log('Departamentos cargados:', normalizados);
+    }, () => {
+      this.lista = [];
+      this.listaFiltrada = [];
+      this.tiposDisponibles = [];
+      this.numerosDisponibles = [];
+    });
   }
 
-  private generarDepartamentos() {
-    const departamentos: any[] = [];
-
-    for (let torre = 1; torre <= 10; torre++) {
-    
-      if (torre <= 4 || torre === 8) {
-        const subNumeros = ['101', '102', '201', '202'];
-        subNumeros.forEach(numero => {
-          departamentos.push({
-            torre,
-            tipo: 'SUB',
-            numero,
-            piso: `S${numero.startsWith('1') ? 1 : 2}`
-          });
-        });
-      }
-
-  
-      const maxPb = torre >= 8 ? 4 : 8;
-      for (let n = 1; n <= maxPb; n++) {
-        departamentos.push({
-          torre,
-          tipo: 'PB',
-          numero: n.toString().padStart(3, '0'),
-          piso: 'PB'
-        });
-      }
-      const maxDepPorPiso = torre >= 8 ? 4 : 8;
-      for (let piso = 1; piso <= 7; piso++) {
-        for (let n = 1; n <= maxDepPorPiso; n++) {
-          departamentos.push({
-            torre,
-            tipo: 'DEP',
-            numero: `${piso}${n.toString().padStart(2, '0')}`,
-            piso
-          });
-        }
-      }
+  private parseCodigoDepartamento(codigo: string) {
+    const match = codigo.match(/^T(\d+)(SS|PB|D)(\d+)$/i);
+    if (!match) {
+      return {
+        torre: 0,
+        tipo: 'DEP',
+        numero: codigo,
+        piso: ''
+      };
     }
 
-    return departamentos;
+    const torre = Number(match[1]);
+    const tipoRaw = match[2].toUpperCase();
+    const numero = match[3];
+    const tipo = tipoRaw === 'SS' ? 'SUB' : tipoRaw === 'PB' ? 'PB' : 'DEP';
+    const piso = tipo === 'DEP'
+      ? numero.charAt(0)
+      : tipo === 'SUB'
+        ? `S${numero.charAt(0)}`
+        : 'PB';
+
+    return {
+      torre,
+      tipo,
+      numero,
+      piso
+    };
   }
 
   setupSearch() {
@@ -181,7 +191,15 @@ export class DepartamentosComponent implements OnInit {
   }
 
   seleccionarDepartamento(depto: any) {
-    this.departamentoSeleccionado = depto;
+    if (!depto?.id) {
+      return;
+    }
+
+    this.router.navigate(['/dashboard/departamentos', depto.id, 'personas'], {
+      queryParams: {
+        codigo: depto.codigo || `T${depto.torre}${depto.tipo}${depto.numero}`
+      }
+    });
   }
 
   cerrarDetalles() {

@@ -1,0 +1,40 @@
+<div class="departamento-personas-container">
+  <div class="header-row">
+    <div>
+      <h2>Personas del Departamento {{ departamentoCodigo || departamentoId }}</h2>
+      <p>Listado de personas registradas para este departamento.</p>
+    </div>
+    <a class="btn-volver" routerLink="/dashboard/departamentos">Volver a departamentos</a>
+  </div>
+
+  <div class="table-wrapper" *ngIf="!cargando; else loadingState">
+    <table class="personas-table" *ngIf="lista.length > 0; else emptyState">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Nombres</th>
+          <th>Cedula</th>
+          <th>Telefono</th>
+          <th>Tipo</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let persona of lista; let i = index" [class.even]="i % 2 === 0">
+          <td>{{ i + 1 }}</td>
+          <td>{{ getNombreCompleto(persona) }}</td>
+          <td>{{ persona.cedula }}</td>
+          <td>{{ persona.telefono }}</td>
+          <td>{{ persona.tipoResidencia === 'dueno' ? 'Dueno' : 'Arrendatario' }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <ng-template #loadingState>
+    <div class="state-box">Cargando personas...</div>
+  </ng-template>
+
+  <ng-template #emptyState>
+    <div class="state-box">No hay personas registradas para este departamento.</div>
+  </ng-template>
+</div>
