@@ -47,6 +47,16 @@ export const routes: Routes = [
                     data: { roles: ['admin_general'], mode: 'create' }
                },
                {
+                    path: 'usuarios', loadComponent: () => import('./pages/usuarios/usuarios.component').then(m => m.UsuariosComponent),
+                    canActivate: [AuthGuard, AuthGuard, RoleGuard],
+                    data: { roles: ['admin_general'] }
+               },
+               {
+                    path: 'usuarios/crear', loadComponent: () => import('./pages/usuarios/usuarios.component').then(m => m.UsuariosComponent),
+                    canActivate: [AuthGuard, AuthGuard, RoleGuard],
+                    data: { roles: ['admin_general'], mode: 'create' }
+               },
+               {
                     path: 'unauthorized',
                     loadComponent: () => import('./pages/unauthorized/unauthorized.component').then(m => m.UnauthorizedComponent)
                },
