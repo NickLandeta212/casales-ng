@@ -63,6 +63,16 @@ export const routes: Routes = [
                     data: { roles: ['admin_general'], mode: 'create' }
                },
                {
+                    path: 'multas', loadComponent: () => import('./pages/multas/multas.component').then(m => m.MultasComponent),
+                    canActivate: [AuthGuard, AuthGuard, RoleGuard],
+                    data: { roles: ['admin_general'], mode: 'list' }
+               },
+               {
+                    path: 'multas/crear', loadComponent: () => import('./pages/multas/multas.component').then(m => m.MultasComponent),
+                    canActivate: [AuthGuard, AuthGuard, RoleGuard],
+                    data: { roles: ['admin_general'], mode: 'create' }
+               },
+               {
                     path: 'usuarios', loadComponent: () => import('./pages/usuarios/usuarios.component').then(m => m.UsuariosComponent),
                     canActivate: [AuthGuard, AuthGuard, RoleGuard],
                     data: { roles: ['admin_general'] }

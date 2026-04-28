@@ -81,6 +81,25 @@ export class SidebarMenuComponent implements OnInit {
       ]
     },
     {
+      title: 'Multas',
+      icon: 'bi bi-exclamation-triangle',
+      roles: ['admin_general'],
+      children: [
+        {
+          title: 'Todas',
+          icon: 'bi bi-list-ul',
+          link: '/dashboard/multas',
+          roles: ['admin_general']
+        },
+        {
+          title: 'Añadir multa',
+          icon: 'bi bi-plus-circle',
+          link: '/dashboard/multas/crear',
+          roles: ['admin_general']
+        }
+      ]
+    },
+    {
       title: 'Usuarios',
       icon: 'bi bi-person-gear',
       roles: ['admin_general'],

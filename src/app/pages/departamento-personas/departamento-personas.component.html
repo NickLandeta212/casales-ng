@@ -30,11 +30,53 @@
     </table>
   </div>
 
+  <div class="section-title-row">
+    <h3>Multas del Departamento</h3>
+    <span class="status-chip" [class.ok]="listaMultas.length > 0" [class.empty]="listaMultas.length === 0">
+      {{ listaMultas.length > 0 ? 'Registrada' : 'No registrada' }}
+    </span>
+  </div>
+
+  <div class="table-wrapper" *ngIf="!cargandoMultas; else loadingMultasState">
+    <table class="multas-table" *ngIf="listaMultas.length > 0; else emptyMultasState">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Persona</th>
+          <th>Motivo</th>
+          <th>Descripcion</th>
+          <th>Monto</th>
+          <th>Estado</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let multa of listaMultas; let i = index" [class.even]="i % 2 === 0">
+          <td>{{ i + 1 }}</td>
+          <td>{{ getPersonaMulta(multa) }}</td>
+          <td>{{ multa.motivoNombre || 'Sin motivo' }}</td>
+          <td>{{ multa.descripcion }}</td>
+          <td>{{ multa.monto | currency:'USD' }}</td>
+          <td>
+            <span class="row-state registered">Registrada</span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
   <ng-template #loadingState>
     <div class="state-box">Cargando personas...</div>
   </ng-template>
 
   <ng-template #emptyState>
     <div class="state-box">No hay personas registradas para este departamento.</div>
+  </ng-template>
+
+  <ng-template #loadingMultasState>
+    <div class="state-box">Cargando multas...</div>
+  </ng-template>
+
+  <ng-template #emptyMultasState>
+    <div class="state-box">No se han registrado multas para este departamento.</div>
   </ng-template>
 </div>
