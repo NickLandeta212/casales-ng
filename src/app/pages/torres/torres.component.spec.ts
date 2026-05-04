@@ -1,4 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 
 import { TorresComponent } from './torres.component';
 
@@ -8,7 +10,8 @@ describe('TorresComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [TorresComponent]
+      imports: [TorresComponent],
+      providers: [provideHttpClient(), provideHttpClientTesting()]
     })
     .compileComponents();
 

@@ -1,103 +1,229 @@
 <div class="multas-container">
+	<div class="multas-page-header" *ngIf="vistaActual === 'list'">
+		<div>
+			<h2>Multas</h2>
+			<p>Revisa las multas registradas y comparte el formulario de pago.</p>
+		</div>
+		<div class="multas-actions">
+			<a class="btn-pago-link" routerLink="/pago-multa">Abrir formulario de pago</a>
+			<button class="btn-recargar" type="button" (click)="cargarMultas()" [disabled]="cargando">
+				<i class="bi bi-arrow-clockwise"></i>
+				{{ cargando ? 'Cargando...' : 'Actualizar' }}
+			</button>
+		</div>
+	</div>
+
+	<div class="alert-error" *ngIf="errorMessage">
+		{{ errorMessage }}
+	</div>
+
+	<div class="alert-success" *ngIf="successMessage">
+		{{ successMessage }}
+	</div>
+
 	<div class="multas-content" *ngIf="vistaActual === 'list'">
 		<div class="multas-table-wrapper table-section">
+			<div class="table-title">
+				<h3>Pagos enviados</h3>
+				<span>{{ listaPagos.length }} registro(s)</span>
+			</div>
+			<table class="multas-table pagos-list-table">
+				<thead>
+					<tr>
+						<th>#</th>
+						<th>Fecha</th>
+						<th>Departamento</th>
+						<th>Total</th>
+						<th>Estado</th>
+						<th>Comprobante</th>
+						<th class="acciones-header">Acciones</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr *ngFor="let pago of listaPagos; let i = index" [class.even]="i % 2 === 0">
+						<td>{{ i + 1 }}</td>
+						<td>{{ getFechaPago(pago) }}</td>
+						<td>{{ getPagoDepartamentoEtiqueta(pago) }}</td>
+						<td>{{ pago.total | currency:'USD' }}</td>
+						<td>
+							<span class="estado-badge" [class.aprobada]="pago.estado === 'aprobado'" [class.en-proceso]="pago.estado !== 'aprobado'">
+								{{ getPagoEstadoLabel(pago) }}
+							</span>
+						</td>
+						<td>
+							<a class="detail-link compact" [href]="getPagoComprobanteUrl(pago)" target="_blank" rel="noopener noreferrer">
+								Ver imagen
+							</a>
+						</td>
+						<td class="acciones-cell">
+							<button
+								class="btn-aprobar"
+								type="button"
+								[disabled]="pago.estado === 'aprobado' || approvingPagoId === pago.id"
+								(click)="aprobarPago(pago)"
+							>
+								{{ pago.estado === 'aprobado' ? 'Aprobado' : approvingPagoId === pago.id ? 'Aprobando...' : 'Aprobar' }}
+							</button>
+							<button class="btn-inspeccionar" type="button" (click)="seleccionarPago(pago)">Ver</button>
+						</td>
+					</tr>
+
+					<tr *ngIf="!listaPagos.length && !cargando">
+						<td colspan="7" class="empty-cell">No hay pagos de multas registrados.</td>
+					</tr>
+				</tbody>
+			</table>
+
+			<div class="table-title secondary">
+				<h3>Multas pendientes</h3>
+				<span>{{ listaMultas.length }} multa(s)</span>
+			</div>
 			<table class="multas-table multas-list-table">
 				<thead>
 					<tr>
 						<th>#</th>
+						<th>Fecha</th>
 						<th>Torre/Departamento</th>
 						<th>Persona</th>
-						<th>Cédula</th>
 						<th>Motivo</th>
 						<th>Monto</th>
+						<th>Estado</th>
 						<th class="acciones-header">Acciones</th>
 					</tr>
 				</thead>
 				<tbody>
 					<tr *ngFor="let multa of listaMultas; let i = index" [class.even]="i % 2 === 0">
 						<td>{{ i + 1 }}</td>
+						<td>{{ getFechaEtiqueta(multa) }}</td>
 						<td>{{ getDepartamentoEtiqueta(multa) }}</td>
 						<td>{{ getPersonaEtiqueta(multa) }}</td>
-						<td>{{ multa.personaCedula }}</td>
-						<td>{{ multa.motivoNombre }}</td>
+						<td>{{ multa.motivoNombre || '-' }}</td>
 						<td>{{ multa.monto | currency:'USD' }}</td>
-						<td class="acciones-cell">
-							<button class="btn-inspeccionar" type="button" (click)="seleccionarMulta(multa)">Inspeccionar</button>
+						<td>
+							<span class="estado-badge" [class.aprobada]="multa.aprobada" [class.en-proceso]="!multa.aprobada">
+								{{ getEstadoLabel(multa) }}
+							</span>
 						</td>
+						<td class="acciones-cell">
+							<button
+								class="btn-aprobar"
+								type="button"
+								[disabled]="multa.aprobada || approvingId === multa.id"
+								(click)="aprobarMulta(multa)"
+							>
+								{{ multa.aprobada ? 'Aprobada' : approvingId === multa.id ? 'Aprobando...' : 'Aprobar' }}
+							</button>
+							<button class="btn-inspeccionar" type="button" (click)="seleccionarMulta(multa)">Ver</button>
+						</td>
+					</tr>
+
+					<tr *ngIf="!listaMultas.length && !cargando">
+						<td colspan="8" class="empty-cell">No hay multas registradas.</td>
 					</tr>
 				</tbody>
 			</table>
+		</div>
 
-			<div class="multas-counter">
-				<span class="counter-label">Multas registradas</span>
-				<span class="counter-value">{{ listaMultas.length }}</span>
+		<div class="details-section" *ngIf="pagoSeleccionado">
+			<div class="details-header">
+				<h3>Detalle de pago</h3>
+				<button class="btn-cerrar" type="button" (click)="cerrarDetalles()">x</button>
+			</div>
+
+			<div class="details-content">
+				<div class="detail-item">
+					<label>Fecha</label>
+					<span class="detail-value">{{ getFechaPago(pagoSeleccionado) }}</span>
+				</div>
+
+				<div class="detail-item">
+					<label>Departamento</label>
+					<span class="detail-value">{{ getPagoDepartamentoEtiqueta(pagoSeleccionado) }}</span>
+				</div>
+
+				<div class="detail-item">
+					<label>Total</label>
+					<span class="detail-value">{{ pagoSeleccionado.total | currency:'USD' }}</span>
+				</div>
+
+				<div class="detail-item">
+					<label>Estado</label>
+					<span class="detail-value">{{ getPagoEstadoLabel(pagoSeleccionado) }}</span>
+				</div>
+
+				<div class="detail-item">
+					<label>Comprobante</label>
+					<a class="detail-link" [href]="getPagoComprobanteUrl(pagoSeleccionado)" target="_blank" rel="noopener noreferrer">
+						Ver imagen subida
+					</a>
+				</div>
+
+				<div class="detail-item">
+					<label>Multas pagadas</label>
+					<div class="pago-detalle-list">
+						<div class="pago-detalle-item" *ngFor="let detalle of pagoSeleccionado.multas">
+							<strong>{{ detalle.motivo_nombre || 'Multa registrada' }}</strong>
+							<span>{{ getPagoPersonaEtiqueta(detalle) }}</span>
+							<small>{{ detalle.descripcion }}</small>
+							<b>{{ detalle.monto | currency:'USD' }}</b>
+						</div>
+					</div>
+				</div>
 			</div>
 		</div>
 
 		<div class="details-section" *ngIf="multaSeleccionada">
 			<div class="details-header">
-				<h3>Editar Multa</h3>
+				<h3>Detalle de multa</h3>
+				<button class="btn-cerrar" type="button" (click)="cerrarDetalles()">x</button>
 			</div>
 
 			<div class="details-content">
 				<div class="detail-item">
-					<label>Torre</label>
-					<select class="field-select" [formControl]="editTorreControl">
-						<option value="">Seleccionar torre</option>
-						<option *ngFor="let torre of torres" [value]="torre">Torre {{ torre }}</option>
-					</select>
+					<label>Fecha</label>
+					<span class="detail-value">{{ getFechaEtiqueta(multaSeleccionada) }}</span>
 				</div>
 
 				<div class="detail-item">
-					<label>Departamento</label>
-					<select class="field-select" [formControl]="editDepartamentoControl" [disabled]="!editTorreControl.value">
-						<option value="">Seleccionar departamento</option>
-						<option *ngFor="let departamento of editDepartamentosDisponibles" [value]="departamento.id">
-							{{ departamento.numero }}
-						</option>
-					</select>
+					<label>Torre/Departamento</label>
+					<span class="detail-value">{{ getDepartamentoEtiqueta(multaSeleccionada) }}</span>
 				</div>
 
 				<div class="detail-item">
 					<label>Persona</label>
-					<input class="field-input" type="text" [formControl]="editPersonaControl" />
+					<span class="detail-value">{{ getPersonaEtiqueta(multaSeleccionada) }}</span>
 				</div>
 
 				<div class="detail-item">
-					<label>Cédula</label>
-					<input class="field-input" type="text" [formControl]="editPersonaCedulaControl" />
+					<label>Cedula</label>
+					<span class="detail-value">{{ multaSeleccionada.personaCedula || '-' }}</span>
 				</div>
 
 				<div class="detail-item">
 					<label>Motivo</label>
-					<select class="field-select" [formControl]="editMotivoIdControl">
-						<option value="">Seleccionar motivo</option>
-						<option *ngFor="let motivo of motivos" [value]="motivo.id">
-							{{ motivo.nombre }}
-						</option>
-					</select>
+					<span class="detail-value">{{ multaSeleccionada.motivoNombre || '-' }}</span>
 				</div>
 
 				<div class="detail-item">
-					<label>Descripción</label>
-					<input class="field-input" type="text" [formControl]="editDescripcionControl" />
+					<label>Descripcion</label>
+					<span class="detail-value">{{ multaSeleccionada.descripcion }}</span>
 				</div>
 
 				<div class="detail-item">
 					<label>Monto</label>
-					<input class="field-input" type="number" [formControl]="editMontoControl" />
+					<span class="detail-value">{{ multaSeleccionada.monto | currency:'USD' }}</span>
 				</div>
-			</div>
 
-			<div class="details-actions">
-				<button class="btn-action btn-primary" type="button" (click)="guardarEdicionMulta()">Guardar cambios</button>
-				<button class="btn-action btn-danger" type="button" (click)="eliminarMultaSeleccionada()">Eliminar multa</button>
+				<div class="detail-item">
+					<label>Estado</label>
+					<span class="detail-value">{{ getEstadoLabel(multaSeleccionada) }}</span>
+				</div>
 			</div>
 		</div>
 
-		<div class="permissions-section" *ngIf="!multaSeleccionada">
-			<h3>Inspeccionar multa</h3>
-			<p>Selecciona una multa desde la tabla para editarla o borrarla.</p>
+		<div class="permissions-section" *ngIf="!multaSeleccionada && !pagoSeleccionado">
+			<h3>Inspeccionar</h3>
+			<p>Selecciona un pago para revisar su comprobante o una multa para revisar sus datos.</p>
 		</div>
 	</div>
 
@@ -107,7 +233,7 @@
 				<tr>
 					<th>Torre y Departamento</th>
 					<th>Persona</th>
-					<th>Cédula</th>
+					<th>Cedula</th>
 					<th>Motivo</th>
 					<th>Monto</th>
 				</tr>
@@ -132,7 +258,7 @@
 						<input class="field-input" type="text" [formControl]="personaControl" placeholder="Nombre y apellido" />
 					</td>
 					<td>
-						<input class="field-input" type="text" [formControl]="personaCedulaControl" placeholder="Cédula" />
+						<input class="field-input" type="text" [formControl]="personaCedulaControl" placeholder="Cedula" />
 					</td>
 					<td>
 						<select class="field-select" [formControl]="motivoIdControl">
@@ -149,12 +275,12 @@
 			</tbody>
 		</table>
 
-		<div class="form-actions" style="flex-direction: column; gap: 12px;">
-			<div style="width: 100%;">
-				<label style="display: block; margin-bottom: 6px; font-size: 12px; font-weight: 600; text-transform: uppercase; color: #555;">Descripción</label>
-				<textarea class="field-input" [formControl]="descripcionControl" placeholder="Describe los detalles de la multa" style="min-height: 60px; resize: vertical; padding: 9px 10px; font-size: 13px;"></textarea>
+		<div class="form-actions form-actions-stacked">
+			<div class="description-field">
+				<label>Descripcion</label>
+				<textarea class="field-input textarea-input" [formControl]="descripcionControl" placeholder="Describe los detalles de la multa"></textarea>
 			</div>
-			<div style="display: flex; gap: 10px;">
+			<div class="form-buttons">
 				<button class="btn-action btn-ghost" type="button" (click)="limpiarFormulario()">Limpiar</button>
 				<button class="btn-action btn-primary" type="button" (click)="crearMulta()">Guardar multa</button>
 			</div>

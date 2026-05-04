@@ -1,12 +1,13 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
+import { RouterModule } from '@angular/router';
 import { environment } from '../../../environments/environment';
 import { ReservaResponse, ReservasService } from '../../services/reservas.service';
 
 @Component({
   selector: 'app-reservas',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterModule],
   templateUrl: './reservas.component.html',
   styleUrl: './reservas.component.scss'
 })

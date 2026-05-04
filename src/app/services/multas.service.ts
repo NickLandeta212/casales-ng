@@ -38,6 +38,35 @@ export interface MotivoOption {
   nombre: string;
 }
 
+export interface PagoMultasPayload {
+  departamento_id: number;
+  multa_ids: Array<number | string>;
+  total: number;
+  comprobante_base64: string;
+}
+
+export interface PagoMultaDetalle {
+  multa_id?: number | string | null;
+  monto: number;
+  descripcion?: string;
+  persona_nombre?: string;
+  persona_apellidos?: string;
+  motivo_nombre?: string;
+}
+
+export interface PagoMulta {
+  id: number | string;
+  departamento_id: number;
+  departamento_numero?: string;
+  torre_numero?: string;
+  total: number;
+  comprobante_url: string;
+  estado: 'en_proceso' | 'aprobado' | string;
+  created_at?: string;
+  updated_at?: string;
+  multas?: PagoMultaDetalle[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -84,6 +113,20 @@ export class MultasService {
     return this.http.delete<void>(`${this.apiUrl}/${id}`).pipe(
       switchMap(() => this.loadMultas())
     );
+  }
+
+  registrarPagoMultas(payload: PagoMultasPayload) {
+    return this.http.post<any>(`${this.apiUrl}/pagos`, payload);
+  }
+
+  loadPagosMultas() {
+    return this.http.get<any>(`${this.apiUrl}/pagos`).pipe(
+      map((res) => this.normalizePagos(res))
+    );
+  }
+
+  aprobarPagoMultas(id: number | string) {
+    return this.http.put<any>(`${this.apiUrl}/pagos/${id}/aprobar`, {});
   }
 
   private normalizeList(res: any): Multa[] {
@@ -135,5 +178,36 @@ export class MultasService {
       aprobada: multa.aprobada,
       fecha: multa.fecha
     };
+  }
+
+  private normalizePagos(res: any): PagoMulta[] {
+    const raw = Array.isArray(res) ? res : res?.data;
+    const lista = Array.isArray(raw) ? raw : [];
+
+    return lista.map((item: any) => ({
+      id: item.id ?? item._id,
+      departamento_id: Number(item.departamento_id ?? item.departamentoId ?? 0),
+      departamento_numero: (item.departamento_numero ?? item.departamentoNumero ?? '').toString(),
+      torre_numero: (item.torre_numero ?? item.torreNumero ?? '').toString(),
+      total: Number(item.total ?? 0),
+      comprobante_url: (item.comprobante_url ?? item.comprobanteUrl ?? '').toString(),
+      estado: (item.estado ?? 'en_proceso').toString(),
+      created_at: item.created_at ?? item.createdAt,
+      updated_at: item.updated_at ?? item.updatedAt,
+      multas: this.normalizePagoDetalle(item.multas)
+    }));
+  }
+
+  private normalizePagoDetalle(res: any): PagoMultaDetalle[] {
+    const lista = Array.isArray(res) ? res : [];
+
+    return lista.map((item: any) => ({
+      multa_id: item.multa_id ?? item.multaId ?? null,
+      monto: Number(item.monto ?? 0),
+      descripcion: (item.descripcion ?? '').toString(),
+      persona_nombre: (item.persona_nombre ?? item.personaNombre ?? '').toString(),
+      persona_apellidos: (item.persona_apellidos ?? item.personaApellidos ?? '').toString(),
+      motivo_nombre: (item.motivo_nombre ?? item.motivoNombre ?? '').toString()
+    }));
   }
 }

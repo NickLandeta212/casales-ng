@@ -60,7 +60,65 @@
 
 				<div class="detail-item">
 					<label>Rol</label>
-					<p>{{ usuarioSeleccionado.role }}</p>
+					<select class="field-select" [formControl]="editRoleControl">
+						<option value="condomino">Condomino</option>
+						<option value="tesorero">Tesorero</option>
+						<option value="admin_conjunto">Admin conjunto</option>
+						<option value="admin_general">Admin general</option>
+					</select>
+				</div>
+
+				<div class="detail-item">
+					<label>Paginas autorizadas</label>
+					<div class="permission-group compact">
+						<label class="permission-option" *ngFor="let page of pageOptions">
+							<input type="checkbox" [checked]="hasPagePermission(page.key)" (change)="togglePagePermission(page.key)" />
+							<span>
+								<strong>{{ page.label }}</strong>
+								<small>{{ page.description }}</small>
+							</span>
+						</label>
+					</div>
+				</div>
+
+				<div class="detail-item">
+					<label>Torres autorizadas</label>
+					<div class="permission-group compact">
+						<label class="permission-option" *ngFor="let torre of torres">
+							<input type="checkbox" [checked]="hasTorreAutorizada(torre.id)" (change)="toggleTorreAutorizada(torre.id)" />
+							<span>
+								<strong>Torre {{ torre.numero }}</strong>
+								<small>Informacion de esta torre.</small>
+							</span>
+						</label>
+					</div>
+				</div>
+
+				<div class="detail-item" *ngIf="getTorresAutorizadasDetalle().length > 0">
+					<label>Datos de torres autorizadas</label>
+					<ul class="detail-list">
+						<li *ngFor="let torre of getTorresAutorizadasDetalle()">
+							<strong>Torre {{ torre.numero }}</strong>
+							<span>
+								{{ torre.departamentos.length }} departamentos,
+								{{ getDepartamentosAsignados(torre.departamentos) }} asignados
+							</span>
+							<ul>
+								<li *ngFor="let departamento of torre.departamentos">
+									{{ departamento.numero }}
+									<span *ngIf="departamento.usuarioNombre">
+										- {{ departamento.usuarioNombre }} ({{ departamento.usuarioRole || 'sin rol' }})
+									</span>
+									<span *ngIf="!departamento.usuarioNombre">- Sin usuario asignado</span>
+								</li>
+							</ul>
+						</li>
+					</ul>
+				</div>
+
+				<div class="detail-actions">
+					<button class="btn-action btn-primary" (click)="guardarAutorizaciones()">Guardar autorizaciones</button>
+					<button class="btn-action btn-ghost" (click)="eliminarUsuarioSeleccionado()">Eliminar usuario</button>
 				</div>
 
 				<div class="detail-item" *ngIf="usuarioSeleccionado.departamentos.length > 0">
@@ -74,7 +132,7 @@
 
 		<div class="permissions-section" *ngIf="!usuarioSeleccionado">
 			<h3>Inspeccionar usuario</h3>
-			<p>Selecciona un usuario desde la tabla para ver su correo, torre y departamentos asociados.</p>
+			<p>Selecciona un usuario desde la tabla para ver su correo, torre, departamentos y autorizaciones.</p>
 		</div>
 	</div>
 
@@ -83,20 +141,19 @@
 			<div>
 				<span class="section-kicker">Usuarios</span>
 				<h3>Crear usuario</h3>
-				<p>Asigna una torre, define el acceso y guarda el usuario con persistencia en departamentos.</p>
+				<p>Asigna una torre base, define el rol y autoriza paginas y torres.</p>
 			</div>
-			<div class="create-badge">Alta con torre asociada</div>
+			<div class="create-badge">Alta con permisos</div>
 		</div>
 
 		<div class="usuarios-table-wrapper table-section">
 			<table class="usuarios-table usuarios-form-table">
 				<thead>
 					<tr>
-						<th>Torre</th>
+						<th>Torre base</th>
 						<th>Nombre</th>
 						<th>Correo</th>
 						<th>Password</th>
-						<th>Rol</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -107,7 +164,7 @@
 									<option value="">Seleccionar torre</option>
 									<option *ngFor="let torre of torres" [value]="torre.id">Torre {{ torre.numero }}</option>
 								</select>
-								<span class="field-hint">El usuario se vinculará a los departamentos de esta torre.</span>
+								<span class="field-hint">La torre base queda incluida en las torres autorizadas.</span>
 							</div>
 						</td>
 						<td>
@@ -117,14 +174,7 @@
 							<input class="field-input" type="email" [formControl]="emailControl" placeholder="Ej: usuario@correo.com" />
 						</td>
 						<td>
-							<input class="field-input" type="password" [formControl]="passwordControl" placeholder="Mínimo 8 caracteres" />
-						</td>
-						<td>
-							<select class="field-select" [formControl]="roleControl">
-								<option value="tesorero">Tesorero</option>
-								<option value="admin_conjunto">Admin conjunto</option>
-								<option value="admin_general">Admin general</option>
-							</select>
+							<input class="field-input" type="password" [formControl]="passwordControl" placeholder="Minimo 8 caracteres" />
 						</td>
 					</tr>
 				</tbody>
@@ -137,13 +187,8 @@
 		</div>
 
 		<div class="permissions-section">
-			<h3>Crear usuario</h3>
-			<p>Asigna nombre, correo, contraseña, rol y una torre. Al guardar, el usuario quedará relacionado con todos los departamentos de esa torre.</p>
-			<ul class="info-list">
-				<li>El rol por defecto es Tesorero.</li>
-				<li>La torre elegida define la persistencia.</li>
-				<li>El alta crea la relación en base de datos.</li>
-			</ul>
+			<h3>Permisos del usuario</h3>
+			<p>Primero crea el usuario. Luego entra en Todos, inspecciona el registro y asigna rol, paginas y torres autorizadas.</p>
 		</div>
 	</div>
 

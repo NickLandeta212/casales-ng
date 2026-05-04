@@ -4,10 +4,13 @@
       <h2>Reservas</h2>
       <p>Revisa las solicitudes registradas desde el formulario publico.</p>
     </div>
-    <button class="btn-recargar" type="button" (click)="cargarReservas()" [disabled]="cargando">
-      <i class="bi bi-arrow-clockwise"></i>
-      {{ cargando ? 'Cargando...' : 'Actualizar' }}
-    </button>
+    <div class="reservas-actions">
+      <a class="btn-reserva-link" routerLink="/reserva">Abrir formulario</a>
+      <button class="btn-recargar" type="button" (click)="cargarReservas()" [disabled]="cargando">
+        <i class="bi bi-arrow-clockwise"></i>
+        {{ cargando ? 'Cargando...' : 'Actualizar' }}
+      </button>
+    </div>
   </div>
 
   <div class="alert-error" *ngIf="errorMessage">

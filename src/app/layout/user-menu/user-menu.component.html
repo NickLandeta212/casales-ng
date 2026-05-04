@@ -11,7 +11,7 @@
           <i [class]="item.icon"></i> {{ item.title }}
         </a>
 
-        <a *ngIf="item.action" href="#" class="dropdown-item text-danger" (click)="item.action()">
+        <a *ngIf="item.action" href="#" class="dropdown-item text-danger" (click)="$event.preventDefault(); item.action()">
           <i [class]="item.icon"></i> {{ item.title }}
         </a>
       </li>

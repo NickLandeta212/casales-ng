@@ -10,6 +10,7 @@ import { RouterModule } from '@angular/router';
   styleUrl: './user-menu.component.scss'
 })
 export class UserMenuComponent implements OnInit {
+  readonly allRoles = ['admin_general', 'admin_conjunto', 'tesorero', 'condomino'];
 
   constructor(public authService: AuthService) { }
 
@@ -22,13 +23,13 @@ export class UserMenuComponent implements OnInit {
       title: 'Configuración',
       icon: 'bi bi-gear',
       link: '/dashboard/settings',
-      roles: ['admin_general']
+      roles: this.allRoles
     },
     {
       title: 'Cerrar Sesión',
       icon: 'bi bi-box-arrow-right',
       action: () => this.logout(),
-      roles: ['admin_general']
+      roles: this.allRoles
     }
   ];
 

@@ -11,8 +11,13 @@ export class RoleGuard implements CanActivate {
 
   canActivate(next: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean {
     const roles = next.data['roles'] as string[];
+    const permission = next.data['permission'] as string | undefined;
 
-    if (this.authService.isAuthenticated() && this.authService.hasRole(roles)) {
+    if (
+      this.authService.isAuthenticated() &&
+      this.authService.hasRole(roles) &&
+      this.authService.hasPagePermission(permission)
+    ) {
       return true;
     }
 

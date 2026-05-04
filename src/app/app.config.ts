@@ -9,7 +9,6 @@ import { HashLocationStrategy, LocationStrategy } from '@angular/common';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
-    provideHttpClient(),
     provideHttpClient(withInterceptors([authInterceptor, loaderInterceptor])),
     provideRouter(routes),
     { provide: LocationStrategy, useClass: HashLocationStrategy }

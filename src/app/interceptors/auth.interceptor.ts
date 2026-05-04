@@ -8,7 +8,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
 
   // Excluir la ruta de login
-  if (req.url.includes('api/auth/login')) {
+  if (req.url.includes('/auth/login')) {
     return next(req);
   }
 
@@ -25,7 +25,6 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(authReq).pipe(
     catchError(err => {
-      console.log(err)
       if (err.status === 403 || err.status === 401) {
         //router.navigateByUrl('/');
       }

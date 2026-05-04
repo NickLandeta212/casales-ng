@@ -1,0 +1,101 @@
+<main class="pago-multa-page">
+  <section class="pago-multa-shell">
+    <header class="pago-multa-header">
+      <div>
+        <span class="section-kicker">Casales San Pedro</span>
+        <h1>Pago de multas</h1>
+        <p>Selecciona tu torre y departamento para consultar el valor pendiente y subir el comprobante.</p>
+      </div>
+    </header>
+
+    <section class="pago-multa-card">
+      <form class="pago-multa-form" [formGroup]="pagoForm" (ngSubmit)="enviarPago()">
+        <div class="feedback-message success" *ngIf="successMessage">
+          {{ successMessage }}
+        </div>
+
+        <div class="feedback-message error" *ngIf="errorMessage">
+          {{ errorMessage }}
+        </div>
+
+        <div class="form-grid">
+          <label>
+            Torre
+            <select formControlName="torre">
+              <option value="">Seleccionar torre</option>
+              <option *ngFor="let torre of torres" [value]="torre.id">Torre {{ torre.numero }}</option>
+            </select>
+            <span *ngIf="pagoForm.get('torre')?.invalid && pagoForm.get('torre')?.touched">Selecciona una torre.</span>
+          </label>
+
+          <label>
+            Departamento
+            <select formControlName="departamento" [disabled]="!departamentosFiltrados.length">
+              <option value="">Seleccionar departamento</option>
+              <option *ngFor="let departamento of departamentosFiltrados" [value]="departamento.id">
+                {{ departamento.numero }}
+              </option>
+            </select>
+            <span *ngIf="pagoForm.get('departamento')?.invalid && pagoForm.get('departamento')?.touched">Selecciona un departamento.</span>
+          </label>
+
+          <label class="file-field">
+            Comprobante de pago
+            <input id="comprobanteMulta" type="file" accept="image/png,image/jpeg,image/webp" (change)="onComprobanteChange($event)">
+            <span class="file-button">
+              <i class="bi bi-image"></i>
+              {{ comprobanteName || 'Subir imagen' }}
+            </span>
+            <small>PNG, JPG o WEBP hasta 4MB.</small>
+            <span *ngIf="submitted && !comprobanteBase64">Sube una imagen del comprobante.</span>
+          </label>
+        </div>
+
+        <aside class="payment-summary">
+          <div class="summary-header">
+            <span>Departamento</span>
+            <strong>{{ getDepartamentoEtiqueta() }}</strong>
+          </div>
+
+          <div class="total-box">
+            <span>Valor seleccionado</span>
+            <strong>{{ totalCancelar | currency:'USD' }}</strong>
+          </div>
+
+          <div class="multas-list" *ngIf="multasDepartamento.length; else emptyMultas">
+            <label class="multa-item" *ngFor="let multa of multasDepartamento">
+              <input
+                type="checkbox"
+                [checked]="isMultaSeleccionada(multa)"
+                (change)="toggleMulta(multa, $event)"
+              >
+              <div class="multa-info">
+                <div>
+                  <strong>{{ multa.motivoNombre || 'Multa registrada' }}</strong>
+                  <span>{{ getPersonaEtiqueta(multa) }}</span>
+                </div>
+                <b>{{ multa.monto | currency:'USD' }}</b>
+              </div>
+            </label>
+          </div>
+
+          <ng-template #emptyMultas>
+            <div class="empty-state">
+              {{ pagoForm.get('departamento')?.value ? 'No hay multas registradas para este departamento.' : 'Selecciona un departamento para ver sus multas.' }}
+            </div>
+          </ng-template>
+
+          <div class="selection-hint" *ngIf="multasDepartamento.length">
+            {{ multasSeleccionadas.length ? multasSeleccionadas.length + ' multa(s) seleccionada(s).' : 'Selecciona la multa que deseas pagar.' }}
+          </div>
+        </aside>
+
+        <div class="form-actions">
+          <button type="submit" class="btn-primary" [disabled]="submitting">
+            {{ submitting ? 'Enviando...' : 'Enviar pago' }}
+          </button>
+        </div>
+      </form>
+    </section>
+  </section>
+</main>

@@ -28,6 +28,7 @@
 }
 
 .btn-recargar,
+.btn-reserva-link,
 .btn-inspeccionar,
 .btn-aprobar {
   border: none;
@@ -56,6 +57,21 @@
   align-items: center;
   gap: 8px;
   padding: 9px 13px;
+}
+
+.reservas-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.btn-reserva-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 9px 13px;
+  background-color: #fff;
+  color: var(--sl-color-primary-dark);
+  border: 1px solid #cfe8d2;
 }
 
 .btn-inspeccionar {
@@ -308,7 +324,9 @@
     align-items: stretch;
   }
 
-  .btn-recargar {
+  .reservas-actions,
+  .btn-recargar,
+  .btn-reserva-link {
     justify-content: center;
   }
 

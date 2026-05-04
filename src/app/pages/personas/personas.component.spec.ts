@@ -1,4 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ActivatedRoute } from '@angular/router';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { of } from 'rxjs';
 
 import { PersonasComponent } from './personas.component';
 
@@ -8,7 +12,18 @@ describe('PersonasComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [PersonasComponent]
+      imports: [PersonasComponent],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            data: of({}),
+            snapshot: { data: {} }
+          }
+        }
+      ]
     })
     .compileComponents();
 

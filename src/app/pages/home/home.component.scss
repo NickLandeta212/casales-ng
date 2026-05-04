@@ -46,37 +46,53 @@
   }
 
   .stat-icon {
-    font-size: 32px;
-    min-width: 50px;
+    width: 64px;
+    height: 64px;
     text-align: center;
     border-radius: 8px;
-    padding: 10px;
+    padding: 14px;
     display: flex;
     align-items: center;
     justify-content: center;
 
+    svg {
+      width: 34px;
+      height: 34px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
     &.torres-icon {
       background-color: #e8f5e9;
+      color: #1b7f37;
     }
 
     &.departamentos-icon {
       background-color: #e3f2fd;
+      color: #1769aa;
     }
 
     &.condominos-icon {
       background-color: #fce4ec;
+      color: #ad1457;
     }
 
     &.usuarios-icon {
       background-color: #e8eaf6;
+      color: #3949ab;
     }
 
     &.reservas-icon {
       background-color: #fff3e0;
+      color: #ef6c00;
     }
 
     &.multas-icon {
       background-color: #ffebee;
+      color: #c62828;
     }
   }
 
@@ -171,7 +187,6 @@
     text-align: center;
 
     .stat-icon {
-      min-width: auto;
       margin: 0;
     }
 

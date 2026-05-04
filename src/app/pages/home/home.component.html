@@ -1,13 +1,21 @@
 <div class="home-container">
   <div class="home-header">
-    <h1>Bienvenido, Admin General</h1>
-    <p class="subtitle">Vista rápida del sistema y actividad reciente.</p>
+    <h1>Bienvenido, {{ userName }}</h1>
+    <p class="subtitle">
+      Vista rapida del sistema y actividad reciente
+      <span *ngIf="authorizedTorreNumeros.length > 0">de Torre {{ authorizedTorreNumeros.join(', Torre ') }}</span>.
+    </p>
   </div>
 
-  <!-- Tarjetas de Estadísticas -->
   <div class="stats-grid">
     <div class="stat-card">
-      <div class="stat-icon torres-icon">🏢</div>
+      <div class="stat-icon torres-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path d="M4 21V4.8C4 3.8 4.8 3 5.8 3h7.4c1 0 1.8.8 1.8 1.8V21" />
+          <path d="M15 9h3.2c1 0 1.8.8 1.8 1.8V21" />
+          <path d="M8 7h3M8 11h3M8 15h3M7 21h10" />
+        </svg>
+      </div>
       <div class="stat-content">
         <h3>Torres</h3>
         <p class="stat-number">{{ totalTorres }}</p>
@@ -15,7 +23,12 @@
     </div>
 
     <div class="stat-card">
-      <div class="stat-icon departamentos-icon">🚪</div>
+      <div class="stat-icon departamentos-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path d="M6 21V4.8C6 3.8 6.8 3 7.8 3h8.4c1 0 1.8.8 1.8 1.8V21" />
+          <path d="M10 21V8h4v13M13 14h.1" />
+        </svg>
+      </div>
       <div class="stat-content">
         <h3>Departamentos</h3>
         <p class="stat-number">{{ totalDepartamentos }}</p>
@@ -23,7 +36,12 @@
     </div>
 
     <div class="stat-card">
-      <div class="stat-icon condominos-icon">👥</div>
+      <div class="stat-icon condominos-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path d="M8.5 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM15.5 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
+          <path d="M3 20c.4-3.2 2.4-5 5.5-5s5.1 1.8 5.5 5M10 20c.4-3.2 2.4-5 5.5-5s5.1 1.8 5.5 5" />
+        </svg>
+      </div>
       <div class="stat-content">
         <h3>Condominos</h3>
         <p class="stat-number">{{ totalCondominos }}</p>
@@ -31,7 +49,13 @@
     </div>
 
     <div class="stat-card">
-      <div class="stat-icon usuarios-icon">🧑‍💼</div>
+      <div class="stat-icon usuarios-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
+          <path d="M4.5 21c.6-4 3.4-6 7.5-6s6.9 2 7.5 6" />
+          <path d="M17 4.5v3M15.5 6h3" />
+        </svg>
+      </div>
       <div class="stat-content">
         <h3>Usuarios</h3>
         <p class="stat-number">{{ totalUsuarios }}</p>
@@ -39,7 +63,12 @@
     </div>
 
     <div class="stat-card">
-      <div class="stat-icon reservas-icon">📅</div>
+      <div class="stat-icon reservas-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path d="M5 6.8C5 5.8 5.8 5 6.8 5h10.4c1 0 1.8.8 1.8 1.8v10.4c0 1-.8 1.8-1.8 1.8H6.8c-1 0-1.8-.8-1.8-1.8V6.8Z" />
+          <path d="M8 3v4M16 3v4M5 10h14M9 14l2 2 4-4" />
+        </svg>
+      </div>
       <div class="stat-content">
         <h3>Reservas</h3>
         <p class="stat-number">{{ totalReservas }}</p>
@@ -47,7 +76,12 @@
     </div>
 
     <div class="stat-card">
-      <div class="stat-icon multas-icon">⚠️</div>
+      <div class="stat-icon multas-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path d="M10.4 4.2 3.3 17c-.7 1.2.2 2.7 1.6 2.7h14.2c1.4 0 2.3-1.5 1.6-2.7L13.6 4.2c-.7-1.2-2.5-1.2-3.2 0Z" />
+          <path d="M12 8.5v5M12 16.8h.1" />
+        </svg>
+      </div>
       <div class="stat-content">
         <h3>Multas</h3>
         <p class="stat-number">{{ totalMultas }}</p>
@@ -55,7 +89,6 @@
     </div>
   </div>
 
-  <!-- Sección de Actividad Reciente -->
   <div class="activity-section">
     <div class="activity-card">
       <h3>Reservas recientes</h3>
@@ -64,7 +97,7 @@
       </p>
       <div *ngIf="reservasRecientes.length > 0" class="activity-list">
         <div *ngFor="let reserva of reservasRecientes" class="activity-item">
-          {{ reserva }}
+          {{ reserva?.fecha || reserva?.created_at || reserva?.estado || 'Reserva registrada' }}
         </div>
       </div>
     </div>
@@ -76,7 +109,7 @@
       </p>
       <div *ngIf="multasRecientes.length > 0" class="activity-list">
         <div *ngFor="let multa of multasRecientes" class="activity-item">
-          {{ multa }}
+          {{ multa?.motivo || multa?.descripcion || multa?.created_at || 'Multa registrada' }}
         </div>
       </div>
     </div>
