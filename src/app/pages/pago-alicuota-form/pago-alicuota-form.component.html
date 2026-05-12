@@ -1,0 +1,65 @@
+<main class="alicuota-public-page">
+  <section class="payment-shell">
+    <header class="payment-header">
+      <span>Casales San Pedro</span>
+      <h1>Pago de alicuota</h1>
+      <p>Formulario publico para registrar el pago de alicuota de un departamento.</p>
+    </header>
+
+    <p class="alert-error" *ngIf="errorMessage">{{ errorMessage }}</p>
+    <p class="alert-success" *ngIf="successMessage">{{ successMessage }}</p>
+    <p class="loading-message" *ngIf="loading">Cargando informacion...</p>
+
+    <section class="payment-card" *ngIf="!loading">
+      <label class="field-block">
+        Torre
+        <select [formControl]="torreControl">
+          <option value="">Selecciona una torre</option>
+          <option *ngFor="let torre of torres" [value]="torre.id">Torre {{ torre.numero }}</option>
+        </select>
+      </label>
+
+      <label class="field-block">
+        Departamento
+        <select [formControl]="departamentoControl" [disabled]="!torre">
+          <option value="">Selecciona tu departamento</option>
+          <option *ngFor="let departamento of departamentos" [value]="departamento.id">
+            Departamento {{ departamento.numero }}
+          </option>
+        </select>
+      </label>
+
+      <div class="form-section-title" *ngIf="departamentoControl.value">
+        <h2>Informacion del pago</h2>
+        <p>Escoge el mes que se esta pagando. El comprobante quedara pendiente de aprobacion.</p>
+      </div>
+
+      <div class="month-grid" *ngIf="pagos.length">
+        <button
+          type="button"
+          class="month-card"
+          *ngFor="let pago of pagos"
+          [class.selected]="selectedPago?.id === pago.id"
+          [class.approved]="pago.estado === 'aprobado'"
+          [class.review]="pago.estado === 'en_revision'"
+          [disabled]="pago.estado === 'aprobado'"
+          (click)="selectPago(pago)"
+        >
+          <span>{{ pago.mes }}</span>
+          <strong>${{ pago.valor }}</strong>
+          <small>{{ getEstadoLabel(pago.estado) }}</small>
+        </button>
+      </div>
+
+      <div class="upload-panel" *ngIf="selectedPago">
+        <div>
+          <h2>{{ selectedPago.mes }}</h2>
+          <p>Sube una foto clara del comprobante para que el tesorero pueda aprobarlo.</p>
+        </div>
+        <input type="file" accept="image/png,image/jpeg,image/webp" (change)="onComprobanteChange($event)" />
+        <span class="file-name" *ngIf="comprobanteNombre">{{ comprobanteNombre }}</span>
+        <button type="button" class="btn-submit" (click)="enviarComprobante()">Enviar pago para aprobacion</button>
+      </div>
+    </section>
+  </section>
+</main>

@@ -1,6 +1,6 @@
 .departamento-personas-container {
   padding: 20px;
-  background-color: #f5f5f5;
+  background-color: var(--sl-color-page);
   border-radius: 8px;
 }
 
@@ -65,8 +65,8 @@
   letter-spacing: 0.3px;
 
   &.ok {
-    background-color: #dcfce7;
-    color: #166534;
+    background-color: #edf7ed;
+    color: var(--sl-color-primary-dark);
   }
 
   &.empty {
@@ -109,7 +109,8 @@
   }
 }
 
-.multas-table {
+.multas-table,
+.alicuotas-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 14px;
@@ -152,8 +153,18 @@
   text-transform: uppercase;
 
   &.registered {
-    background-color: #dcfce7;
-    color: #166534;
+    background-color: #edf7ed;
+    color: var(--sl-color-primary-dark);
+  }
+
+  &.review {
+    background-color: #fff4d6;
+    color: #986400;
+  }
+
+  &.pending {
+    background-color: #f3f4f6;
+    color: #6b7280;
   }
 }
 
@@ -186,7 +197,8 @@
     }
   }
 
-  .multas-table {
+  .multas-table,
+  .alicuotas-table {
     font-size: 13px;
 
     th,
@@ -195,3 +207,5 @@
     }
   }
 }
+
+

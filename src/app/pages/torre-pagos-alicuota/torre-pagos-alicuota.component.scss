@@ -35,6 +35,145 @@
   font-size: 13px;
 }
 
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+
+  article {
+    display: grid;
+    gap: 6px;
+    padding: 14px;
+    border: 1px solid var(--sl-color-border-soft);
+    border-radius: var(--sl-radius-md);
+    background-color: var(--sl-color-surface);
+    box-shadow: var(--sl-shadow-sm);
+  }
+
+  span {
+    color: var(--sl-color-muted);
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  strong {
+    color: var(--sl-color-primary-dark);
+    font-size: 24px;
+    line-height: 1;
+  }
+}
+
+.links-section {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 18px;
+  padding: 18px;
+  border: 1px solid var(--sl-color-border-soft);
+  border-radius: var(--sl-radius-lg);
+  background-color: #fff;
+  box-shadow: var(--sl-shadow-sm);
+}
+
+.section-heading {
+  h3,
+  p {
+    margin: 0;
+  }
+
+  h3 {
+    color: var(--sl-color-primary-dark);
+    font-size: 17px;
+  }
+
+  p {
+    margin-top: 4px;
+    color: var(--sl-color-muted);
+    font-size: 13px;
+  }
+}
+
+.tower-link-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.tower-link-card {
+  display: grid;
+  gap: 9px;
+  padding: 14px;
+  border: 1px solid var(--sl-color-border-soft);
+  border-radius: var(--sl-radius-md);
+  background-color: var(--sl-color-panel);
+
+  span {
+    color: var(--sl-color-primary-dark);
+    font-weight: 800;
+  }
+
+  input {
+    width: 100%;
+    padding: 9px 10px;
+    border: 1px solid var(--sl-color-border);
+    border-radius: var(--sl-radius-sm);
+    background-color: #fff;
+    color: var(--sl-color-text-soft);
+    font-size: 12px;
+  }
+
+  small {
+    color: var(--sl-color-primary-dark);
+    font-size: 12px;
+    font-weight: 700;
+  }
+}
+
+.tower-link-actions {
+  display: flex;
+  gap: 8px;
+
+  a,
+  button {
+    padding: 8px 10px;
+    border: 1px solid var(--sl-color-primary);
+    border-radius: var(--sl-radius-sm);
+    background-color: var(--sl-color-primary);
+    color: #fff;
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 700;
+  }
+}
+
+.btn-payment-link {
+  justify-self: start;
+  padding: 11px 16px;
+  border: 1px solid var(--sl-color-primary);
+  border-radius: var(--sl-radius-md);
+  background-color: var(--sl-color-primary);
+  color: #fff;
+  cursor: pointer;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.empty-note,
+.error-message {
+  margin: 0;
+  color: var(--sl-color-muted);
+  font-size: 13px;
+}
+
+.error-message {
+  margin-bottom: 12px;
+  color: #b42318;
+  font-weight: 700;
+}
+
 .filters-row {
   display: flex;
   align-items: flex-end;
@@ -88,6 +227,13 @@
       font-weight: 600;
       color: var(--sl-color-text);
     }
+
+    .table-title {
+      text-align: left;
+      color: var(--sl-color-primary-dark);
+      font-size: 15px;
+      background-color: #fff;
+    }
   }
 
   tbody {
@@ -104,6 +250,26 @@
         color: var(--sl-color-text-soft);
       }
     }
+  }
+}
+
+.status-pill {
+  display: inline-flex;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background-color: #f3f4f6;
+  color: var(--sl-color-muted);
+  font-size: 12px;
+  font-weight: 700;
+
+  &.review {
+    background-color: #fff4d6;
+    color: #986400;
+  }
+
+  &.approved {
+    background-color: var(--sl-color-primary-soft);
+    color: var(--sl-color-primary-dark);
   }
 }
 
@@ -127,7 +293,7 @@
 
   &:hover:not(:disabled) {
     background-color: var(--sl-color-primary-hover);
-    box-shadow: 0 2px 6px rgba(76, 175, 80, 0.28);
+    box-shadow: 0 2px 6px rgba(var(--sl-color-primary-rgb), 0.22);
   }
 
   &:disabled {
@@ -144,9 +310,18 @@
     align-items: flex-start;
   }
 
+  .summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .filters-row,
   .filter-field {
     width: 100%;
+  }
+
+  .filters-row {
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .pagos-table {
@@ -158,3 +333,5 @@
     }
   }
 }
+
+

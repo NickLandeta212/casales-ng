@@ -64,6 +64,48 @@
     </table>
   </div>
 
+  <div class="section-title-row">
+    <h3>Historial de alicuotas</h3>
+    <span class="status-chip" [class.ok]="listaPagos.length > 0" [class.empty]="listaPagos.length === 0">
+      {{ listaPagos.length > 0 ? 'Disponible' : 'Sin pagos' }}
+    </span>
+  </div>
+
+  <div class="table-wrapper" *ngIf="!cargandoPagos; else loadingPagosState">
+    <table class="alicuotas-table" *ngIf="listaPagos.length > 0; else emptyPagosState">
+      <thead>
+        <tr>
+          <th>Mes</th>
+          <th>Valor</th>
+          <th>Estado</th>
+          <th>Fecha pago</th>
+          <th>Comprobante</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let pago of listaPagos; let i = index" [class.even]="i % 2 === 0">
+          <td>{{ pago.mes }}</td>
+          <td>{{ pago.valor | currency:'USD' }}</td>
+          <td>
+            <span
+              class="row-state"
+              [class.pending]="pago.estado === 'pendiente'"
+              [class.review]="pago.estado === 'en_revision'"
+              [class.registered]="pago.estado === 'aprobado'"
+            >
+              {{ getEstadoPagoLabel(pago.estado) }}
+            </span>
+          </td>
+          <td>{{ getFechaPago(pago) }}</td>
+          <td>
+            <a *ngIf="pago.comprobanteUrl" [href]="getComprobanteUrl(pago)" target="_blank" rel="noopener">Ver foto</a>
+            <span *ngIf="!pago.comprobanteUrl">Sin comprobante</span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
   <ng-template #loadingState>
     <div class="state-box">Cargando personas...</div>
   </ng-template>
@@ -78,5 +120,13 @@
 
   <ng-template #emptyMultasState>
     <div class="state-box">No se han registrado multas para este departamento.</div>
+  </ng-template>
+
+  <ng-template #loadingPagosState>
+    <div class="state-box">Cargando historial de alicuotas...</div>
+  </ng-template>
+
+  <ng-template #emptyPagosState>
+    <div class="state-box">{{ pagosError || 'No hay historial de alicuotas para este departamento.' }}</div>
   </ng-template>
 </div>

@@ -21,27 +21,27 @@ export class SidebarMenuComponent implements OnInit {
       title: 'Inicio',
       icon: 'bi bi-house-door',
       link: '/dashboard/home',
-      roles: ['admin_general', 'admin_conjunto', 'tesorero', 'condomino'],
+      roles: ['admin_general', 'admin_conjunto', 'tesorero'],
       permission: 'home'
     },
     {
       title: 'Torres',
       icon: 'bi bi-building',
-      roles: ['admin_general', 'admin_conjunto', 'tesorero', 'condomino'],
+      roles: ['admin_general', 'admin_conjunto', 'tesorero'],
       permission: 'torres',
       children: [
         {
           title: 'Todos',
           icon: 'bi bi-list-ul',
           link: '/dashboard/torres',
-          roles: ['admin_general', 'admin_conjunto', 'tesorero', 'condomino'],
+          roles: ['admin_general', 'admin_conjunto', 'tesorero'],
           permission: 'torres'
         },
         {
-          title: 'Aprobar pagos',
-          icon: 'bi bi-receipt-cutoff',
+          title: 'Pagos por torres',
+          icon: 'bi bi-building-check',
           link: '/dashboard/torres/pagos-alicuota',
-          roles: ['admin_general', 'admin_conjunto', 'tesorero', 'condomino'],
+          roles: ['admin_general', 'admin_conjunto'],
           permission: 'pagos_alicuota'
         }
       ]
@@ -49,28 +49,43 @@ export class SidebarMenuComponent implements OnInit {
     {
       title: 'Departamentos',
       icon: 'bi bi-door-open',
-      link: '/dashboard/departamentos',
-      roles: ['admin_general', 'admin_conjunto', 'tesorero', 'condomino'],
-      permission: 'departamentos'
+      roles: ['admin_general', 'admin_conjunto', 'tesorero'],
+      permission: 'departamentos',
+      children: [
+        {
+          title: 'Todos',
+          icon: 'bi bi-list-ul',
+          link: '/dashboard/departamentos',
+          roles: ['admin_general', 'admin_conjunto', 'tesorero'],
+          permission: 'departamentos'
+        },
+        {
+          title: 'Pagos departamentos',
+          icon: 'bi bi-receipt-cutoff',
+          link: '/dashboard/departamentos/pagos-alicuota',
+          roles: ['admin_general', 'tesorero'],
+          permission: 'pagos_departamentos'
+        }
+      ]
     },
     {
       title: 'Reservas',
       icon: 'bi bi-calendar-check',
-      roles: ['admin_general', 'admin_conjunto', 'tesorero', 'condomino'],
+      roles: ['admin_general', 'admin_conjunto', 'tesorero'],
       permission: 'reservas',
       children: [
         {
           title: 'Todas',
           icon: 'bi bi-list-ul',
           link: '/dashboard/reservas',
-          roles: ['admin_general', 'admin_conjunto', 'tesorero', 'condomino'],
+          roles: ['admin_general', 'admin_conjunto', 'tesorero'],
           permission: 'reservas'
         },
         {
           title: 'Formulario de reserva',
           icon: 'bi bi-box-arrow-up-right',
           link: '/reserva',
-          roles: ['admin_general', 'admin_conjunto', 'tesorero', 'condomino'],
+          roles: ['admin_general', 'admin_conjunto', 'tesorero'],
           permission: 'reservas'
         }
       ]
@@ -78,21 +93,21 @@ export class SidebarMenuComponent implements OnInit {
     {
       title: 'Personas',
       icon: 'bi bi-people',
-      roles: ['admin_general', 'admin_conjunto', 'tesorero', 'condomino'],
+      roles: ['admin_general', 'admin_conjunto', 'tesorero'],
       permission: 'personas',
       children: [
         {
           title: 'Todos',
           icon: 'bi bi-list-ul',
           link: '/dashboard/personas',
-          roles: ['admin_general', 'admin_conjunto', 'tesorero', 'condomino'],
+          roles: ['admin_general', 'admin_conjunto', 'tesorero'],
           permission: 'personas'
         },
         {
           title: 'Crear nueva persona',
           icon: 'bi bi-person-plus',
           link: '/dashboard/personas/crear',
-          roles: ['admin_general', 'admin_conjunto', 'tesorero', 'condomino'],
+          roles: ['admin_general', 'admin_conjunto', 'tesorero'],
           permission: 'personas_crear'
         }
       ]
@@ -100,28 +115,28 @@ export class SidebarMenuComponent implements OnInit {
     {
       title: 'Multas',
       icon: 'bi bi-exclamation-triangle',
-      roles: ['admin_general', 'admin_conjunto', 'tesorero', 'condomino'],
+      roles: ['admin_general', 'admin_conjunto', 'tesorero'],
       permission: 'multas',
       children: [
         {
           title: 'Todas',
           icon: 'bi bi-list-ul',
           link: '/dashboard/multas',
-          roles: ['admin_general', 'admin_conjunto', 'tesorero', 'condomino'],
+          roles: ['admin_general', 'admin_conjunto', 'tesorero'],
           permission: 'multas'
         },
         {
           title: 'Añadir multa',
           icon: 'bi bi-plus-circle',
           link: '/dashboard/multas/crear',
-          roles: ['admin_general', 'admin_conjunto', 'tesorero', 'condomino'],
+          roles: ['admin_general', 'admin_conjunto', 'tesorero'],
           permission: 'multas_crear'
         },
         {
           title: 'Formulario de pago',
           icon: 'bi bi-box-arrow-up-right',
           link: '/pago-multa',
-          roles: ['admin_general', 'admin_conjunto', 'tesorero', 'condomino'],
+          roles: ['admin_general', 'admin_conjunto', 'tesorero'],
           permission: 'multas'
         }
       ]
@@ -129,21 +144,21 @@ export class SidebarMenuComponent implements OnInit {
     {
       title: 'Usuarios',
       icon: 'bi bi-person-gear',
-      roles: ['admin_general', 'admin_conjunto', 'tesorero', 'condomino'],
+      roles: ['admin_general', 'admin_conjunto', 'tesorero'],
       permission: 'usuarios',
       children: [
         {
           title: 'Todos',
           icon: 'bi bi-list-ul',
           link: '/dashboard/usuarios',
-          roles: ['admin_general', 'admin_conjunto', 'tesorero', 'condomino'],
+          roles: ['admin_general', 'admin_conjunto', 'tesorero'],
           permission: 'usuarios'
         },
         {
           title: 'Crear nuevo usuario',
           icon: 'bi bi-person-add',
           link: '/dashboard/usuarios/crear',
-          roles: ['admin_general', 'admin_conjunto', 'tesorero', 'condomino'],
+          roles: ['admin_general', 'admin_conjunto', 'tesorero'],
           permission: 'usuarios_crear'
         }
       ]
@@ -167,3 +182,4 @@ export class SidebarMenuComponent implements OnInit {
     return this.authService.hasRole(item.roles) && this.authService.hasPagePermission(item.permission);
   }
 }
+

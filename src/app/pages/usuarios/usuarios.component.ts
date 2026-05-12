@@ -64,14 +64,17 @@ export class UsuariosComponent implements OnInit {
   emailControl = new FormControl<string>('');
   passwordControl = new FormControl<string>('');
   torreControl = new FormControl<string>('');
-  editRoleControl = new FormControl<'admin_general' | 'admin_conjunto' | 'tesorero' | 'condomino'>('condomino');
+  editNombreControl = new FormControl<string>('');
+  editEmailControl = new FormControl<string>('');
+  editRoleControl = new FormControl<'admin_general' | 'admin_conjunto' | 'tesorero'>('tesorero');
   pagePermissionsControl = new FormControl<string[]>([]);
   torreIdsControl = new FormControl<number[]>([]);
 
   pageOptions: PagePermissionOption[] = [
     { key: 'home', label: 'Inicio', description: 'Resumen general del conjunto.' },
     { key: 'torres', label: 'Torres', description: 'Listado e informacion de torres.' },
-    { key: 'pagos_alicuota', label: 'Pagos alicuota', description: 'Aprobacion de pagos por torre.' },
+    { key: 'pagos_alicuota', label: 'Aprobar pagos', description: 'Aprobacion de alicuotas que pagan las torres.' },
+    { key: 'pagos_departamentos', label: 'Pagos departamentos', description: 'Aprobacion de alicuotas por departamento.' },
     { key: 'departamentos', label: 'Departamentos', description: 'Informacion de departamentos autorizados.' },
     { key: 'reservas', label: 'Reservas', description: 'Revision de reservas.' },
     { key: 'personas', label: 'Personas', description: 'Listado de residentes.' },
@@ -91,7 +94,7 @@ export class UsuariosComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    this.editRoleControl.valueChanges.subscribe((role) => this.aplicarPermisosPorRol(role || 'condomino'));
+    this.editRoleControl.valueChanges.subscribe((role) => this.aplicarPermisosPorRol(role || 'tesorero'));
 
     this.route.data.subscribe((data) => {
       const mode = data['mode'];
@@ -112,7 +115,9 @@ export class UsuariosComponent implements OnInit {
 
   seleccionarUsuario(usuario: UsuarioItem) {
     this.usuarioSeleccionado = usuario;
-    this.editRoleControl.setValue(usuario.role as 'admin_general' | 'admin_conjunto' | 'tesorero' | 'condomino', { emitEvent: false });
+    this.editNombreControl.setValue(usuario.nombre);
+    this.editEmailControl.setValue(usuario.email);
+    this.editRoleControl.setValue(this.normalizarRolAdministrativo(usuario.role), { emitEvent: false });
     this.pagePermissionsControl.setValue([...usuario.pagePermissions]);
     this.torreIdsControl.setValue([...usuario.torreIds]);
   }
@@ -126,8 +131,10 @@ export class UsuariosComponent implements OnInit {
       nombre: (this.nombreControl.value || '').trim(),
       email: (this.emailControl.value || '').trim(),
       password: this.passwordControl.value || '',
-      role: 'condomino',
-      torre_id: Number(this.torreControl.value)
+      role: 'tesorero',
+      torre_id: Number(this.torreControl.value),
+      page_permissions: ['home', 'torres', 'pagos_departamentos', 'departamentos', 'reservas'],
+      torre_ids: [Number(this.torreControl.value)]
     };
 
     this.usuariosService.addUsuario(payload).subscribe({
@@ -227,10 +234,17 @@ export class UsuariosComponent implements OnInit {
     }
 
     const usuarioActual = this.usuarioSeleccionado;
+    const nombre = (this.editNombreControl.value || '').trim();
+    const email = (this.editEmailControl.value || '').trim();
+
+    if (!nombre || !email) {
+      return;
+    }
+
     const payload = {
-      nombre: usuarioActual.nombre,
-      email: usuarioActual.email,
-      role: this.editRoleControl.value || 'condomino',
+      nombre,
+      email,
+      role: this.editRoleControl.value || 'tesorero',
       page_permissions: this.pagePermissionsControl.value || [],
       torre_ids: this.torreIdsControl.value || []
     };
@@ -241,10 +255,24 @@ export class UsuariosComponent implements OnInit {
         if (actualizado) {
           this.usuarioSeleccionado = {
             ...usuarioActual,
+            nombre: actualizado.nombre,
+            email: actualizado.email,
             role: actualizado.role,
             pagePermissions: actualizado.page_permissions,
             torreIds: actualizado.torre_ids
           };
+          this.listaUsuarios = this.listaUsuarios.map((usuario) =>
+            usuario.id === usuarioActual.id
+              ? {
+                  ...usuario,
+                  nombre: actualizado.nombre,
+                  email: actualizado.email,
+                  role: actualizado.role,
+                  pagePermissions: actualizado.page_permissions,
+                  torreIds: actualizado.torre_ids
+                }
+              : usuario
+          );
         }
       },
       error: (error) => {
@@ -287,9 +315,11 @@ export class UsuariosComponent implements OnInit {
 
   togglePagePermission(permission: string) {
     const current = this.pagePermissionsControl.value || [];
-    const next = current.includes(permission)
-      ? current.filter((item) => item !== permission)
-      : [...current, permission];
+    const related = this.getRelatedPermissions(permission);
+    const shouldRemove = current.includes(permission);
+    const next = shouldRemove
+      ? current.filter((item) => !related.includes(item))
+      : Array.from(new Set([...current, ...related]));
 
     this.pagePermissionsControl.setValue(next);
   }
@@ -358,8 +388,14 @@ export class UsuariosComponent implements OnInit {
       return;
     }
 
+    if (role === 'admin_conjunto') {
+      this.pagePermissionsControl.setValue(['home', 'torres', 'pagos_alicuota', 'departamentos', 'reservas']);
+      this.torreIdsControl.setValue(this.torres.map((torre) => torre.id));
+      return;
+    }
+
     if ((this.pagePermissionsControl.value || []).length === 0) {
-      this.pagePermissionsControl.setValue(['home', 'departamentos', 'reservas']);
+      this.pagePermissionsControl.setValue(['home', 'torres', 'pagos_departamentos', 'departamentos', 'reservas']);
     }
   }
 
@@ -388,6 +424,33 @@ export class UsuariosComponent implements OnInit {
           : []
       }))
       .filter((item) => item.id > 0);
+  }
+
+  private normalizarRolAdministrativo(role: string): 'admin_general' | 'admin_conjunto' | 'tesorero' {
+    if (role === 'admin_general' || role === 'admin_conjunto' || role === 'tesorero') {
+      return role;
+    }
+
+    return 'tesorero';
+  }
+
+  private getRelatedPermissions(permission: string): string[] {
+    const role = this.editRoleControl.value || 'tesorero';
+    const groups: Record<string, string[]> = {
+      torres: role === 'admin_conjunto'
+        ? ['torres', 'pagos_alicuota']
+        : role === 'admin_general'
+          ? ['torres', 'pagos_alicuota', 'pagos_departamentos']
+          : ['torres', 'pagos_departamentos'],
+      departamentos: role === 'admin_conjunto'
+        ? ['departamentos']
+        : ['departamentos', 'pagos_departamentos'],
+      personas: ['personas', 'personas_crear'],
+      multas: ['multas', 'multas_crear'],
+      usuarios: ['usuarios', 'usuarios_crear']
+    };
+
+    return groups[permission] || [permission];
   }
 
   private normalizarDepartamentos(respuesta: any): DepartamentoUsuarioItem[] {

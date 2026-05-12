@@ -2,24 +2,258 @@
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400&display=swap');
 
 :root {
-  --sl-color-primary: #4caf50;
-  --sl-color-primary-hover: #45a049;
-  --sl-color-primary-dark: #15622d;
-  --sl-color-primary-soft: #f4fbf4;
-  --sl-color-danger: #b42318;
+  --sl-color-primary: #4fa33d;
+  --sl-color-primary-rgb: 79, 163, 61;
+  --sl-color-primary-hover: #3f8f31;
+  --sl-color-primary-dark: #176b34;
+  --sl-color-primary-soft: #edf8e8;
+  --sl-color-accent: #8bcf3f;
+  --sl-color-danger: #a94438;
   --sl-color-surface: #ffffff;
-  --sl-color-page: #f5f5f5;
-  --sl-color-muted: #777777;
-  --sl-color-text: #333333;
-  --sl-color-text-soft: #555555;
-  --sl-color-border: #dddddd;
-  --sl-color-border-soft: #eeeeee;
+  --sl-color-page: #f4f9f1;
+  --sl-color-muted: #66715f;
+  --sl-color-text: #243528;
+  --sl-color-text-soft: #53624f;
+  --sl-color-border: #d7e6d1;
+  --sl-color-border-soft: #e8f1e3;
+  --sl-color-nav-start: #176b34;
+  --sl-color-nav-mid: #248241;
+  --sl-color-nav-end: #4fa33d;
+  --sl-color-panel: #f7fbf5;
+  --sl-color-panel-strong: #dff1d7;
+  --sl-color-section: #edf8e8;
+  --sl-color-section-border: #b8d9ad;
+  --sl-shadow-panel: 0 8px 20px rgba(23, 107, 52, 0.1);
   --sl-radius-sm: 4px;
   --sl-radius-md: 6px;
   --sl-radius-lg: 8px;
-  --sl-shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
-  --sl-shadow-md: 0 2px 8px rgba(0, 0, 0, 0.15);
-  --sl-focus-ring: 0 0 0 3px rgba(76, 175, 80, 0.18);
+  --sl-shadow-sm: 0 2px 4px rgba(47, 56, 47, 0.08);
+  --sl-shadow-md: 0 2px 8px rgba(47, 56, 47, 0.12);
+  --sl-focus-ring: 0 0 0 3px rgba(var(--sl-color-primary-rgb), 0.2);
+}
+
+.home-container,
+.departamentos-container,
+.departamento-personas-container,
+.personas-container,
+.torres-container,
+.usuarios-container,
+.reservas-container,
+.multas-container,
+.pagos-container,
+.reserva-page,
+.pago-multa-page {
+  min-height: calc(100vh - 56px);
+  padding: 20px;
+  background: var(--sl-color-page) !important;
+}
+
+.home-header,
+.departamentos-header,
+.reservas-header,
+.multas-page-header,
+.header-row,
+.create-header,
+.reserva-header,
+.pago-multa-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 18px;
+  border: 1px solid var(--sl-color-section-border);
+  border-radius: var(--sl-radius-lg);
+  background: linear-gradient(90deg, var(--sl-color-primary-dark) 0 10px, var(--sl-color-section) 10px, #ffffff 100%);
+  box-shadow: var(--sl-shadow-sm);
+}
+
+.home-header h1,
+.departamentos-header h1,
+.departamentos-header h2,
+.reservas-header h1,
+.reservas-header h2,
+.multas-page-header h1,
+.multas-page-header h2,
+.header-row h1,
+.header-row h2,
+.create-header h1,
+.create-header h2,
+.create-header h3,
+.reserva-header h1,
+.pago-multa-header h1 {
+  color: var(--sl-color-primary-dark) !important;
+}
+
+.home-header p,
+.departamentos-header p,
+.reservas-header p,
+.multas-page-header p,
+.header-row p,
+.create-header p,
+.reserva-header p,
+.pago-multa-header p {
+  color: var(--sl-color-text-soft) !important;
+}
+
+.table-section,
+.personas-table-wrapper,
+.usuarios-table-wrapper,
+.multas-table-wrapper,
+.activity-card,
+.stat-card,
+.reserva-card,
+.pago-multa-card,
+.details-section,
+.permissions-section {
+  border: 1px solid var(--sl-color-border-soft) !important;
+  border-radius: var(--sl-radius-lg) !important;
+  background: var(--sl-color-surface) !important;
+  box-shadow: var(--sl-shadow-md) !important;
+}
+
+.table-section,
+.personas-table-wrapper,
+.usuarios-table-wrapper,
+.multas-table-wrapper {
+  overflow: hidden;
+}
+
+.table-section thead,
+.personas-table thead,
+.usuarios-table thead,
+.reservas-table thead,
+.departamentos-table thead,
+.torres-table thead,
+.multas-table thead {
+  background: var(--sl-color-primary-dark) !important;
+}
+
+.table-section th,
+.personas-table th,
+.usuarios-table th,
+.reservas-table th,
+.departamentos-table th,
+.torres-table th,
+.multas-table th {
+  color: #ffffff !important;
+  border-bottom-color: var(--sl-color-primary-dark) !important;
+}
+
+.table-section tbody tr,
+.personas-table tbody tr,
+.usuarios-table tbody tr,
+.reservas-table tbody tr,
+.departamentos-table tbody tr,
+.torres-table tbody tr,
+.multas-table tbody tr {
+  border-bottom-color: var(--sl-color-border-soft) !important;
+}
+
+.table-section tbody tr:hover,
+.personas-table tbody tr:hover,
+.usuarios-table tbody tr:hover,
+.reservas-table tbody tr:hover,
+.departamentos-table tbody tr:hover,
+.torres-table tbody tr:hover,
+.multas-table tbody tr:hover {
+  background-color: var(--sl-color-primary-soft) !important;
+}
+
+.table-section tbody tr.even,
+.personas-table tbody tr.even,
+.usuarios-table tbody tr.even,
+.reservas-table tbody tr.even,
+.departamentos-table tbody tr.even,
+.torres-table tbody tr.even,
+.multas-table tbody tr.even {
+  background-color: var(--sl-color-panel) !important;
+}
+
+.table-section td,
+.personas-table td,
+.usuarios-table td,
+.reservas-table td,
+.departamentos-table td,
+.torres-table td,
+.multas-table td {
+  vertical-align: middle;
+}
+
+.details-header,
+.summary-header,
+.calendar-header {
+  background: var(--sl-color-section) !important;
+  border-bottom: 1px solid var(--sl-color-section-border) !important;
+}
+
+.stat-card {
+  border-top: 4px solid var(--sl-color-primary) !important;
+  min-height: 118px;
+}
+
+.activity-card {
+  border-top: 4px solid var(--sl-color-primary-dark) !important;
+}
+
+.stat-card:hover,
+.activity-card:hover,
+.table-section:hover,
+.personas-table-wrapper:hover,
+.usuarios-table-wrapper:hover,
+.multas-table-wrapper:hover {
+  border-color: var(--sl-color-section-border) !important;
+}
+
+.search-input,
+.filter-select,
+.page-size-select,
+.field-input,
+.field-select,
+input.form-control,
+select.form-select,
+textarea.form-control {
+  border-color: var(--sl-color-section-border) !important;
+  background-color: #ffffff !important;
+}
+
+.search-input:focus,
+.filter-select:focus,
+.page-size-select:focus,
+.field-input:focus,
+.field-select:focus,
+input.form-control:focus,
+select.form-select:focus,
+textarea.form-control:focus {
+  border-color: var(--sl-color-primary) !important;
+  box-shadow: var(--sl-focus-ring) !important;
+}
+
+@media (max-width: 760px) {
+  .home-container,
+  .departamentos-container,
+  .departamento-personas-container,
+  .personas-container,
+  .torres-container,
+  .usuarios-container,
+  .reservas-container,
+  .multas-container,
+  .pagos-container,
+  .reserva-page,
+  .pago-multa-page {
+    padding: 14px;
+  }
+
+  .home-header,
+  .departamentos-header,
+  .reservas-header,
+  .multas-page-header,
+  .header-row,
+  .create-header,
+  .reserva-header,
+  .pago-multa-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
 }
 
 
@@ -29,27 +263,27 @@ body {
 
 .action-cell {
   cursor: pointer;
-  color: #0d6efd; /* azul bootstrap */
+  color: var(--sl-color-primary-dark);
   transition: color 0.3s ease;
 }
 
 .action-cell:hover {
-  color: #0a58ca; /* azul más oscuro */
+  color: var(--sl-color-primary-hover);
   text-decoration: underline;
 }
 
 /* Estilo para los enlaces activos */
 nav a.active {
   font-weight: normal;
-  color: #15622D !important;
-  background-color: #e6f5f8;
+  color: var(--sl-color-primary-dark) !important;
+  background-color: var(--sl-color-primary-soft);
   border-radius: 5px;
 }
 
 /* Hover en el sidebar */
 nav .nav-link:hover {
-  background-color: #e6f5f8;
-  color: #15622D !important;
+  background-color: var(--sl-color-primary-soft);
+  color: var(--sl-color-primary-dark) !important;
   border-radius: 5px;
 }
 
@@ -81,3 +315,6 @@ quill-editor {
   padding: 10px 0;
   z-index: 100;
 }
+
+
+

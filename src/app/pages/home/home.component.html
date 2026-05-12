@@ -1,11 +1,73 @@
 <div class="home-container">
   <div class="home-header">
-    <h1>Bienvenido, {{ userName }}</h1>
-    <p class="subtitle">
-      Vista rapida del sistema y actividad reciente
-      <span *ngIf="authorizedTorreNumeros.length > 0">de Torre {{ authorizedTorreNumeros.join(', Torre ') }}</span>.
-    </p>
+    <div class="welcome-copy">
+      <span class="home-kicker">Casales San Pedro</span>
+      <h1>Bienvenido, {{ userName }}</h1>
+      <p class="subtitle">
+        Vista rapida del sistema y actividad reciente
+        <span *ngIf="authorizedTorreNumeros.length > 0">de Torre {{ authorizedTorreNumeros.join(', Torre ') }}</span>.
+      </p>
+    </div>
+    <div class="welcome-summary">
+      <span class="summary-label">Gestion actual</span>
+      <strong>{{ totalDepartamentos }}</strong>
+      <span>departamentos activos</span>
+    </div>
   </div>
+
+  <section class="quick-menu" aria-label="Menu principal">
+    <a class="quick-card primary" routerLink="/dashboard/departamentos">
+      <span class="quick-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path d="M6 21V4.8C6 3.8 6.8 3 7.8 3h8.4c1 0 1.8.8 1.8 1.8V21" />
+          <path d="M10 21V8h4v13M8 7h8M8 11h2M14 11h2M8 15h2M14 15h2" />
+        </svg>
+      </span>
+      <span>
+        <strong>Departamentos</strong>
+        <small>Consulta torres, viviendas y asignaciones.</small>
+      </span>
+    </a>
+
+    <a class="quick-card" routerLink="/dashboard/reservas">
+      <span class="quick-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path d="M5 6.8C5 5.8 5.8 5 6.8 5h10.4c1 0 1.8.8 1.8 1.8v10.4c0 1-.8 1.8-1.8 1.8H6.8c-1 0-1.8-.8-1.8-1.8V6.8Z" />
+          <path d="M8 3v4M16 3v4M5 10h14M9 14l2 2 4-4" />
+        </svg>
+      </span>
+      <span>
+        <strong>Reservas</strong>
+        <small>Revisa solicitudes y espacios comunes.</small>
+      </span>
+    </a>
+
+    <a class="quick-card" routerLink="/dashboard/personas">
+      <span class="quick-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path d="M8.5 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM15.5 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
+          <path d="M3 20c.4-3.2 2.4-5 5.5-5s5.1 1.8 5.5 5M10 20c.4-3.2 2.4-5 5.5-5s5.1 1.8 5.5 5" />
+        </svg>
+      </span>
+      <span>
+        <strong>Condominos</strong>
+        <small>Administra residentes y contactos.</small>
+      </span>
+    </a>
+
+    <a class="quick-card" routerLink="/dashboard/multas">
+      <span class="quick-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path d="M10.4 4.2 3.3 17c-.7 1.2.2 2.7 1.6 2.7h14.2c1.4 0 2.3-1.5 1.6-2.7L13.6 4.2c-.7-1.2-2.5-1.2-3.2 0Z" />
+          <path d="M12 8.5v5M12 16.8h.1" />
+        </svg>
+      </span>
+      <span>
+        <strong>Multas</strong>
+        <small>Controla registros y comprobantes.</small>
+      </span>
+    </a>
+  </section>
 
   <div class="stats-grid">
     <div class="stat-card">
@@ -90,16 +152,55 @@
   </div>
 
   <div class="activity-section">
-    <div class="activity-card">
-      <h3>Reservas recientes</h3>
+    <div class="activity-card reservations-calendar-card">
+      <div class="calendar-card-header">
+        <div>
+          <h3>Calendario de reservas</h3>
+          <p>Dias marcados con reserva aprobada.</p>
+        </div>
+        <div class="calendar-actions">
+          <button type="button" (click)="previousHomeMonth()" aria-label="Mes anterior">&lsaquo;</button>
+          <strong>{{ homeMonthLabel }}</strong>
+          <button type="button" (click)="nextHomeMonth()" aria-label="Mes siguiente">&rsaquo;</button>
+        </div>
+      </div>
+
+      <div class="home-calendar">
+        <span class="calendar-weekday">Dom</span>
+        <span class="calendar-weekday">Lun</span>
+        <span class="calendar-weekday">Mar</span>
+        <span class="calendar-weekday">Mie</span>
+        <span class="calendar-weekday">Jue</span>
+        <span class="calendar-weekday">Vie</span>
+        <span class="calendar-weekday">Sab</span>
+
+        <div
+          *ngFor="let day of homeCalendarDays"
+          class="calendar-day"
+          [class.muted]="day.muted"
+          [class.today]="day.today"
+          [class.reserved]="day.reserved"
+          [title]="day.reserved ? 'Reservado: ' + day.value : day.value"
+        >
+          <span>{{ day.label }}</span>
+          <small *ngIf="day.reserved">Reservado</small>
+        </div>
+      </div>
+
+      <div class="calendar-legend">
+        <span><i class="legend-dot reserved-dot"></i>Reservado</span>
+        <span><i class="legend-dot today-dot"></i>Hoy</span>
+      </div>
+
+      <div class="activity-list compact-list" *ngIf="reservasRecientes.length > 0">
+        <div *ngFor="let reserva of reservasRecientes" class="activity-item">
+          {{ getReservaResumen(reserva) }}
+        </div>
+      </div>
+
       <p class="activity-message" *ngIf="reservasRecientes.length === 0">
         No hay reservas registradas.
       </p>
-      <div *ngIf="reservasRecientes.length > 0" class="activity-list">
-        <div *ngFor="let reserva of reservasRecientes" class="activity-item">
-          {{ reserva?.fecha || reserva?.created_at || reserva?.estado || 'Reserva registrada' }}
-        </div>
-      </div>
     </div>
 
     <div class="activity-card">

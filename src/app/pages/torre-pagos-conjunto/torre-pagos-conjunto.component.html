@@ -1,0 +1,71 @@
+<div class="pagos-container">
+  <div class="header-row">
+    <div>
+      <h2>Aprobar pagos</h2>
+      <p>Revisa los comprobantes de alicuotas que cada torre realiza al conjunto.</p>
+    </div>
+    <a class="btn-volver" routerLink="/dashboard/torres">Volver a torres</a>
+  </div>
+
+  <section class="links-section">
+    <div class="section-heading">
+      <h3>Link de cobro para torres</h3>
+      <p>Comparte este unico formulario para que el responsable seleccione su torre y suba el comprobante.</p>
+    </div>
+
+    <a class="btn-payment-link" routerLink="/pago-alicuota-torre" target="_blank" rel="noopener">Ir al link de pago</a>
+  </section>
+
+  <div class="filters-row">
+    <label class="filter-field">
+      Torre
+      <select [formControl]="torreFilterControl">
+        <option value="">Todas las torres</option>
+        <option *ngFor="let torre of torres" [value]="torre.numero">Torre {{ torre.numero }}</option>
+      </select>
+    </label>
+  </div>
+
+  <div class="table-wrapper">
+    <table class="pagos-table">
+      <thead>
+        <tr>
+          <th colspan="6" class="table-title">Historial de pagos de torres</th>
+        </tr>
+        <tr>
+          <th>Torre</th>
+          <th>Mes</th>
+          <th>Valor</th>
+          <th>Estado</th>
+          <th>Comprobante</th>
+          <th>Accion</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let pago of pagosFiltrados; let i = index" [class.even]="i % 2 === 0">
+          <td>Torre {{ pago.torreNumero }}</td>
+          <td>{{ pago.mes }}</td>
+          <td>${{ pago.valor }}</td>
+          <td>
+            <span class="status-pill" [class.review]="pago.estado === 'en_revision'" [class.approved]="pago.estado === 'aprobado'">
+              {{ getEstadoLabel(pago.estado) }}
+            </span>
+          </td>
+          <td>
+            <a *ngIf="pago.comprobanteUrl" [href]="getComprobanteUrl(pago)" target="_blank" rel="noopener">Ver foto</a>
+            <span *ngIf="!pago.comprobanteUrl">Sin comprobante</span>
+          </td>
+          <td>
+            <button class="btn-aprobar" type="button" [disabled]="pago.estado !== 'en_revision' || approvingPagoId !== null" (click)="aprobarPago(pago)">
+              {{ pago.estado === 'aprobado' ? 'Aprobado' : approvingPagoId === pago.id ? 'Aprobando...' : 'Aprobar' }}
+            </button>
+          </td>
+        </tr>
+
+        <tr *ngIf="!pagosFiltrados.length">
+          <td colspan="6" class="empty-cell">Todavia no hay pagos de torres registrados.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

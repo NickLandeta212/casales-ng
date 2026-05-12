@@ -38,7 +38,7 @@ export class TorresComponent implements OnInit {
       return;
     }
 
-    this.router.navigate(['/dashboard/torres', torreId, 'pagos-alicuota'], {
+    this.router.navigate(['/dashboard/torres/pagos-alicuota'], {
       queryParams: {
         numero: torre?.numero ?? torreId
       }

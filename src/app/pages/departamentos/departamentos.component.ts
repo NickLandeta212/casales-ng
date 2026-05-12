@@ -71,6 +71,7 @@ export class DepartamentosComponent implements OnInit {
 
         return {
           id: Number(item?.id),
+          torreId: Number(item?.torre_id ?? item?.torreId ?? 0),
           codigo: (item?.numero ?? '').toString(),
           torre: Number(item?.torre_numero ?? parsed.torre ?? 0),
           tipo: parsed.tipo,
@@ -245,7 +246,8 @@ export class DepartamentosComponent implements OnInit {
 
     this.router.navigate(['/dashboard/departamentos', depto.id, 'personas'], {
       queryParams: {
-        codigo: depto.codigo || `T${depto.torre}${depto.tipo}${depto.numero}`
+        codigo: depto.codigo || `T${depto.torre}${depto.tipo}${depto.numero}`,
+        torreId: depto.torreId
       }
     });
   }

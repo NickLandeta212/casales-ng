@@ -14,12 +14,15 @@
 }
 
 .position-relative i:hover {
-  color: #000; /* Ícono se oscurece en hover */
+  color: var(--sl-color-primary-dark);
 }
 
 .form-control:focus + i {
-  color: #0d6efd; /* Ícono se pone azul cuando el input está en foco */
+  color: var(--sl-color-primary);
 }
+
+
+
 
 
 

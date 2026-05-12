@@ -1,56 +1,108 @@
 <div class="pagos-container">
   <div class="header-row">
     <div>
-      <h2>Pagos alicuota</h2>
-      <p>{{ torreFilterControl.value ? 'Registro de pagos de la torre seleccionada.' : 'Registro de pagos de todas las
-        torres.' }}</p>
+      <h2>Pagos de alicuotas por departamentos</h2>
+      <p>Flujo de tesoreria para revisar comprobantes y aprobar pagos mensuales por departamento.</p>
     </div>
-    <a class="btn-volver" routerLink="/dashboard/torres">Volver a torres</a>
+    <a class="btn-volver" routerLink="/dashboard/departamentos">Volver a departamentos</a>
   </div>
+
+  <section class="summary-grid">
+    <article>
+      <span>Total</span>
+      <strong>{{ getTotalPagos() }}</strong>
+    </article>
+    <article>
+      <span>Por revisar</span>
+      <strong>{{ getTotalPorEstado('en_revision') }}</strong>
+    </article>
+    <article>
+      <span>Aprobados</span>
+      <strong>{{ getTotalPorEstado('aprobado') }}</strong>
+    </article>
+    <article>
+      <span>Pendientes</span>
+      <strong>{{ getTotalPorEstado('pendiente') }}</strong>
+    </article>
+  </section>
+
+  <section class="links-section">
+    <div class="section-heading">
+      <h3>Link de cobro para departamentos</h3>
+      <p>Comparte este unico formulario para que el residente seleccione torre, departamento y suba el comprobante.</p>
+    </div>
+
+    <a class="btn-payment-link" routerLink="/pago-alicuota" target="_blank" rel="noopener">Ir al link de pago</a>
+  </section>
 
   <div class="filters-row">
     <label class="filter-field">
       Torre
       <select [formControl]="torreFilterControl">
-        <option value="">Todas las torres</option>
-        <option *ngFor="let torre of torres" [value]="torre.numero">
+        <option value="">Todas mis torres</option>
+        <option *ngFor="let torre of torresAutorizadas" [value]="torre.numero">
           Torre {{ torre.numero }}
         </option>
       </select>
     </label>
+
+    <label class="filter-field">
+      Estado
+      <select [formControl]="estadoFilterControl">
+        <option value="todos">Todos</option>
+        <option value="en_revision">Por revisar</option>
+        <option value="pendiente">Pendientes</option>
+        <option value="aprobado">Aprobados</option>
+      </select>
+    </label>
   </div>
+
+  <p class="error-message" *ngIf="errorMessage">{{ errorMessage }}</p>
 
   <div class="table-wrapper">
     <table class="pagos-table">
       <thead>
         <tr>
           <th>Torre</th>
-          <th># Pago</th>
-          <th>Descripcion</th>
-          <th>Fecha</th>
+          <th>Departamento</th>
+          <th>Mes</th>
+          <th>Valor</th>
+          <th>Estado</th>
+          <th>Comprobante</th>
           <th>Accion</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let pago of pagosFiltrados; let i = index" [class.even]="i % 2 === 0">
           <td>Torre {{ pago.torreNumero }}</td>
-          <td>{{ pago.numeroPago }}</td>
-          <td>{{ pago.descripcion }}</td>
-          <td>{{ pago.fecha }}</td>
+          <td>{{ pago.departamentoNumero }}</td>
+          <td>{{ pago.mes }}</td>
+          <td>${{ pago.valor }}</td>
+          <td>
+            <span class="status-pill" [class.review]="pago.estado === 'en_revision'" [class.approved]="pago.estado === 'aprobado'">
+              {{ getEstadoLabel(pago.estado) }}
+            </span>
+          </td>
+          <td>
+            <a *ngIf="pago.comprobanteUrl" [href]="getComprobanteUrl(pago)" target="_blank" rel="noopener">
+              Ver foto
+            </a>
+            <span *ngIf="!pago.comprobanteUrl">Sin comprobante</span>
+          </td>
           <td>
             <button
               class="btn-aprobar"
               type="button"
-              [disabled]="pago.estado === 'aprobado'"
-              (click)="aprobarPago(i)"
+              [disabled]="pago.estado !== 'en_revision' || approvingPagoId !== null"
+              (click)="aprobarPago(pago)"
             >
-              {{ pago.estado === 'aprobado' ? 'Aprobado' : 'Aprobar' }}
+              {{ pago.estado === 'aprobado' ? 'Aprobado' : approvingPagoId === pago.id ? 'Aprobando...' : 'Aprobar' }}
             </button>
           </td>
         </tr>
 
         <tr *ngIf="!pagosFiltrados.length">
-          <td colspan="5" class="empty-cell">No hay pagos para la torre seleccionada.</td>
+          <td colspan="7" class="empty-cell">No hay pagos de departamentos para el filtro seleccionado.</td>
         </tr>
       </tbody>
     </table>

@@ -86,7 +86,13 @@ export class AuthService {
       return true;
     }
 
-    return this.getPagePermissions().includes(permission);
+    const permissions = this.getPagePermissions();
+
+    if (permission === 'pagos_alicuota' && permissions.includes('pagos_torres')) {
+      return true;
+    }
+
+    return permissions.includes(permission);
   }
 
   isAuthenticated(): boolean {

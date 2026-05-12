@@ -3,15 +3,24 @@ import { TorresService } from '../../services/torres.service';
 import { DepartamentosService } from '../../services/departamentos.service';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import { forkJoin, Observable, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { AuthService } from '../../auth/services/auth.service';
 
+interface HomeCalendarDay {
+  label: number;
+  value: string;
+  muted: boolean;
+  today: boolean;
+  reserved: boolean;
+}
+
 @Component({
   selector: 'app-home',
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss'
 })
@@ -28,6 +37,10 @@ export class HomeComponent implements OnInit {
 
   reservasRecientes: any[] = [];
   multasRecientes: any[] = [];
+  reservasCalendario: any[] = [];
+  homeCalendarDays: HomeCalendarDay[] = [];
+  homeCalendarMonth = new Date();
+  reservedDates = new Set<string>();
 
   constructor(
     private http: HttpClient,
@@ -73,11 +86,56 @@ export class HomeComponent implements OnInit {
         this.totalCondominos = this.filterByAuthorizedTorres(condominos).length;
         this.totalReservas = reservasAutorizadas.length;
         this.totalMultas = multasAutorizadas.length;
-        this.reservasRecientes = reservasAutorizadas.slice(0, 5);
+        this.reservasCalendario = reservasAutorizadas;
+        this.reservasRecientes = [...reservasAutorizadas]
+          .sort((a, b) => String(b.fecha || '').localeCompare(String(a.fecha || '')))
+          .slice(0, 5);
         this.multasRecientes = multasAutorizadas.slice(0, 5);
+        this.reservedDates = new Set(
+          reservasAutorizadas
+            .filter((reserva) => reserva.estado === 'reservado')
+            .map((reserva) => String(reserva.fecha || '').slice(0, 10))
+            .filter(Boolean)
+        );
+        this.buildHomeCalendar();
       },
       error: (error) => console.error('Error cargando estadisticas:', error)
     });
+  }
+
+  get homeMonthLabel(): string {
+    return new Intl.DateTimeFormat('es-EC', {
+      month: 'long',
+      year: 'numeric'
+    }).format(this.homeCalendarMonth);
+  }
+
+  previousHomeMonth(): void {
+    this.homeCalendarMonth = new Date(
+      this.homeCalendarMonth.getFullYear(),
+      this.homeCalendarMonth.getMonth() - 1,
+      1
+    );
+    this.buildHomeCalendar();
+  }
+
+  nextHomeMonth(): void {
+    this.homeCalendarMonth = new Date(
+      this.homeCalendarMonth.getFullYear(),
+      this.homeCalendarMonth.getMonth() + 1,
+      1
+    );
+    this.buildHomeCalendar();
+  }
+
+  getReservasByDate(value: string): any[] {
+    return this.reservasCalendario.filter((reserva) => String(reserva.fecha || '').slice(0, 10) === value);
+  }
+
+  getReservaResumen(reserva: any): string {
+    const fecha = String(reserva?.fecha || '').slice(0, 10) || 'Sin fecha';
+    const estado = this.getEstadoReserva(reserva);
+    return `${fecha} · ${estado}`;
   }
 
   private fetchCollection(path: string): Observable<any[]> {
@@ -135,5 +193,45 @@ export class HomeComponent implements OnInit {
     );
 
     return ids.size;
+  }
+
+  private buildHomeCalendar(): void {
+    const year = this.homeCalendarMonth.getFullYear();
+    const month = this.homeCalendarMonth.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const start = new Date(year, month, 1 - firstDay.getDay());
+    const todayValue = this.formatDate(new Date());
+
+    this.homeCalendarDays = Array.from({ length: 42 }, (_, index) => {
+      const date = new Date(start);
+      date.setDate(start.getDate() + index);
+      const value = this.formatDate(date);
+
+      return {
+        label: date.getDate(),
+        value,
+        muted: date.getMonth() !== month,
+        today: value === todayValue,
+        reserved: this.reservedDates.has(value)
+      };
+    });
+  }
+
+  private formatDate(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+  }
+
+  private getEstadoReserva(reserva: any): string {
+    const labels: Record<string, string> = {
+      disponible: 'Disponible',
+      en_proceso: 'En proceso',
+      reservado: 'Reservado'
+    };
+
+    return labels[String(reserva?.estado || '')] || String(reserva?.estado || 'Reserva');
   }
 }
