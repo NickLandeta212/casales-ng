@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { TorresService } from '../../services/torres.service';
@@ -59,13 +59,20 @@ export class UsuariosComponent implements OnInit {
   torres: TorreOption[] = [];
   departamentos: DepartamentoUsuarioItem[] = [];
   cargando = false;
+  creandoUsuario = false;
+  errorMessage = '';
+  successMessage = '';
 
-  nombreControl = new FormControl<string>('');
-  emailControl = new FormControl<string>('');
-  passwordControl = new FormControl<string>('');
-  torreControl = new FormControl<string>('');
-  editNombreControl = new FormControl<string>('');
-  editEmailControl = new FormControl<string>('');
+  nombreControl = new FormControl<string>('', [Validators.required, Validators.maxLength(80)]);
+  emailControl = new FormControl<string>('', [Validators.required, Validators.email]);
+  passwordControl = new FormControl<string>('', [
+    Validators.required,
+    Validators.minLength(8),
+    Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/)
+  ]);
+  torreControl = new FormControl<string>('', Validators.required);
+  editNombreControl = new FormControl<string>('', [Validators.required, Validators.maxLength(80)]);
+  editEmailControl = new FormControl<string>('', [Validators.required, Validators.email]);
   editRoleControl = new FormControl<'admin_general' | 'admin_conjunto' | 'tesorero'>('tesorero');
   pagePermissionsControl = new FormControl<string[]>([]);
   torreIdsControl = new FormControl<number[]>([]);
@@ -123,7 +130,14 @@ export class UsuariosComponent implements OnInit {
   }
 
   crearUsuario() {
+    this.errorMessage = '';
+    this.successMessage = '';
+
     if (!this.formularioValido()) {
+      this.nombreControl.markAsTouched();
+      this.emailControl.markAsTouched();
+      this.passwordControl.markAsTouched();
+      this.torreControl.markAsTouched();
       return;
     }
 
@@ -133,16 +147,21 @@ export class UsuariosComponent implements OnInit {
       password: this.passwordControl.value || '',
       role: 'tesorero',
       torre_id: Number(this.torreControl.value),
-      page_permissions: ['home', 'torres', 'pagos_departamentos', 'departamentos', 'reservas'],
+      page_permissions: ['home', 'torres', 'pagos_alicuota_torre', 'pagos_departamentos', 'departamentos', 'reservas'],
       torre_ids: [Number(this.torreControl.value)]
     };
 
+    this.creandoUsuario = true;
     this.usuariosService.addUsuario(payload).subscribe({
       next: () => {
+        this.creandoUsuario = false;
+        this.successMessage = 'Usuario creado y correo de confirmacion enviado.';
         this.limpiarFormulario();
         this.router.navigate(['/dashboard/usuarios']);
       },
       error: (error) => {
+        this.creandoUsuario = false;
+        this.errorMessage = error?.error?.message || 'No se pudo crear el usuario ni enviar la confirmacion.';
         console.error('Error creando usuario', error);
       }
     });
@@ -218,14 +237,13 @@ export class UsuariosComponent implements OnInit {
   private formularioValido(): boolean {
     const nombre = (this.nombreControl.value || '').trim();
     const email = (this.emailControl.value || '').trim();
-    const password = this.passwordControl.value || '';
     const torreId = this.torreControl.value;
     const hasNombre = nombre.length > 0;
     const hasEmail = email.length > 0;
-    const hasPassword = (password || '').length > 0;
+    const hasPassword = this.passwordControl.valid;
     const hasTorre = torreId !== undefined && torreId !== null && String(torreId).trim() !== '';
 
-    return hasNombre && hasEmail && hasPassword && hasTorre;
+    return hasNombre && hasEmail && this.emailControl.valid && hasPassword && hasTorre;
   }
 
   guardarAutorizaciones() {
@@ -237,7 +255,8 @@ export class UsuariosComponent implements OnInit {
     const nombre = (this.editNombreControl.value || '').trim();
     const email = (this.editEmailControl.value || '').trim();
 
-    if (!nombre || !email) {
+    if (!nombre || !email || this.editEmailControl.invalid) {
+      this.editEmailControl.markAsTouched();
       return;
     }
 
@@ -395,7 +414,7 @@ export class UsuariosComponent implements OnInit {
     }
 
     if ((this.pagePermissionsControl.value || []).length === 0) {
-      this.pagePermissionsControl.setValue(['home', 'torres', 'pagos_departamentos', 'departamentos', 'reservas']);
+      this.pagePermissionsControl.setValue(['home', 'torres', 'pagos_alicuota_torre', 'pagos_departamentos', 'departamentos', 'reservas']);
     }
   }
 

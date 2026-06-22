@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { AuthService } from '../../auth/services/auth.service';
 import { TorresService } from '../../services/torres.service';
 
 @Component({
@@ -17,6 +18,7 @@ export class TorresComponent implements OnInit {
 
   constructor(
     private torreService: TorresService,
+    private authService: AuthService,
     private router: Router
   ) { }
 
@@ -26,9 +28,15 @@ export class TorresComponent implements OnInit {
 
   load() {
     this.torreService.list().subscribe((res: any) => {
-      this.lista = res;
-      this.listaFiltrada = res;
-      console.log(res)
+      const lista = Array.isArray(res) ? res : [];
+      const role = this.authService.getUserRole();
+      const authorizedTorreIds = this.authService.getAuthorizedTorreIds();
+      const filtrada = role === 'admin_general' || role === 'admin_conjunto'
+        ? lista
+        : lista.filter((torre) => authorizedTorreIds.includes(Number(torre.id)));
+
+      this.lista = filtrada;
+      this.listaFiltrada = filtrada;
     });
   }
 
@@ -43,6 +51,15 @@ export class TorresComponent implements OnInit {
         numero: torre?.numero ?? torreId
       }
     });
+  }
+
+  puedeVerLinkPago(): boolean {
+    return this.authService.getUserRole() === 'tesorero';
+  }
+
+  getLinkPagoTorre(torre: any): string {
+    const torreId = torre?.id ?? torre?.numero;
+    return torreId ? `/pago-alicuota-torre/${torreId}` : '/pago-alicuota-torre';
   }
 
   cerrarDetalles() {

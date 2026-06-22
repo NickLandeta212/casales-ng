@@ -20,6 +20,7 @@ export interface AlicuotaPago {
   fechaPago?: string;
   comprobanteUrl?: string;
   comprobanteNombre?: string;
+  emailDestinatario?: string;
 }
 
 export interface AlicuotaDepartamento {
@@ -80,14 +81,15 @@ export class AlicuotasService {
     );
   }
 
-  registrarComprobante(pago: AlicuotaPago, comprobanteBase64: string, comprobanteNombre: string) {
+  registrarComprobante(pago: AlicuotaPago, comprobanteBase64: string, comprobanteNombre: string, emailDestinatario?: string) {
     return this.http.post<any>(`${this.apiUrl}/pagos`, {
       torre_id: pago.torreId,
       departamento_id: pago.departamentoId,
       anio: pago.anio,
       mes: pago.mesNumero,
       comprobante_base64: comprobanteBase64,
-      comprobante_nombre: comprobanteNombre
+      comprobante_nombre: comprobanteNombre,
+      email_destinatario: String(emailDestinatario || '').trim() || null
     }).pipe(
       map((res) => this.toPago(res?.pago ?? res))
     );
@@ -181,7 +183,8 @@ export class AlicuotasService {
       estado: (raw.estado ?? 'pendiente') as EstadoAlicuota,
       fechaPago: raw.fecha_pago ?? raw.fechaPago,
       comprobanteUrl: raw.comprobante_url ?? raw.comprobanteUrl,
-      comprobanteNombre: raw.comprobante_nombre ?? raw.comprobanteNombre
+      comprobanteNombre: raw.comprobante_nombre ?? raw.comprobanteNombre,
+      emailDestinatario: raw.email_destinatario ?? raw.emailDestinatario
     };
   }
 

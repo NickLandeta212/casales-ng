@@ -1,9 +1,10 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { AlicuotaTorrePago, AlicuotasService } from '../../services/alicuotas.service';
 import { TorresService } from '../../services/torres.service';
+import { PublicFormSecurityService } from '../../services/public-form-security.service';
 
 @Component({
   selector: 'app-pago-alicuota-torre-form',
@@ -13,23 +14,27 @@ import { TorresService } from '../../services/torres.service';
   styleUrl: '../pago-alicuota-form/pago-alicuota-form.component.scss'
 })
 export class PagoAlicuotaTorreFormComponent implements OnInit {
+  private readonly maxComprobanteSize = 4 * 1024 * 1024;
+  private readonly formStartedAt = Date.now();
   torreId = 0;
   torreNumero = '';
   torres: any[] = [];
   pagos: AlicuotaTorrePago[] = [];
   selectedPago: AlicuotaTorrePago | null = null;
   torreControl = new FormControl<string>('');
-  valorControl = new FormControl<number | null>(null);
+  valorControl = new FormControl<number | null>(null, [Validators.required, Validators.min(0.01), Validators.max(100000)]);
   comprobanteBase64 = '';
   comprobanteNombre = '';
   loading = false;
   successMessage = '';
   errorMessage = '';
+  website = '';
 
   constructor(
     private route: ActivatedRoute,
     private alicuotasService: AlicuotasService,
-    private torresService: TorresService
+    private torresService: TorresService,
+    private publicFormSecurity: PublicFormSecurityService
   ) {}
 
   ngOnInit(): void {
@@ -65,6 +70,12 @@ export class PagoAlicuotaTorreFormComponent implements OnInit {
       return;
     }
 
+    if (file.size > this.maxComprobanteSize) {
+      this.errorMessage = 'El comprobante no debe superar 4MB.';
+      input.value = '';
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = () => {
       this.comprobanteBase64 = String(reader.result);
@@ -75,16 +86,29 @@ export class PagoAlicuotaTorreFormComponent implements OnInit {
   }
 
   enviarComprobante(): void {
+    if (this.loading) {
+      return;
+    }
+
     this.successMessage = '';
     this.errorMessage = '';
+    const securityError = this.publicFormSecurity.validateSubmission('pago-alicuota-torre', this.formStartedAt, this.website);
+
+    if (securityError) {
+      this.errorMessage = securityError;
+      return;
+    }
+
     const valor = Number(this.valorControl.value);
 
-    if (!this.selectedPago || !this.comprobanteBase64 || !Number.isFinite(valor) || valor <= 0) {
+    if (!this.selectedPago || !this.comprobanteBase64 || this.valorControl.invalid || !Number.isFinite(valor)) {
+      this.valorControl.markAsTouched();
       this.errorMessage = 'Selecciona un mes, ingresa el valor y sube la foto del comprobante.';
       return;
     }
 
     this.loading = true;
+    this.publicFormSecurity.markSubmitted('pago-alicuota-torre');
     this.alicuotasService.registrarComprobanteTorre(this.selectedPago, this.comprobanteBase64, this.comprobanteNombre, valor).subscribe({
       next: () => {
         this.successMessage = 'Pago enviado correctamente. Ahora aparece en Aprobar pagos para que el administrador del conjunto lo revise.';
@@ -135,6 +159,12 @@ export class PagoAlicuotaTorreFormComponent implements OnInit {
 
   private cargarTorres(): void {
     this.loading = true;
+
+    if (!this.torreId) {
+      this.loading = false;
+      this.errorMessage = 'Link de pago invalido. Usa el enlace enviado por la administracion.';
+      return;
+    }
 
     this.torresService.list().subscribe({
       next: (res: any) => {

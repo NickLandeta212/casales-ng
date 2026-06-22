@@ -10,6 +10,11 @@
 
     <section class="reserva-card">
       <form class="reserva-form" [formGroup]="reservaForm" (ngSubmit)="guardarReserva()">
+        <label style="display: none;" aria-hidden="true">
+          Sitio web
+          <input type="text" tabindex="-1" autocomplete="off" [value]="website" (input)="website = $any($event.target).value">
+        </label>
+
         <div class="feedback-message success" *ngIf="successMessage">
           {{ successMessage }}
         </div>

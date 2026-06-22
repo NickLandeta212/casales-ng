@@ -100,7 +100,7 @@ export class SettingsComponent {
   torreLabel = 'Sin torres asignadas';
 
   constructor(private authService: AuthService) {
-    this.userName = localStorage.getItem('user_display_name') || 'Usuario';
+    this.userName = this.authService.getDisplayName();
     this.role = this.authService.getUserRole();
     this.torreIds = this.authService.getAuthorizedTorreIds();
     this.torreLabel = this.torreIds.length > 0

@@ -3,6 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { environment } from '../../../environments/environment';
 import { ReservaResponse, ReservasService } from '../../services/reservas.service';
+import { SecurityUrlService } from '../../services/security-url.service';
 
 @Component({
   selector: 'app-reservas',
@@ -19,7 +20,10 @@ export class ReservasComponent implements OnInit {
   errorMessage = '';
   successMessage = '';
 
-  constructor(private reservasService: ReservasService) { }
+  constructor(
+    private reservasService: ReservasService,
+    private securityUrlService: SecurityUrlService
+  ) { }
 
   ngOnInit(): void {
     this.cargarReservas();
@@ -104,19 +108,7 @@ export class ReservasComponent implements OnInit {
     const match = String(reserva.observaciones || '').match(/Comprobante:\s*([^|]+)/i);
     const rawUrl = match?.[1]?.trim() || '';
 
-    if (!rawUrl) {
-      return '';
-    }
-
-    if (/^https?:\/\//i.test(rawUrl)) {
-      return rawUrl;
-    }
-
-    if (rawUrl.startsWith('/')) {
-      return `${this.getApiOrigin()}${rawUrl}`;
-    }
-
-    return rawUrl;
+    return this.securityUrlService.sanitizeResourceUrl(rawUrl, this.getApiOrigin());
   }
 
   tieneComprobante(reserva: ReservaResponse): boolean {

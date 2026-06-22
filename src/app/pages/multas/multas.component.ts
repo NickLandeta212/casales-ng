@@ -6,6 +6,7 @@ import { startWith } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { DepartamentosService } from '../../services/departamentos.service';
 import { MotivoOption, Multa, MultaDraft, MultasService, PagoMulta, PagoMultaDetalle } from '../../services/multas.service';
+import { SecurityUrlService } from '../../services/security-url.service';
 
 interface DepartamentoOption {
   id: number;
@@ -58,7 +59,8 @@ export class MultasComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private multasService: MultasService,
-    private departamentosService: DepartamentosService
+    private departamentosService: DepartamentosService,
+    private securityUrlService: SecurityUrlService
   ) {
     this.route.data.subscribe(data => {
       const mode = data['mode'];
@@ -373,6 +375,8 @@ export class MultasComponent implements OnInit {
   }
 
   private formularioValido(): boolean {
+    const monto = Number(this.montoControl.value);
+
     return Boolean(
       this.torreControl.value &&
       this.departamentoControl.value &&
@@ -380,11 +384,14 @@ export class MultasComponent implements OnInit {
       (this.personaCedulaControl.value || '').trim() &&
       this.motivoIdControl.value &&
       (this.descripcionControl.value || '').trim() &&
-      this.montoControl.value
+      Number.isFinite(monto) &&
+      monto > 0
     );
   }
 
   private formularioEdicionValido(): boolean {
+    const monto = Number(this.editMontoControl.value);
+
     return Boolean(
       this.editTorreControl.value &&
       this.editDepartamentoControl.value &&
@@ -392,7 +399,8 @@ export class MultasComponent implements OnInit {
       (this.editPersonaCedulaControl.value || '').trim() &&
       this.editMotivoIdControl.value &&
       (this.editDescripcionControl.value || '').trim() &&
-      this.editMontoControl.value
+      Number.isFinite(monto) &&
+      monto > 0
     );
   }
 
@@ -453,19 +461,7 @@ export class MultasComponent implements OnInit {
   getPagoComprobanteUrl(pago: PagoMulta): string {
     const rawUrl = String(pago.comprobante_url || '').trim();
 
-    if (!rawUrl) {
-      return '';
-    }
-
-    if (/^https?:\/\//i.test(rawUrl)) {
-      return rawUrl;
-    }
-
-    if (rawUrl.startsWith('/')) {
-      return `${this.getApiOrigin()}${rawUrl}`;
-    }
-
-    return rawUrl;
+    return this.securityUrlService.sanitizeResourceUrl(rawUrl, this.getApiOrigin());
   }
 
   getPagoPersonaEtiqueta(detalle: PagoMultaDetalle): string {

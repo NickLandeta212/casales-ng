@@ -14,9 +14,18 @@
             <td>{{ torre.numero }}</td>
             <td>{{ torre.total_departamentos }}</td>
             <td class="acciones-cell">
-              <button class="btn-inspeccionar" (click)="seleccionarTorre(torre)">
+              <button class="btn-inspeccionar" type="button" (click)="seleccionarTorre(torre)">
                 Inspeccionar
               </button>
+              <a
+                *ngIf="puedeVerLinkPago()"
+                class="btn-link-pago"
+                [href]="getLinkPagoTorre(torre)"
+                target="_blank"
+                rel="noopener"
+              >
+                Link de pago
+              </a>
             </td>
           </tr>
         </tbody>

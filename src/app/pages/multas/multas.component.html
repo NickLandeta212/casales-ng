@@ -34,6 +34,7 @@
 						<th>Fecha</th>
 						<th>Departamento</th>
 						<th>Total</th>
+						<th>Correo factura</th>
 						<th>Estado</th>
 						<th>Comprobante</th>
 						<th class="acciones-header">Acciones</th>
@@ -45,6 +46,7 @@
 						<td>{{ getFechaPago(pago) }}</td>
 						<td>{{ getPagoDepartamentoEtiqueta(pago) }}</td>
 						<td>{{ pago.total | currency:'USD' }}</td>
+						<td>{{ pago.email_destinatario || 'Sin correo' }}</td>
 						<td>
 							<span class="estado-badge" [class.aprobada]="pago.estado === 'aprobado'" [class.en-proceso]="pago.estado !== 'aprobado'">
 								{{ getPagoEstadoLabel(pago) }}
@@ -69,7 +71,7 @@
 					</tr>
 
 					<tr *ngIf="!listaPagos.length && !cargando">
-						<td colspan="7" class="empty-cell">No hay pagos de multas registrados.</td>
+						<td colspan="8" class="empty-cell">No hay pagos de multas registrados.</td>
 					</tr>
 				</tbody>
 			</table>
@@ -144,6 +146,11 @@
 				<div class="detail-item">
 					<label>Total</label>
 					<span class="detail-value">{{ pagoSeleccionado.total | currency:'USD' }}</span>
+				</div>
+
+				<div class="detail-item">
+					<label>Correo factura</label>
+					<span class="detail-value">{{ pagoSeleccionado.email_destinatario || 'Sin correo' }}</span>
 				</div>
 
 				<div class="detail-item">

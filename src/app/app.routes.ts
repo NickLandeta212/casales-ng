@@ -31,7 +31,7 @@ export const routes: Routes = [
                loadComponent: () => import('./pages/pago-alicuota-torre-form/pago-alicuota-torre-form.component').then(m => m.PagoAlicuotaTorreFormComponent)
           },
      {
-          path: 'dashboard', component: DashboardComponent, children: [
+          path: 'dashboard', component: DashboardComponent, canActivate: [AuthGuard], children: [
                { path: '', redirectTo: 'home', pathMatch: 'full' },
                {
                     path: 'home', loadComponent: () => import('./pages/home/home.component').then(m => m.HomeComponent),
@@ -127,7 +127,8 @@ export const routes: Routes = [
 
 
           ]
-     }
+     },
+     { path: '**', redirectTo: '' }
 
 ];
 

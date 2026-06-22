@@ -43,6 +43,7 @@ export interface PagoMultasPayload {
   multa_ids: Array<number | string>;
   total: number;
   comprobante_base64: string;
+  email_destinatario: string;
 }
 
 export interface PagoMultaDetalle {
@@ -64,6 +65,7 @@ export interface PagoMulta {
   estado: 'en_proceso' | 'aprobado' | string;
   created_at?: string;
   updated_at?: string;
+  email_destinatario?: string;
   multas?: PagoMultaDetalle[];
 }
 
@@ -194,6 +196,7 @@ export class MultasService {
       estado: (item.estado ?? 'en_proceso').toString(),
       created_at: item.created_at ?? item.createdAt,
       updated_at: item.updated_at ?? item.updatedAt,
+      email_destinatario: (item.email_destinatario ?? item.emailDestinatario ?? '').toString(),
       multas: this.normalizePagoDetalle(item.multas)
     }));
   }

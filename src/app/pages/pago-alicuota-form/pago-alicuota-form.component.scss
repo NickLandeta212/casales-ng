@@ -59,6 +59,16 @@
     border-radius: var(--sl-radius-md);
     background-color: #fff;
   }
+
+  &.compact {
+    font-size: 13px;
+  }
+}
+
+.field-error {
+  color: var(--sl-color-danger);
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .form-section-title {

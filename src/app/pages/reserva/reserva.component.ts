@@ -5,6 +5,7 @@ import { of, switchMap } from 'rxjs';
 import { DepartamentosService } from '../../services/departamentos.service';
 import { ReservasService } from '../../services/reservas.service';
 import { TorresService } from '../../services/torres.service';
+import { PublicFormSecurityService } from '../../services/public-form-security.service';
 
 interface ReservaTorre {
   id: number;
@@ -39,6 +40,8 @@ export class ReservaComponent implements OnInit {
   private torresService = inject(TorresService);
   private departamentosService = inject(DepartamentosService);
   private reservasService = inject(ReservasService);
+  private publicFormSecurity = inject(PublicFormSecurityService);
+  private readonly formStartedAt = Date.now();
 
   torres: ReservaTorre[] = [];
   departamentos: ReservaDepartamento[] = [];
@@ -49,6 +52,7 @@ export class ReservaComponent implements OnInit {
   submitted = false;
   loadingData = false;
   submitting = false;
+  website = '';
   successMessage = '';
   errorMessage = '';
   comprobanteBase64: string | null = null;
@@ -57,7 +61,7 @@ export class ReservaComponent implements OnInit {
   reservaForm = this.fb.group({
     nombre: ['', [Validators.required, Validators.maxLength(80)]],
     apellido: ['', [Validators.required, Validators.maxLength(80)]],
-    telefono: ['', [Validators.required, Validators.maxLength(30)]],
+    telefono: ['', [Validators.required, Validators.pattern(/^[0-9+\-\s()]{7,30}$/)]],
     torre: ['', Validators.required],
     departamento: ['', Validators.required]
   });
@@ -120,9 +124,19 @@ export class ReservaComponent implements OnInit {
   }
 
   guardarReserva(): void {
+    if (this.submitting) {
+      return;
+    }
+
     this.submitted = true;
     this.successMessage = '';
     this.errorMessage = '';
+    const securityError = this.publicFormSecurity.validateSubmission('reserva', this.formStartedAt, this.website);
+
+    if (securityError) {
+      this.errorMessage = securityError;
+      return;
+    }
 
     if (this.reservaForm.invalid || !this.selectedDate || this.reservedDates.has(this.selectedDate)) {
       this.reservaForm.markAllAsTouched();
@@ -141,6 +155,7 @@ export class ReservaComponent implements OnInit {
     ].join(' | ');
 
     this.submitting = true;
+    this.publicFormSecurity.markSubmitted('reserva');
     this.reservasService.crear({
       departamento_id: Number(raw.departamento),
       fecha: this.selectedDate,

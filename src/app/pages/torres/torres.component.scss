@@ -39,7 +39,7 @@
 
     .acciones-header {
       text-align: center;
-      width: 140px;
+      width: 230px;
     }
   }
 
@@ -66,6 +66,11 @@
       }
 
       .acciones-cell {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
         text-align: center;
         vertical-align: middle;
       }
@@ -91,6 +96,25 @@
 
   &:active {
     transform: scale(0.95);
+  }
+}
+
+.btn-link-pago {
+  padding: 6px 12px;
+  background-color: #ffffff;
+  color: var(--sl-color-primary-dark);
+  border: 1px solid var(--sl-color-primary);
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 12px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background-color: rgba(var(--sl-color-primary-rgb), 0.08);
+    color: var(--sl-color-primary-dark);
+    box-shadow: 0 2px 6px rgba(var(--sl-color-primary-rgb), 0.16);
   }
 }
 

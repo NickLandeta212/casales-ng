@@ -54,7 +54,7 @@ export class HomeComponent implements OnInit {
   }
 
   cargarEstadisticas() {
-    this.userName = localStorage.getItem('user_display_name') || 'Usuario';
+    this.userName = this.authService.getDisplayName();
     this.authorizedTorreIds = this.authService.getAuthorizedTorreIds();
 
     forkJoin({

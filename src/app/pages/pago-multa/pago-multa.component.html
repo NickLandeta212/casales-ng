@@ -10,6 +10,11 @@
 
     <section class="pago-multa-card">
       <form class="pago-multa-form" [formGroup]="pagoForm" (ngSubmit)="enviarPago()">
+        <label style="display: none;" aria-hidden="true">
+          Sitio web
+          <input type="text" tabindex="-1" autocomplete="off" [value]="website" (input)="website = $any($event.target).value">
+        </label>
+
         <div class="feedback-message success" *ngIf="successMessage">
           {{ successMessage }}
         </div>
@@ -48,6 +53,12 @@
             </span>
             <small>PNG, JPG o WEBP hasta 4MB.</small>
             <span *ngIf="submitted && !comprobanteBase64">Sube una imagen del comprobante.</span>
+          </label>
+
+          <label>
+            Correo para factura
+            <input type="email" formControlName="email_destinatario" placeholder="nombre@correo.com" autocomplete="email">
+            <span *ngIf="pagoForm.get('email_destinatario')?.invalid && pagoForm.get('email_destinatario')?.touched">Ingresa un correo valido.</span>
           </label>
         </div>
 

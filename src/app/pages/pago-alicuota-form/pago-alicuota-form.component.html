@@ -11,6 +11,11 @@
     <p class="loading-message" *ngIf="loading">Cargando informacion...</p>
 
     <section class="payment-card" *ngIf="!loading">
+      <label class="field-block" style="display: none;" aria-hidden="true">
+        Sitio web
+        <input type="text" tabindex="-1" autocomplete="off" [value]="website" (input)="website = $any($event.target).value" />
+      </label>
+
       <label class="field-block">
         Torre
         <select [formControl]="torreControl">
@@ -56,9 +61,16 @@
           <h2>{{ selectedPago.mes }}</h2>
           <p>Sube una foto clara del comprobante para que el tesorero pueda aprobarlo.</p>
         </div>
+        <label class="field-block compact">
+          Correo para factura
+          <input type="email" [formControl]="facturaEmailControl" placeholder="nombre@correo.com" autocomplete="email" />
+          <span class="field-error" *ngIf="facturaEmailControl.touched && facturaEmailControl.invalid">
+            Ingresa un correo valido para recibir la factura.
+          </span>
+        </label>
         <input type="file" accept="image/png,image/jpeg,image/webp" (change)="onComprobanteChange($event)" />
         <span class="file-name" *ngIf="comprobanteNombre">{{ comprobanteNombre }}</span>
-        <button type="button" class="btn-submit" (click)="enviarComprobante()">Enviar pago para aprobacion</button>
+        <button type="button" class="btn-submit" [disabled]="loading" (click)="enviarComprobante()">Enviar pago para aprobacion</button>
       </div>
     </section>
   </section>

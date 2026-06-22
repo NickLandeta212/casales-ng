@@ -1,9 +1,10 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { AlicuotaDepartamento, AlicuotaPago, AlicuotasService } from '../../services/alicuotas.service';
 import { TorresService } from '../../services/torres.service';
+import { PublicFormSecurityService } from '../../services/public-form-security.service';
 
 @Component({
   selector: 'app-pago-alicuota-form',
@@ -13,6 +14,8 @@ import { TorresService } from '../../services/torres.service';
   styleUrl: './pago-alicuota-form.component.scss'
 })
 export class PagoAlicuotaFormComponent implements OnInit {
+  private readonly maxComprobanteSize = 4 * 1024 * 1024;
+  private readonly formStartedAt = Date.now();
   torre: any | null = null;
   torres: any[] = [];
   departamentos: AlicuotaDepartamento[] = [];
@@ -23,14 +26,20 @@ export class PagoAlicuotaFormComponent implements OnInit {
   loading = false;
   successMessage = '';
   errorMessage = '';
+  website = '';
 
   torreControl = new FormControl<string>('');
   departamentoControl = new FormControl<string>('');
+  facturaEmailControl = new FormControl<string>('', {
+    nonNullable: true,
+    validators: [Validators.required, Validators.email]
+  });
 
   constructor(
     private route: ActivatedRoute,
     private alicuotasService: AlicuotasService,
-    private torresService: TorresService
+    private torresService: TorresService,
+    private publicFormSecurity: PublicFormSecurityService
   ) {}
 
   ngOnInit(): void {
@@ -66,6 +75,12 @@ export class PagoAlicuotaFormComponent implements OnInit {
       return;
     }
 
+    if (file.size > this.maxComprobanteSize) {
+      this.errorMessage = 'El comprobante no debe superar 4MB.';
+      input.value = '';
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = () => {
       this.comprobanteBase64 = String(reader.result);
@@ -76,20 +91,38 @@ export class PagoAlicuotaFormComponent implements OnInit {
   }
 
   enviarComprobante(): void {
+    if (this.loading) {
+      return;
+    }
+
     this.successMessage = '';
     this.errorMessage = '';
+    const securityError = this.publicFormSecurity.validateSubmission('pago-alicuota', this.formStartedAt, this.website);
 
-    if (!this.selectedPago || !this.comprobanteBase64) {
-      this.errorMessage = 'Selecciona un mes y sube la foto del comprobante.';
+    if (securityError) {
+      this.errorMessage = securityError;
+      return;
+    }
+
+    if (!this.selectedPago || !this.comprobanteBase64 || this.facturaEmailControl.invalid) {
+      this.facturaEmailControl.markAsTouched();
+      this.errorMessage = 'Selecciona un mes, ingresa un correo valido y sube la foto del comprobante.';
       return;
     }
 
     this.loading = true;
-    this.alicuotasService.registrarComprobante(this.selectedPago, this.comprobanteBase64, this.comprobanteNombre).subscribe({
+    this.publicFormSecurity.markSubmitted('pago-alicuota');
+    this.alicuotasService.registrarComprobante(
+      this.selectedPago,
+      this.comprobanteBase64,
+      this.comprobanteNombre,
+      this.facturaEmailControl.value
+    ).subscribe({
       next: () => {
         this.successMessage = 'Pago enviado correctamente. Ahora aparece en Pagos departamentos para revision del tesorero.';
         this.comprobanteBase64 = '';
         this.comprobanteNombre = '';
+        this.facturaEmailControl.reset('');
         this.selectedPago = null;
         this.loading = false;
         this.loadPagosDepartamento();
@@ -114,6 +147,12 @@ export class PagoAlicuotaFormComponent implements OnInit {
   private loadData(): void {
     this.loading = true;
     const torreId = Number(this.route.snapshot.paramMap.get('torreId'));
+
+    if (!torreId) {
+      this.loading = false;
+      this.errorMessage = 'Link de pago invalido. Usa el enlace enviado por la administracion.';
+      return;
+    }
 
     this.torresService.list().subscribe({
       next: (res: any) => {
@@ -156,6 +195,7 @@ export class PagoAlicuotaFormComponent implements OnInit {
     this.selectedPago = null;
     this.comprobanteBase64 = '';
     this.comprobanteNombre = '';
+    this.facturaEmailControl.reset('');
     this.successMessage = '';
     this.errorMessage = '';
     this.loadDepartamentosTorre();

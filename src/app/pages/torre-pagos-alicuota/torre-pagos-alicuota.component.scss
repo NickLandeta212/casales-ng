@@ -76,6 +76,12 @@
   box-shadow: var(--sl-shadow-sm);
 }
 
+.payment-link-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
 .section-heading {
   h3,
   p {

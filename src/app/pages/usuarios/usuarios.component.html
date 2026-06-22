@@ -1,4 +1,7 @@
 <div class="usuarios-container">
+	<div class="alert-error" *ngIf="errorMessage">{{ errorMessage }}</div>
+	<div class="alert-success" *ngIf="successMessage">{{ successMessage }}</div>
+
 	<div class="usuarios-content" *ngIf="vistaActual === 'list'">
 		<div class="usuarios-table-wrapper table-section">
 			<table class="usuarios-table usuarios-list-table">
@@ -162,6 +165,7 @@
 						</td>
 						<td>
 							<input class="field-input" type="email" [formControl]="emailControl" placeholder="Ej: usuario@correo.com" />
+							<span class="field-hint error" *ngIf="emailControl.touched && emailControl.invalid">Ingresa un correo valido.</span>
 						</td>
 						<td>
 							<input class="field-input" type="password" [formControl]="passwordControl" placeholder="Minimo 8 caracteres" />
@@ -172,7 +176,9 @@
 
 			<div class="form-actions">
 				<button class="btn-action btn-ghost" (click)="limpiarFormulario()">Limpiar</button>
-				<button class="btn-action btn-primary" (click)="crearUsuario()">Guardar usuario</button>
+				<button class="btn-action btn-primary" (click)="crearUsuario()" [disabled]="creandoUsuario">
+					{{ creandoUsuario ? 'Enviando confirmacion...' : 'Guardar usuario' }}
+				</button>
 			</div>
 		</div>
 

@@ -6,6 +6,7 @@ import { startWith } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AlicuotaTorrePago, AlicuotasService } from '../../services/alicuotas.service';
 import { TorresService } from '../../services/torres.service';
+import { SecurityUrlService } from '../../services/security-url.service';
 
 @Component({
   selector: 'app-torre-pagos-conjunto',
@@ -23,7 +24,8 @@ export class TorrePagosConjuntoComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private torresService: TorresService,
-    private alicuotasService: AlicuotasService
+    private alicuotasService: AlicuotasService,
+    private securityUrlService: SecurityUrlService
   ) {}
 
   ngOnInit(): void {
@@ -86,8 +88,9 @@ export class TorrePagosConjuntoComponent implements OnInit {
     });
   }
 
-  getPaymentLink(): string {
-    return `${window.location.origin}/pago-alicuota-torre`;
+  getPaymentLink(torre: any): string {
+    const id = torre?.id ?? torre?.numero;
+    return `${window.location.origin}/pago-alicuota-torre/${id}`;
   }
 
   getEstadoLabel(estado: string): string {
@@ -103,11 +106,7 @@ export class TorrePagosConjuntoComponent implements OnInit {
   getComprobanteUrl(pago: AlicuotaTorrePago): string {
     const rawUrl = String(pago.comprobanteUrl || '').trim();
 
-    if (!rawUrl || /^https?:\/\//i.test(rawUrl)) {
-      return rawUrl;
-    }
-
-    return rawUrl.startsWith('/') ? `${this.getApiOrigin()}${rawUrl}` : rawUrl;
+    return this.securityUrlService.sanitizeResourceUrl(rawUrl, this.getApiOrigin());
   }
 
   private getApiOrigin(): string {

@@ -5,6 +5,7 @@ import { environment } from '../../../environments/environment';
 import { AlicuotaPago, AlicuotasService } from '../../services/alicuotas.service';
 import { Multa, MultasService } from '../../services/multas.service';
 import { Persona, PersonasService } from '../../services/personas.service';
+import { SecurityUrlService } from '../../services/security-url.service';
 
 @Component({
   selector: 'app-departamento-personas',
@@ -28,7 +29,8 @@ export class DepartamentoPersonasComponent implements OnInit {
     private route: ActivatedRoute,
     private personasService: PersonasService,
     private multasService: MultasService,
-    private alicuotasService: AlicuotasService
+    private alicuotasService: AlicuotasService,
+    private securityUrlService: SecurityUrlService
   ) { }
 
   ngOnInit(): void {
@@ -109,11 +111,7 @@ export class DepartamentoPersonasComponent implements OnInit {
   getComprobanteUrl(pago: AlicuotaPago): string {
     const rawUrl = String(pago.comprobanteUrl || '').trim();
 
-    if (!rawUrl || /^https?:\/\//i.test(rawUrl)) {
-      return rawUrl;
-    }
-
-    return rawUrl.startsWith('/') ? `${this.getApiOrigin()}${rawUrl}` : rawUrl;
+    return this.securityUrlService.sanitizeResourceUrl(rawUrl, this.getApiOrigin());
   }
 
   private cargarPagosAlicuotas(): void {

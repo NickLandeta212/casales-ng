@@ -1,16 +1,18 @@
 
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
 
 :root {
-  --sl-color-primary: #4fa33d;
-  --sl-color-primary-rgb: 79, 163, 61;
-  --sl-color-primary-hover: #3f8f31;
-  --sl-color-primary-dark: #176b34;
-  --sl-color-primary-soft: #edf8e8;
-  --sl-color-accent: #8bcf3f;
-  --sl-color-danger: #a94438;
+  --sl-color-primary: #3f8f31;
+  --sl-color-primary-rgb: 63, 143, 49;
+  --sl-color-primary-hover: #2f7628;
+  --sl-color-primary-dark: #14532d;
+  --sl-color-primary-soft: #eef8ea;
+  --sl-color-accent: #7fbf3f;
+  --sl-color-danger: #b42318;
+  --sl-color-warning: #986400;
+  --sl-color-info: #2563eb;
   --sl-color-surface: #ffffff;
-  --sl-color-page: #f4f9f1;
+  --sl-color-page: #f5faf2;
   --sl-color-muted: #66715f;
   --sl-color-text: #243528;
   --sl-color-text-soft: #53624f;
@@ -259,6 +261,39 @@ textarea.form-control:focus {
 
 body {
   font-family: 'Poppins', sans-serif;
+  color: var(--sl-color-text);
+  background: var(--sl-color-page);
+}
+
+.btn-success,
+.btn-primary,
+.btn-submit,
+.btn-action.btn-primary,
+button.btn-primary {
+  background-color: var(--sl-color-primary) !important;
+  border-color: var(--sl-color-primary) !important;
+  color: #ffffff !important;
+}
+
+.btn-success:hover,
+.btn-primary:hover,
+.btn-submit:hover,
+.btn-action.btn-primary:hover,
+button.btn-primary:hover {
+  background-color: var(--sl-color-primary-hover) !important;
+  border-color: var(--sl-color-primary-hover) !important;
+}
+
+.alert-error {
+  color: var(--sl-color-danger) !important;
+  background-color: #fff6f5 !important;
+  border-color: #f0c4bf !important;
+}
+
+.alert-success {
+  color: var(--sl-color-primary-dark) !important;
+  background-color: var(--sl-color-primary-soft) !important;
+  border-color: var(--sl-color-section-border) !important;
 }
 
 .action-cell {

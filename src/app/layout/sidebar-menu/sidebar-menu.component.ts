@@ -43,6 +43,15 @@ export class SidebarMenuComponent implements OnInit {
           link: '/dashboard/torres/pagos-alicuota',
           roles: ['admin_general', 'admin_conjunto'],
           permission: 'pagos_alicuota'
+        },
+        {
+          title: 'Link de pago',
+          icon: 'bi bi-credit-card',
+          link: '/pago-alicuota-torre',
+          dynamicLink: 'pago-alicuota-torre-tesorero',
+          target: '_blank',
+          roles: ['tesorero'],
+          permission: 'pagos_alicuota_torre'
         }
       ]
     },
@@ -180,6 +189,15 @@ export class SidebarMenuComponent implements OnInit {
 
   canShow(item: any): boolean {
     return this.authService.hasRole(item.roles) && this.authService.hasPagePermission(item.permission);
+  }
+
+  getLink(item: any): string {
+    if (item?.dynamicLink === 'pago-alicuota-torre-tesorero') {
+      const [torreId] = this.authService.getAuthorizedTorreIds();
+      return torreId ? `/pago-alicuota-torre/${torreId}` : '/pago-alicuota-torre';
+    }
+
+    return item?.link || '/dashboard/home';
   }
 }
 

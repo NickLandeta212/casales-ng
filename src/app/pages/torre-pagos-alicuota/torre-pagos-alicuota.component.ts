@@ -7,6 +7,7 @@ import { AuthService } from '../../auth/services/auth.service';
 import { AlicuotaPago, AlicuotasService } from '../../services/alicuotas.service';
 import { TorresService } from '../../services/torres.service';
 import { environment } from '../../../environments/environment';
+import { SecurityUrlService } from '../../services/security-url.service';
 
 @Component({
   selector: 'app-torre-pagos-alicuota',
@@ -31,7 +32,8 @@ export class TorrePagosAlicuotaComponent implements OnInit {
     private route: ActivatedRoute,
     private torresService: TorresService,
     private authService: AuthService,
-    private alicuotasService: AlicuotasService
+    private alicuotasService: AlicuotasService,
+    private securityUrlService: SecurityUrlService
   ) { }
 
   ngOnInit(): void {
@@ -102,8 +104,8 @@ export class TorrePagosAlicuotaComponent implements OnInit {
 
     this.alicuotasService.aprobarPago(pago.id).subscribe({
       next: () => this.cargarPagos(),
-      error: () => {
-        this.errorMessage = 'No se pudo aprobar el pago seleccionado.';
+      error: (error) => {
+        this.errorMessage = error?.error?.message || 'No se pudo aprobar el pago seleccionado.';
         this.approvingPagoId = null;
       },
       complete: () => {
@@ -149,19 +151,7 @@ export class TorrePagosAlicuotaComponent implements OnInit {
   getComprobanteUrl(pago: AlicuotaPago): string {
     const rawUrl = String(pago.comprobanteUrl || '').trim();
 
-    if (!rawUrl) {
-      return '';
-    }
-
-    if (/^https?:\/\//i.test(rawUrl)) {
-      return rawUrl;
-    }
-
-    if (rawUrl.startsWith('/')) {
-      return `${this.getApiOrigin()}${rawUrl}`;
-    }
-
-    return rawUrl;
+    return this.securityUrlService.sanitizeResourceUrl(rawUrl, this.getApiOrigin());
   }
 
   private aplicarTorresAutorizadas(): void {

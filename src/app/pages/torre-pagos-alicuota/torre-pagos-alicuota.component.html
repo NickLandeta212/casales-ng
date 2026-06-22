@@ -29,10 +29,20 @@
   <section class="links-section">
     <div class="section-heading">
       <h3>Link de cobro para departamentos</h3>
-      <p>Comparte este unico formulario para que el residente seleccione torre, departamento y suba el comprobante.</p>
+      <p>Comparte el enlace de la torre correspondiente para que el residente seleccione su departamento y suba el comprobante.</p>
     </div>
 
-    <a class="btn-payment-link" routerLink="/pago-alicuota" target="_blank" rel="noopener">Ir al link de pago</a>
+    <div class="payment-link-list">
+      <a
+        class="btn-payment-link"
+        *ngFor="let torre of torresAutorizadas"
+        [href]="getPaymentLink(torre)"
+        target="_blank"
+        rel="noopener"
+      >
+        Torre {{ torre.numero }}
+      </a>
+    </div>
   </section>
 
   <div class="filters-row">
@@ -67,6 +77,7 @@
           <th>Departamento</th>
           <th>Mes</th>
           <th>Valor</th>
+          <th>Correo factura</th>
           <th>Estado</th>
           <th>Comprobante</th>
           <th>Accion</th>
@@ -78,6 +89,7 @@
           <td>{{ pago.departamentoNumero }}</td>
           <td>{{ pago.mes }}</td>
           <td>${{ pago.valor }}</td>
+          <td>{{ pago.emailDestinatario || 'Sin correo' }}</td>
           <td>
             <span class="status-pill" [class.review]="pago.estado === 'en_revision'" [class.approved]="pago.estado === 'aprobado'">
               {{ getEstadoLabel(pago.estado) }}
@@ -102,7 +114,7 @@
         </tr>
 
         <tr *ngIf="!pagosFiltrados.length">
-          <td colspan="7" class="empty-cell">No hay pagos de departamentos para el filtro seleccionado.</td>
+          <td colspan="8" class="empty-cell">No hay pagos de departamentos para el filtro seleccionado.</td>
         </tr>
       </tbody>
     </table>

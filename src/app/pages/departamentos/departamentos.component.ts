@@ -54,7 +54,6 @@ export class DepartamentosComponent implements OnInit {
       });
 
       this.torres = Array.from(torresMap.values()).sort((a, b) => a.numero - b.numero);
-      console.log('Torres cargadas:', this.torres);
     }, () => {
       // Fallback local en caso de que el endpoint de torres no responda
       this.torres = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(numero => ({ numero }));
@@ -85,7 +84,6 @@ export class DepartamentosComponent implements OnInit {
       this.tiposDisponibles = Array.from(new Set(normalizados.map(item => item.tipo))).sort();
       this.actualizarNumerosDisponibles();
       this.irAPagina(1);
-      console.log('Departamentos cargados:', normalizados);
     }, () => {
       this.lista = [];
       this.listaFiltrada = [];

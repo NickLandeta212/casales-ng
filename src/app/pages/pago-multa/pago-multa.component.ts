@@ -4,6 +4,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DepartamentosService } from '../../services/departamentos.service';
 import { Multa, MultasService } from '../../services/multas.service';
 import { TorresService } from '../../services/torres.service';
+import { PublicFormSecurityService } from '../../services/public-form-security.service';
 
 interface PagoMultaTorre {
   id: number;
@@ -29,6 +30,8 @@ export class PagoMultaComponent implements OnInit {
   private torresService = inject(TorresService);
   private departamentosService = inject(DepartamentosService);
   private multasService = inject(MultasService);
+  private publicFormSecurity = inject(PublicFormSecurityService);
+  private readonly formStartedAt = Date.now();
 
   torres: PagoMultaTorre[] = [];
   departamentos: PagoMultaDepartamento[] = [];
@@ -39,12 +42,14 @@ export class PagoMultaComponent implements OnInit {
   submitted = false;
   loadingData = false;
   submitting = false;
+  website = '';
   successMessage = '';
   errorMessage = '';
 
   pagoForm = this.fb.group({
     torre: ['', Validators.required],
     departamento: ['', Validators.required],
+    email_destinatario: ['', [Validators.required, Validators.email]],
   });
 
   ngOnInit(): void {
@@ -106,9 +111,19 @@ export class PagoMultaComponent implements OnInit {
   }
 
   enviarPago(): void {
+    if (this.submitting) {
+      return;
+    }
+
     this.submitted = true;
     this.successMessage = '';
     this.errorMessage = '';
+    const securityError = this.publicFormSecurity.validateSubmission('pago-multa', this.formStartedAt, this.website);
+
+    if (securityError) {
+      this.errorMessage = securityError;
+      return;
+    }
 
     if (
       this.pagoForm.invalid ||
@@ -141,12 +156,14 @@ export class PagoMultaComponent implements OnInit {
       .filter((id): id is number | string => id !== undefined && id !== null);
 
     this.submitting = true;
+    this.publicFormSecurity.markSubmitted('pago-multa');
     this.multasService
       .registrarPagoMultas({
         departamento_id: departamentoId,
         multa_ids: multaIds,
         total: this.totalCancelar,
         comprobante_base64: this.comprobanteBase64,
+        email_destinatario: String(this.pagoForm.get('email_destinatario')?.value || '').trim(),
       })
       .subscribe({
         next: () => {
