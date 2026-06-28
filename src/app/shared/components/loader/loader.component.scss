@@ -4,7 +4,7 @@
   left: 0;
   width: 100%;
   height: 100vh;
-  background-color: #F8F9FA; /* tono claro, limpio */
+  background-color: var(--sl-color-page);
   z-index: 9999;
 
   display: flex;
@@ -15,14 +15,14 @@
 
 .letters-row {
   display: flex;
-  gap: 10px; /* separación entre letras */
+  gap: 10px;
 }
 
 .falling-letter {
-  font-family: 'Montserrat', sans-serif;
-  font-size: 3rem; /* más pequeña que antes */
-  font-weight: 300; /* delgado */
-  letter-spacing: 2px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 3rem;
+  font-weight: 600;
+  letter-spacing: 0;
   animation: fall 1.8s ease forwards;
 }
 

@@ -2,11 +2,12 @@
 .btn {
   background-color: transparent;
   border: none;
+  color: var(--sl-color-primary-dark);
 }
 
 .btn:focus {
   outline: none;
-  box-shadow: none;
+  box-shadow: var(--sl-focus-ring);
 }
 
 

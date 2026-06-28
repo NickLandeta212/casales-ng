@@ -4,13 +4,14 @@ import { Router } from '@angular/router';
 import { catchError } from 'rxjs/operators';
 import { throwError } from 'rxjs';
 import { AuthService } from '../auth/services/auth.service';
+import { environment } from '../../environments/environment';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
   const authService = inject(AuthService);
 
   // Excluir la ruta de login
-  if (req.url.includes('/auth/login')) {
+  if (req.url.includes('/auth/login') || !isTrustedApiRequest(req.url)) {
     return next(req);
   }
 
@@ -35,3 +36,17 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     })
   );
 };
+
+function isTrustedApiRequest(url: string): boolean {
+  if (!/^https?:\/\//i.test(url)) {
+    return true;
+  }
+
+  try {
+    const requestUrl = new URL(url);
+    const apiUrl = new URL(environment.endpoint, window.location.origin);
+    return requestUrl.origin === apiUrl.origin;
+  } catch {
+    return false;
+  }
+}

@@ -16,7 +16,7 @@
               </div>
               <div class="col-md-10 mt-1 mb-3">
                 <p class="lead">Bienvenido de nuevo. Inicia sesión para continuar.</p>
-                <span style="color: #0A8800;"> <i class="bi bi-lock"></i> Todos los datos se cifrarán</span>
+                <span class="login-security-note"> <i class="bi bi-lock"></i> Todos los datos se cifrarán</span>
               </div>
               <div *ngIf="errorMessage !== ''" class="col-md-10 mt-1 mb-3">
                 <div class="alert alert-danger" role="alert">{{ errorMessage }}</div>
@@ -42,8 +42,9 @@
                       <input #passwordInput [type]="showPassword ? 'text' : 'password'" id="password"
                         class="form-control form-control-lg pe-5" formControlName="password"
                         placeholder="Ingresa tu contraseña" autocomplete="current-password" />
-                      <i class="bi" [ngClass]="showPassword ? 'bi-eye-slash' : 'bi-eye'" (click)="togglePassword()"
-                        style="position: absolute; top: 50%; right: 15px; transform: translateY(-50%); font-size: 1.5rem; cursor: pointer; color: #6c757d;"></i>
+                      <button class="password-toggle" type="button" (click)="togglePassword()" [attr.aria-label]="showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'">
+                        <i class="bi" [ngClass]="showPassword ? 'bi-eye-slash' : 'bi-eye'"></i>
+                      </button>
                     </div>
                     <div class="text-danger mt-1"
                       *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">

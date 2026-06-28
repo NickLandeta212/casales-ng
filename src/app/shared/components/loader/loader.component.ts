@@ -15,6 +15,7 @@ export class LoaderComponent {
   loading$: typeof this.loaderService.loading$;
   letters: { char: string; color: string }[] = [];
   text = 'Casales';
+  private readonly brandColors = ['#14532d', '#3f8f31', '#7fbf3f', '#53624f'];
   private intervalSub?: Subscription;
 
 
@@ -31,7 +32,6 @@ export class LoaderComponent {
   }
 
   randomColor(): string {
-    const colors = ['#FF5733', '#33FF57', '#3357FF', '#FF33A8', '#FFC300', '#DAF7A6'];
-    return colors[Math.floor(Math.random() * colors.length)];
+    return this.brandColors[Math.floor(Math.random() * this.brandColors.length)];
   }
 }

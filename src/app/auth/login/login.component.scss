@@ -1,7 +1,7 @@
 .login-card {
     border: 0;
-    border-radius: 25px;
-    box-shadow: 0 5px 30px 0 rgba(172, 168, 168, 0.43);
+    border-radius: var(--sl-radius-lg);
+    box-shadow: var(--sl-shadow-panel);
     overflow: hidden;
 
     &-img {
@@ -20,7 +20,7 @@
   align-items: center;
   justify-content: center;
   padding: 2rem 1rem;
-  background: #ffffff;
+  background: var(--sl-color-surface);
 }
 
 .login-logo {
@@ -35,6 +35,38 @@
 
 .form-control:focus + i {
   color: var(--sl-color-primary);
+}
+
+.login-security-note {
+  color: var(--sl-color-primary-dark);
+  font-weight: 500;
+}
+
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: var(--sl-radius-sm);
+  background: transparent;
+  color: var(--sl-color-muted);
+  cursor: pointer;
+}
+
+.password-toggle:hover,
+.password-toggle:focus {
+  color: var(--sl-color-primary-dark);
+}
+
+.password-toggle:focus {
+  outline: none;
+  box-shadow: var(--sl-focus-ring);
 }
 
 
