@@ -6,7 +6,7 @@
       </a>
 
       <div *ngIf="item.children">
-        <a class="nav-link" data-bs-toggle="collapse" [attr.href]="'#' + item.title.replace(' ', '')"
+        <a class="nav-link parent-link" data-bs-toggle="collapse" [attr.href]="'#' + item.title.replace(' ', '')"
           role="button">
           <i [class]="item.icon"></i> {{ item.title }}
         </a>

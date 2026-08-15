@@ -10,7 +10,7 @@ import { RouterModule } from '@angular/router';
   styleUrl: './user-menu.component.scss'
 })
 export class UserMenuComponent implements OnInit {
-  readonly allRoles = ['admin_general', 'admin_conjunto', 'tesorero', 'condomino'];
+  readonly allRoles = ['superadmin', 'admin_general', 'admin_conjunto', 'guardia', 'tesorero', 'condomino'];
 
   constructor(public authService: AuthService) { }
 

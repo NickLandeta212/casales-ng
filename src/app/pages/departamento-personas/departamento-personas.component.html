@@ -16,6 +16,9 @@
           <th>Cedula</th>
           <th>Telefono</th>
           <th>Tipo</th>
+          <th>Vehiculo</th>
+          <th>Parqueadero</th>
+          <th>Accion</th>
         </tr>
       </thead>
       <tbody>
@@ -25,6 +28,35 @@
           <td>{{ persona.cedula }}</td>
           <td>{{ persona.telefono }}</td>
           <td>{{ persona.tipoResidencia === 'dueno' ? 'Dueno' : 'Arrendatario' }}</td>
+          <td>
+            <span *ngIf="personaEditando !== getPersonaKey(persona)">{{ getMovilidad(persona).vehiculo || '-' }}</span>
+            <input
+              *ngIf="personaEditando === getPersonaKey(persona)"
+              class="inline-input"
+              type="text"
+              placeholder="Ej: PBA-1234"
+              [(ngModel)]="movilidadDraft.vehiculo"
+            />
+          </td>
+          <td>
+            <span *ngIf="personaEditando !== getPersonaKey(persona)">{{ getMovilidad(persona).parqueadero || '-' }}</span>
+            <input
+              *ngIf="personaEditando === getPersonaKey(persona)"
+              class="inline-input"
+              type="text"
+              placeholder="Ej: P-12"
+              [(ngModel)]="movilidadDraft.parqueadero"
+            />
+          </td>
+          <td>
+            <div class="inline-actions" *ngIf="personaEditando !== getPersonaKey(persona)">
+              <button type="button" (click)="editarMovilidad(persona)">Asignar</button>
+            </div>
+            <div class="inline-actions" *ngIf="personaEditando === getPersonaKey(persona)">
+              <button type="button" (click)="guardarMovilidad(persona)">Guardar</button>
+              <button type="button" class="secondary" (click)="cancelarMovilidad()">Cancelar</button>
+            </div>
+          </td>
         </tr>
       </tbody>
     </table>

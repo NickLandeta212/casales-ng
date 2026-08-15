@@ -4,39 +4,66 @@
 
 	<div class="usuarios-content" *ngIf="vistaActual === 'list'">
 		<div class="usuarios-table-wrapper table-section">
+			<div class="form-actions">
+				<select class="field-select" [formControl]="filtroTorreControl">
+					<option value="todas">Todas las torres</option>
+					<option *ngFor="let torre of torresFiltro" [value]="torre">Torre {{ torre }}</option>
+				</select>
+				<select class="field-select" [formControl]="filtroTipoControl">
+					<option value="todos">Todos los tipos</option>
+					<option *ngFor="let tipo of tiposFiltro" [value]="tipo">{{ tipo }}</option>
+				</select>
+				<select class="field-select" [formControl]="filtroNumeroControl">
+					<option value="todos">Todos los números</option>
+					<option *ngFor="let numero of numerosFiltro" [value]="numero">{{ numero }}</option>
+				</select>
+				<input class="field-input" type="text" [formControl]="busquedaControl" placeholder="Buscar usuario" />
+				<button class="btn-action btn-ghost" (click)="limpiarFiltros()">Limpiar filtros</button>
+			</div>
+		</div>
+
+		<div class="usuarios-content">
+		<div class="usuarios-table-wrapper table-section">
 			<table class="usuarios-table usuarios-list-table">
 				<thead>
 					<tr>
-						<th>#</th>
-						<th>Usuario</th>
 						<th>Torre</th>
+						<th>Tipo</th>
+						<th>Número de departamento</th>
+						<th>Usuario</th>
 						<th>Correo</th>
-						<th class="acciones-header">Inspeccionar</th>
+						<th class="acciones-header">Acción</th>
 					</tr>
 				</thead>
 				<tbody>
-					<tr *ngFor="let usuario of listaUsuarios; let i = index" [class.even]="i % 2 === 0">
-						<td>{{ i + 1 }}</td>
-						<td>
-							<div class="usuario-chip">
-								<span class="usuario-avatar">{{ getIniciales(usuario.nombre) }}</span>
-								<span>{{ usuario.nombre }}</span>
-							</div>
-						</td>
-						<td>{{ usuario.torreEtiqueta }}</td>
-						<td>{{ usuario.email }}</td>
+					<tr *ngFor="let usuario of usuariosPaginados; let i = index" [class.even]="i % 2 === 0">
+						<td>{{ usuario.torreNumero || '-' }}</td>
+						<td>{{ usuario.departamentoTipo }}</td>
+						<td>{{ usuario.departamentoNumero || '-' }}</td>
+						<td>{{ usuario.username }}</td>
+						<td>{{ getCorreoVisible(usuario) }}</td>
 						<td class="acciones-cell">
-							<button class="btn-inspeccionar" (click)="seleccionarUsuario(usuario)">
+							<button class="btn-inspeccionar" *ngIf="!esUsuarioDepartamento(usuario)" (click)="seleccionarUsuario(usuario)">
 								Inspeccionar
 							</button>
+							<span class="field-hint" *ngIf="esUsuarioDepartamento(usuario)">Solo lectura</span>
 						</td>
 					</tr>
 				</tbody>
 			</table>
 
 			<div class="usuarios-counter">
-				<span class="counter-label">Usuarios registrados</span>
-				<span class="counter-value">{{ listaUsuarios.length }}</span>
+				<span class="counter-label">Mostrando {{ rangoInicio }} - {{ rangoFin }} de {{ usuariosFiltrados.length }}</span>
+				<div class="form-actions">
+					<select class="field-select" [formControl]="pageSizeControl">
+						<option [ngValue]="10">10</option>
+						<option [ngValue]="25">25</option>
+						<option [ngValue]="50">50</option>
+					</select>
+					<button class="btn-action btn-ghost" (click)="cambiarPagina(paginaActual - 1)" [disabled]="paginaActual === 1">Anterior</button>
+					<button class="btn-inspeccionar" *ngFor="let pagina of paginasVisibles" (click)="cambiarPagina(pagina)" [disabled]="pagina === paginaActual">{{ pagina }}</button>
+					<button class="btn-action btn-ghost" (click)="cambiarPagina(paginaActual + 1)" [disabled]="paginaActual === totalPaginas">Siguiente</button>
+				</div>
 			</div>
 		</div>
 
@@ -46,6 +73,14 @@
 			</div>
 
 			<div class="details-content">
+				<div class="detail-item">
+					<label>Usuario</label>
+					<input class="field-input" type="text" [formControl]="editUsernameControl" />
+					<span class="field-hint error" *ngIf="editUsernameControl.touched && editUsernameControl.invalid">
+						Usa solo letras, numeros, punto, guion o guion bajo.
+					</span>
+				</div>
+
 				<div class="detail-item">
 					<label>Nombre</label>
 					<input class="field-input" type="text" [formControl]="editNombreControl" />
@@ -64,10 +99,21 @@
 				<div class="detail-item">
 					<label>Rol</label>
 					<select class="field-select" [formControl]="editRoleControl">
-						<option value="tesorero">Tesorero</option>
-						<option value="admin_conjunto">Admin conjunto</option>
+						<option value="superadmin">Superadmin</option>
 						<option value="admin_general">Admin general</option>
+						<option value="admin_conjunto">Admin conjunto</option>
+						<option value="guardia">Guardia</option>
+						<option value="tesorero">Tesorero</option>
+						<option value="condomino">Departamento</option>
 					</select>
+				</div>
+
+				<div class="detail-item">
+					<label>Nueva contraseña</label>
+					<input class="field-input" type="password" [formControl]="editPasswordControl" placeholder="Dejar vacio si no cambia" />
+					<span class="field-hint error" *ngIf="editPasswordControl.touched && editPasswordControl.invalid">
+						Minimo 8 caracteres, una mayuscula, una minuscula y un numero.
+					</span>
 				</div>
 
 				<div class="detail-item">
@@ -124,8 +170,9 @@
 		</div>
 
 		<div class="permissions-section" *ngIf="!usuarioSeleccionado">
-			<h3>Inspeccionar usuario</h3>
-			<p>Selecciona un usuario desde la tabla para ver su correo, torre, departamentos y autorizaciones.</p>
+			<h3>Solo lectura</h3>
+			<p>Los usuarios de departamentos no se editan desde inspección. Selecciona un usuario administrativo para cambiar rol, permisos o eliminarlo.</p>
+		</div>
 		</div>
 	</div>
 
@@ -134,7 +181,7 @@
 			<div>
 				<span class="section-kicker">Usuarios</span>
 				<h3>Crear usuario</h3>
-				<p>Asigna una torre base, define el rol y autoriza paginas y torres.</p>
+				<p>Asigna una torre base, selecciona el rol y crea el acceso con permisos iniciales.</p>
 			</div>
 			<div class="create-badge">Alta con permisos</div>
 		</div>
@@ -144,6 +191,8 @@
 				<thead>
 					<tr>
 						<th>Torre base</th>
+						<th>Rol</th>
+						<th>Usuario</th>
 						<th>Nombre</th>
 						<th>Correo</th>
 						<th>Password</th>
@@ -161,10 +210,24 @@
 							</div>
 						</td>
 						<td>
+							<select class="field-select" [formControl]="createRoleControl">
+								<option value="superadmin">Superadmin</option>
+								<option value="admin_general">Admin general</option>
+								<option value="admin_conjunto">Admin conjunto</option>
+								<option value="guardia">Guardia</option>
+								<option value="tesorero">Tesorero</option>
+								<option value="condomino">Departamento</option>
+							</select>
+						</td>
+						<td>
+							<input class="field-input" type="text" [formControl]="usernameControl" placeholder="Ej: T3D603" />
+							<span class="field-hint error" *ngIf="usernameControl.touched && usernameControl.invalid">Usa solo letras, numeros, punto, guion o guion bajo.</span>
+						</td>
+						<td>
 							<input class="field-input" type="text" [formControl]="nombreControl" placeholder="Ej: Admin Conjunto" />
 						</td>
 						<td>
-							<input class="field-input" type="email" [formControl]="emailControl" placeholder="Ej: usuario@correo.com" />
+							<input class="field-input" type="email" [formControl]="emailControl" placeholder="Correo de la persona responsable" />
 							<span class="field-hint error" *ngIf="emailControl.touched && emailControl.invalid">Ingresa un correo valido.</span>
 						</td>
 						<td>
@@ -183,8 +246,23 @@
 		</div>
 
 		<div class="permissions-section">
-			<h3>Permisos del usuario</h3>
-			<p>Primero crea el usuario. Luego entra en Todos, inspecciona el registro y asigna rol, paginas y torres autorizadas.</p>
+			<h3>Permisos iniciales</h3>
+			<p>El rol seleccionado asigna permisos base. Luego puedes ajustar paginas y torres desde la inspeccion del usuario.</p>
+		</div>
+
+		<div class="permissions-section">
+			<h3>Usuarios de departamentos</h3>
+			<p>Crea automaticamente un acceso para cada departamento registrado. El usuario queda como codigo simple, por ejemplo T3D603.</p>
+			<div class="form-actions">
+				<input class="field-input" type="password" [formControl]="departamentosPasswordControl" placeholder="Clave temporal para departamentos" />
+				<button class="btn-action btn-primary" (click)="crearUsuariosParaDepartamentos()" [disabled]="creandoUsuariosDepartamentos">
+					{{ creandoUsuariosDepartamentos ? 'Creando usuarios...' : 'Crear usuarios departamentos' }}
+				</button>
+			</div>
+			<span class="field-hint error" *ngIf="departamentosPasswordControl.touched && departamentosPasswordControl.invalid">
+				La clave debe tener minimo 8 caracteres, una mayuscula, una minuscula y un numero.
+			</span>
+			<p *ngIf="usuariosDepartamentoResultado">{{ usuariosDepartamentoResultado }}</p>
 		</div>
 	</div>
 

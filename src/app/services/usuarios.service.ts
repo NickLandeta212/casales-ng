@@ -6,6 +6,7 @@ import { map, switchMap, tap } from 'rxjs/operators';
 
 export interface Usuario {
   id?: number | string;
+  username?: string;
   nombre: string;
   email: string;
   role: string;
@@ -15,6 +16,7 @@ export interface Usuario {
 }
 
 export interface UsuarioDraft {
+  username?: string;
   nombre: string;
   email: string;
   password: string;
@@ -25,11 +27,13 @@ export interface UsuarioDraft {
 }
 
 export interface UsuarioPermissionsDraft {
+  username?: string;
   nombre: string;
   email: string;
   role: string;
   page_permissions: string[];
   torre_ids: number[];
+  password?: string;
 }
 
 @Injectable({
@@ -54,9 +58,13 @@ export class UsuariosService {
   }
 
   addUsuario(usuario: UsuarioDraft) {
-    return this.http.post<any>(this.apiUrl, usuario).pipe(
+    return this.createUsuario(usuario).pipe(
       switchMap(() => this.loadUsers())
     );
+  }
+
+  createUsuario(usuario: UsuarioDraft) {
+    return this.http.post<any>(this.apiUrl, usuario);
   }
 
   updateUsuario(id: number | string, usuario: UsuarioPermissionsDraft) {
@@ -77,6 +85,7 @@ export class UsuariosService {
 
     return lista.map((item: any) => ({
       id: item.id ?? item._id,
+      username: String(item.username ?? item.usuario ?? '').trim(),
       nombre: String(item.nombre ?? '').trim(),
       email: String(item.email ?? '').trim(),
       role: String(item.role ?? '').trim(),

@@ -176,6 +176,38 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+.inline-input {
+  width: 120px;
+  max-width: 100%;
+  padding: 7px 8px;
+  border: 1px solid var(--sl-color-section-border);
+  border-radius: var(--sl-radius-md);
+  font-size: 12px;
+}
+
+.inline-actions {
+  display: inline-flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+
+  button {
+    border: 0;
+    border-radius: var(--sl-radius-md);
+    padding: 7px 9px;
+    background: var(--sl-color-primary);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .secondary {
+    background: var(--sl-color-panel);
+    color: var(--sl-color-primary-dark);
+  }
+}
+
 @media (max-width: 768px) {
   .header-row {
     flex-direction: column;

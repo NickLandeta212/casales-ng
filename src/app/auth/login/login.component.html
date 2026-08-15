@@ -29,11 +29,11 @@
               <div class="col-md-10">
                 <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
                   <div class="mb-3">
-                    <label for="username" class="form-label">Correo electrónico</label>
-                    <input #usernameInput type="email" id="username" class="form-control form-control-lg" formControlName="username" autocomplete="username" autocapitalize="off" spellcheck="false">
+                    <label for="username" class="form-label">Usuario o correo</label>
+                    <input #usernameInput type="text" id="username" class="form-control form-control-lg" formControlName="username" placeholder="Ej: T3D603" autocomplete="username" autocapitalize="off" spellcheck="false">
                     <div class="text-danger"
                       *ngIf="loginForm.get('username')?.invalid && loginForm.get('username')?.touched">
-                      Ingresa un correo válido.
+                      Ingresa tu usuario.
                     </div>
                   </div>
                   <div class="mb-3">

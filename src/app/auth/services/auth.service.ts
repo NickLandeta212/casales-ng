@@ -6,16 +6,55 @@ import { BehaviorSubject } from 'rxjs';
   providedIn: 'root'
 })
 export class AuthService {
-  private readonly allowedRoles = ['admin_general', 'admin_conjunto', 'tesorero'];
+  private readonly allowedRoles = [
+    'superadmin',
+    'admin_general',
+    'admin_conjunto',
+    'tesorero',
+    'guardia',
+    'condomino',
+    'residente',
+    'propietario',
+    'proveedor'
+  ];
   private readonly allowedPermissions = [
     'home',
+    'plataforma',
+    'conjuntos',
     'torres',
     'pagos_alicuota',
     'pagos_alicuota_torre',
     'pagos_torres',
     'pagos_departamentos',
     'departamentos',
+    'residentes',
+    'propietarios',
+    'inquilinos',
+    'vehiculos',
+    'parqueaderos',
+    'mascotas',
+    'visitantes',
+    'control_acceso',
     'reservas',
+    'comunicados',
+    'incidencias',
+    'documentos',
+    'proveedores',
+    'reportes',
+    'finanzas',
+    'cuentas_cobrar',
+    'estados_cuenta',
+    'mora',
+    'recordatorios_pago',
+    'gastos_comunes',
+    'presupuestos',
+    'automatizaciones',
+    'asistente_ia',
+    'marketplace',
+    'marca_blanca',
+    'multi_conjunto',
+    'configuracion_conjunto',
+    'auditoria',
     'personas',
     'personas_crear',
     'multas',
@@ -24,6 +63,28 @@ export class AuthService {
     'usuarios_crear'
   ];
   private readonly sessionMaxIdleMs = 30 * 60 * 1000;
+  private readonly defaultPermissionsByRole: Record<string, string[]> = {
+    superadmin: this.allowedPermissions,
+    admin_general: this.allowedPermissions,
+    admin_conjunto: [
+      'home', 'conjuntos', 'torres', 'pagos_alicuota', 'departamentos', 'residentes',
+      'pagos_alicuota_torre', 'pagos_torres',
+      'propietarios', 'inquilinos', 'vehiculos', 'parqueaderos', 'mascotas', 'visitantes',
+      'control_acceso', 'reservas', 'comunicados', 'incidencias', 'documentos',
+      'proveedores', 'reportes', 'personas', 'personas_crear', 'multas', 'multas_crear',
+      'usuarios', 'usuarios_crear', 'gastos_comunes', 'recordatorios_pago', 'auditoria'
+    ],
+    tesorero: [
+      'home', 'torres', 'pagos_departamentos', 'departamentos', 'reservas', 'personas', 'multas',
+      'finanzas', 'cuentas_cobrar', 'estados_cuenta', 'mora', 'recordatorios_pago',
+      'gastos_comunes', 'presupuestos', 'reportes'
+    ],
+    guardia: ['home', 'visitantes', 'control_acceso', 'incidencias'],
+    condomino: ['home', 'reservas', 'visitantes', 'pagos_alicuota'],
+    residente: ['home', 'vehiculos', 'mascotas', 'visitantes', 'reservas', 'incidencias', 'documentos', 'pagos_alicuota'],
+    propietario: ['home', 'vehiculos', 'mascotas', 'reservas', 'incidencias', 'documentos', 'estados_cuenta'],
+    proveedor: ['home', 'control_acceso', 'incidencias']
+  };
 
   private tokenSubject = new BehaviorSubject<string | null>(this.getTokenFromStorage());
 
@@ -77,10 +138,10 @@ export class AuthService {
 
     try {
       const parsed = JSON.parse(rawRole);
-      const role = Array.isArray(parsed) ? parsed[0] || 'vendor' : String(parsed);
-      return this.allowedRoles.includes(role) ? role : 'vendor';
+      const role = Array.isArray(parsed) ? parsed[0] || 'residente' : String(parsed);
+      return this.allowedRoles.includes(role) ? role : 'residente';
     } catch {
-      return this.allowedRoles.includes(rawRole) ? rawRole : 'vendor';
+      return this.allowedRoles.includes(rawRole) ? rawRole : 'residente';
     }
   }
 
@@ -129,17 +190,18 @@ export class AuthService {
   }
 
   hasPagePermission(permission?: string): boolean {
-    if (!permission || this.getUserRole() === 'admin_general') {
+    if (!permission || ['superadmin', 'admin_general'].includes(this.getUserRole())) {
       return true;
     }
 
     const permissions = this.getPagePermissions();
+    const rolePermissions = this.defaultPermissionsByRole[this.getUserRole()] || [];
 
     if (permission === 'pagos_alicuota' && permissions.includes('pagos_torres')) {
       return true;
     }
 
-    return permissions.includes(permission);
+    return permissions.includes(permission) || rolePermissions.includes(permission);
   }
 
   isAuthenticated(): boolean {

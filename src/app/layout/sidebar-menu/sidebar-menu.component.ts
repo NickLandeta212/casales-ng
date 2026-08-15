@@ -3,6 +3,11 @@ import { RouterModule } from '@angular/router';
 import { AuthService } from '../../auth/services/auth.service';
 import { CommonModule } from '@angular/common';
 
+const CASALES_ADMIN_ROLES = ['superadmin', 'admin_general', 'admin_conjunto'];
+const CASALES_FINANCE_ROLES = ['superadmin', 'admin_general', 'admin_conjunto', 'tesorero'];
+const CASALES_RESIDENT_ROLES = ['superadmin', 'admin_general', 'admin_conjunto', 'condomino', 'residente', 'propietario'];
+const CASALES_SECURITY_ROLES = ['superadmin', 'admin_general', 'admin_conjunto', 'guardia'];
+
 @Component({
   selector: 'app-sidebar-menu',
   standalone: true,
@@ -21,27 +26,27 @@ export class SidebarMenuComponent implements OnInit {
       title: 'Inicio',
       icon: 'bi bi-house-door',
       link: '/dashboard/home',
-      roles: ['admin_general', 'admin_conjunto', 'tesorero'],
+      roles: ['superadmin', 'admin_general', 'admin_conjunto', 'tesorero', 'guardia', 'condomino', 'residente', 'propietario', 'proveedor'],
       permission: 'home'
     },
     {
       title: 'Torres',
       icon: 'bi bi-building',
-      roles: ['admin_general', 'admin_conjunto', 'tesorero'],
+      roles: CASALES_FINANCE_ROLES,
       permission: 'torres',
       children: [
         {
           title: 'Todos',
           icon: 'bi bi-list-ul',
           link: '/dashboard/torres',
-          roles: ['admin_general', 'admin_conjunto', 'tesorero'],
+          roles: CASALES_FINANCE_ROLES,
           permission: 'torres'
         },
         {
           title: 'Pagos por torres',
           icon: 'bi bi-building-check',
           link: '/dashboard/torres/pagos-alicuota',
-          roles: ['admin_general', 'admin_conjunto'],
+          roles: CASALES_ADMIN_ROLES,
           permission: 'pagos_alicuota'
         },
         {
@@ -50,7 +55,7 @@ export class SidebarMenuComponent implements OnInit {
           link: '/pago-alicuota-torre',
           dynamicLink: 'pago-alicuota-torre-tesorero',
           target: '_blank',
-          roles: ['tesorero'],
+          roles: CASALES_ADMIN_ROLES,
           permission: 'pagos_alicuota_torre'
         }
       ]
@@ -58,43 +63,50 @@ export class SidebarMenuComponent implements OnInit {
     {
       title: 'Departamentos',
       icon: 'bi bi-door-open',
-      roles: ['admin_general', 'admin_conjunto', 'tesorero'],
+      roles: CASALES_FINANCE_ROLES,
       permission: 'departamentos',
       children: [
         {
           title: 'Todos',
           icon: 'bi bi-list-ul',
           link: '/dashboard/departamentos',
-          roles: ['admin_general', 'admin_conjunto', 'tesorero'],
+          roles: CASALES_FINANCE_ROLES,
           permission: 'departamentos'
         },
         {
           title: 'Pagos departamentos',
           icon: 'bi bi-receipt-cutoff',
           link: '/dashboard/departamentos/pagos-alicuota',
-          roles: ['admin_general', 'tesorero'],
+          roles: ['tesorero'],
           permission: 'pagos_departamentos'
         }
       ]
     },
     {
+      title: 'Acceso',
+      icon: 'bi bi-shield-check',
+      link: '/dashboard/acceso',
+      roles: CASALES_SECURITY_ROLES,
+      permission: 'control_acceso'
+    },
+    {
       title: 'Reservas',
       icon: 'bi bi-calendar-check',
-      roles: ['admin_general', 'admin_conjunto', 'tesorero'],
+      roles: CASALES_RESIDENT_ROLES,
       permission: 'reservas',
       children: [
         {
           title: 'Todas',
           icon: 'bi bi-list-ul',
           link: '/dashboard/reservas',
-          roles: ['admin_general', 'admin_conjunto', 'tesorero'],
+          roles: CASALES_RESIDENT_ROLES,
           permission: 'reservas'
         },
         {
           title: 'Formulario de reserva',
           icon: 'bi bi-box-arrow-up-right',
           link: '/reserva',
-          roles: ['admin_general', 'admin_conjunto', 'tesorero'],
+          roles: CASALES_RESIDENT_ROLES,
           permission: 'reservas'
         }
       ]
@@ -102,21 +114,21 @@ export class SidebarMenuComponent implements OnInit {
     {
       title: 'Personas',
       icon: 'bi bi-people',
-      roles: ['admin_general', 'admin_conjunto', 'tesorero'],
+      roles: CASALES_FINANCE_ROLES,
       permission: 'personas',
       children: [
         {
           title: 'Todos',
           icon: 'bi bi-list-ul',
           link: '/dashboard/personas',
-          roles: ['admin_general', 'admin_conjunto', 'tesorero'],
+          roles: CASALES_FINANCE_ROLES,
           permission: 'personas'
         },
         {
           title: 'Crear nueva persona',
           icon: 'bi bi-person-plus',
           link: '/dashboard/personas/crear',
-          roles: ['admin_general', 'admin_conjunto', 'tesorero'],
+          roles: CASALES_FINANCE_ROLES,
           permission: 'personas_crear'
         }
       ]
@@ -124,50 +136,60 @@ export class SidebarMenuComponent implements OnInit {
     {
       title: 'Multas',
       icon: 'bi bi-exclamation-triangle',
-      roles: ['admin_general', 'admin_conjunto', 'tesorero'],
+      roles: CASALES_FINANCE_ROLES,
       permission: 'multas',
       children: [
         {
           title: 'Todas',
           icon: 'bi bi-list-ul',
           link: '/dashboard/multas',
-          roles: ['admin_general', 'admin_conjunto', 'tesorero'],
+          roles: CASALES_FINANCE_ROLES,
           permission: 'multas'
         },
         {
           title: 'Añadir multa',
           icon: 'bi bi-plus-circle',
           link: '/dashboard/multas/crear',
-          roles: ['admin_general', 'admin_conjunto', 'tesorero'],
+          roles: CASALES_FINANCE_ROLES,
           permission: 'multas_crear'
         },
         {
           title: 'Formulario de pago',
           icon: 'bi bi-box-arrow-up-right',
           link: '/pago-multa',
-          roles: ['admin_general', 'admin_conjunto', 'tesorero'],
+          roles: CASALES_FINANCE_ROLES,
           permission: 'multas'
         }
       ]
     },
     {
+      title: 'Finanzas',
+      icon: 'bi bi-cash-coin',
+      roles: CASALES_FINANCE_ROLES,
+      permission: 'gastos_comunes',
+      children: [
+        { title: 'Finanzas del conjunto', icon: 'bi bi-bank', link: '/dashboard/finanzas/conjunto', roles: CASALES_ADMIN_ROLES, permission: 'gastos_comunes' },
+        { title: 'Finanzas de torres', icon: 'bi bi-building-check', link: '/dashboard/finanzas/torres', roles: ['tesorero'], permission: 'gastos_comunes' }
+      ]
+    },
+    {
       title: 'Usuarios',
       icon: 'bi bi-person-gear',
-      roles: ['admin_general', 'admin_conjunto', 'tesorero'],
+      roles: CASALES_ADMIN_ROLES,
       permission: 'usuarios',
       children: [
         {
           title: 'Todos',
           icon: 'bi bi-list-ul',
           link: '/dashboard/usuarios',
-          roles: ['admin_general', 'admin_conjunto', 'tesorero'],
+          roles: CASALES_ADMIN_ROLES,
           permission: 'usuarios'
         },
         {
           title: 'Crear nuevo usuario',
           icon: 'bi bi-person-add',
           link: '/dashboard/usuarios/crear',
-          roles: ['admin_general', 'admin_conjunto', 'tesorero'],
+          roles: CASALES_ADMIN_ROLES,
           permission: 'usuarios_crear'
         }
       ]
@@ -175,8 +197,15 @@ export class SidebarMenuComponent implements OnInit {
     {
       title: 'Ajustes',
       icon: 'bi bi-sliders',
-      roles: ['admin_general'],
+      roles: ['superadmin', 'admin_general'],
       children: [
+        {
+          title: 'Auditoría',
+          icon: 'bi bi-shield-lock',
+          link: '/dashboard/auditoria',
+          roles: CASALES_ADMIN_ROLES,
+          permission: 'auditoria'
+        },
         {
           title: 'Emails',
           icon: 'bi bi-envelope-paper',

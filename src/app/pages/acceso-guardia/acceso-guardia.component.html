@@ -1,0 +1,135 @@
+<div class="acceso-container">
+  <header class="acceso-header">
+    <div>
+      <h1>Control de acceso</h1>
+      <p>Registra torre, departamento, llamada al dueño o residente, visitante e ingreso del vehículo.</p>
+    </div>
+    <span>{{ registrosFiltrados.length }} registros</span>
+  </header>
+
+  <section class="acceso-layout">
+    <form class="access-form" [formGroup]="form" (ngSubmit)="registrar()">
+      <h2>Registrar visitante</h2>
+
+      <div class="two-cols">
+        <label>
+          <span>Torre *</span>
+          <input type="text" formControlName="torre" placeholder="Torre 1" />
+        </label>
+        <label>
+          <span>Departamento *</span>
+          <input type="text" formControlName="departamento" placeholder="302" />
+        </label>
+      </div>
+
+      <label>
+        <span>Dueño o residente contactado *</span>
+        <input type="text" formControlName="duenioContactado" placeholder="Nombre de quien autoriza" />
+      </label>
+
+      <div class="resident-suggestions" *ngIf="residentesSugeridos.length > 0">
+        <span>Residentes encontrados</span>
+        <button type="button" *ngFor="let persona of residentesSugeridos" (click)="usarResidente(persona)">
+          {{ persona.nombres }} {{ persona.apellidos }} · {{ persona.telefono || 'sin teléfono' }}
+        </button>
+      </div>
+
+      <div class="two-cols">
+        <label>
+          <span>Visitante *</span>
+          <input type="text" formControlName="visitante" placeholder="Nombre del visitante" />
+        </label>
+        <label>
+          <span>Documento</span>
+          <input type="text" formControlName="documento" placeholder="Cédula / placa / referencia" />
+        </label>
+      </div>
+
+      <div class="two-cols">
+        <label>
+          <span>Placa del vehículo</span>
+          <input type="text" formControlName="placaVehiculo" placeholder="Ej: PBA-1234" />
+        </label>
+        <label>
+          <span>Hora ingreso vehículo</span>
+          <input type="time" formControlName="horaIngresoVehiculo" />
+        </label>
+      </div>
+
+      <label>
+        <span>Resultado de la llamada</span>
+        <select formControlName="autorizacion">
+          <option value="pendiente">Pendiente de confirmar</option>
+          <option value="autorizado">Autorizado</option>
+          <option value="rechazado">No autorizado</option>
+        </select>
+      </label>
+
+      <label>
+        <span>Observación</span>
+        <textarea rows="3" formControlName="observacion" placeholder="Detalle adicional para portería"></textarea>
+      </label>
+
+      <button type="submit">Registrar ingreso</button>
+    </form>
+
+    <div class="access-table-card">
+      <div class="table-title">
+        <h2>Historial de accesos</h2>
+        <small>Ingresos registrados por portería</small>
+      </div>
+
+      <div class="empty-state" *ngIf="registrosFiltrados.length === 0">
+        No hay ingresos registrados para esta búsqueda.
+      </div>
+
+      <div class="table-scroll" *ngIf="registrosFiltrados.length > 0">
+        <table>
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Torre / Dep.</th>
+              <th>Visitante</th>
+              <th>Contactado</th>
+              <th>Vehículo</th>
+              <th>Estado</th>
+              <th>Horas</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let registro of registrosFiltrados">
+              <td>{{ registro.fecha }}</td>
+              <td>{{ registro.torre }} / {{ registro.departamento }}</td>
+              <td>
+                <strong>{{ registro.visitante }}</strong>
+                <small>{{ registro.documento || 'Sin documento' }}</small>
+              </td>
+              <td>{{ registro.duenioContactado }}</td>
+              <td>
+                <span>{{ registro.placaVehiculo || 'Sin vehículo' }}</span>
+                <small>Ingreso: {{ registro.horaIngresoVehiculo || '-' }}</small>
+              </td>
+              <td>
+                <span class="state-pill" [class.in]="registro.estado === 'ingreso'" [class.out]="registro.estado === 'salio'" [class.rejected]="registro.estado === 'rechazado'">
+                  {{ getEstadoLabel(registro) }}
+                </span>
+              </td>
+              <td>
+                <span>Entrada: {{ registro.horaIngreso }}</span>
+                <small>Salida: {{ registro.horaSalida || '-' }}</small>
+              </td>
+              <td>
+                <div class="row-actions">
+                  <button type="button" (click)="marcarAutorizado(registro)" *ngIf="registro.estado === 'en_porteria'">Autorizar</button>
+                  <button type="button" (click)="marcarSalida(registro)" *ngIf="registro.estado === 'ingreso'">Salida</button>
+                  <button type="button" class="danger" (click)="marcarRechazado(registro)" *ngIf="registro.estado === 'en_porteria'">Rechazar</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</div>

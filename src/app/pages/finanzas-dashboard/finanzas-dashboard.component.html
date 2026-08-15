@@ -1,0 +1,154 @@
+<div class="finanzas-container">
+  <header class="finanzas-header">
+    <div>
+      <h1>{{ viewTitle }}</h1>
+      <p>{{ viewSubtitle }}</p>
+    </div>
+    <div class="scope-chip">{{ isConjuntoView ? 'Solo administradores' : 'Solo tesorero' }}</div>
+  </header>
+
+  <section class="finance-summary">
+    <article class="summary-card income">
+      <span>Ganancias</span>
+      <strong>{{ totalIngresos | currency:'USD':'symbol':'1.0-2' }}</strong>
+      <small>Ingresos registrados</small>
+    </article>
+    <article class="summary-card expense">
+      <span>Gastos</span>
+      <strong>{{ totalGastos | currency:'USD':'symbol':'1.0-2' }}</strong>
+      <small>{{ porcentajeGastos }}% frente a ingresos</small>
+    </article>
+    <article class="summary-card balance">
+      <span>Saldo</span>
+      <strong>{{ saldo | currency:'USD':'symbol':'1.0-2' }}</strong>
+      <small>{{ porcentajeSaldo }}% disponible</small>
+    </article>
+  </section>
+
+  <section class="finance-visuals">
+    <div class="donut-card">
+      <div class="donut" [style.--expense.%]="porcentajeGastos">
+        <span>{{ porcentajeGastos }}%</span>
+      </div>
+      <div>
+        <h2>Relación gastos/ganancias</h2>
+        <p>Mientras más bajo sea el porcentaje, mejor está el balance del periodo.</p>
+      </div>
+    </div>
+
+    <div class="bars-card">
+      <div class="bar-row">
+        <span>Ganancias</span>
+        <i class="bar income-bar" [style.width.%]="100"></i>
+      </div>
+      <div class="bar-row">
+        <span>Gastos</span>
+        <i class="bar expense-bar" [style.width.%]="porcentajeGastos"></i>
+      </div>
+      <div class="bar-row">
+        <span>Saldo</span>
+        <i class="bar balance-bar" [style.width.%]="porcentajeSaldo"></i>
+      </div>
+    </div>
+  </section>
+
+  <section class="finance-workspace">
+    <form class="finance-form" [formGroup]="form" (ngSubmit)="save()">
+      <h2>Agregar movimiento</h2>
+
+      <label>
+        <span>Fecha</span>
+        <input type="date" formControlName="fecha" />
+      </label>
+
+      <label>
+        <span>Concepto</span>
+        <input type="text" formControlName="concepto" placeholder="Ej: Alícuotas enero" />
+      </label>
+
+      <div class="two-cols">
+        <label>
+          <span>Tipo</span>
+          <select formControlName="tipo">
+            <option value="ingreso">Ganancia</option>
+            <option value="gasto">Gasto</option>
+          </select>
+        </label>
+
+        <label>
+          <span>Valor</span>
+          <input type="number" min="0" step="0.01" formControlName="valor" />
+        </label>
+      </div>
+
+      <div class="two-cols">
+        <label>
+          <span>Estado</span>
+          <select formControlName="estado">
+            <option value="pagado">Pagado</option>
+            <option value="pendiente">Pendiente</option>
+          </select>
+        </label>
+
+        <label>
+          <span>{{ isConjuntoView ? 'Alcance' : 'Torre' }}</span>
+          <input *ngIf="isConjuntoView" type="text" value="Conjunto" disabled />
+          <input *ngIf="!isConjuntoView" type="text" formControlName="torre" />
+        </label>
+      </div>
+
+      <button type="submit">Guardar</button>
+    </form>
+
+    <div class="finance-table-card">
+      <div class="table-toolbar">
+        <h2>Movimientos</h2>
+        <div class="table-actions">
+          <select [value]="filtro" (change)="filtro = $any($event.target).value">
+            <option value="todos">Todos</option>
+            <option value="ingreso">Ganancias</option>
+            <option value="gasto">Gastos</option>
+          </select>
+          <button type="button" (click)="exportarExcel()" [disabled]="movimientosVisibles.length === 0">Exportar Excel</button>
+          <button type="button" class="secondary-action" (click)="generarInforme()">Informe</button>
+        </div>
+      </div>
+
+      <div class="empty-state" *ngIf="movimientosVisibles.length === 0">
+        No hay movimientos registrados todavía.
+      </div>
+
+      <div class="table-scroll" *ngIf="movimientosVisibles.length > 0">
+        <table>
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Concepto</th>
+              <th>Tipo</th>
+              <th>Valor</th>
+              <th>Alcance</th>
+              <th>Estado</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of movimientosVisibles">
+              <td>{{ item.fecha }}</td>
+              <td>{{ item.concepto }}</td>
+              <td><span class="type-pill" [class.expense]="item.tipo === 'gasto'">{{ item.tipo === 'ingreso' ? 'Ganancia' : 'Gasto' }}</span></td>
+              <td>{{ item.valor | currency:'USD':'symbol':'1.0-2' }}</td>
+              <td>{{ item.alcance === 'conjunto' ? 'Conjunto' : item.torre }}</td>
+              <td>{{ item.estado === 'pagado' ? 'Pagado' : 'Pendiente' }}</td>
+              <td>
+                <button type="button" class="delete-btn" (click)="remove(item.id)" *ngIf="!item.id.toString().startsWith('alicuota-')">
+                  Eliminar
+                </button>
+                <span class="auto-label" *ngIf="item.id.toString().startsWith('alicuota-')">Automático</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</div>

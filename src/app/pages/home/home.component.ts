@@ -9,6 +9,7 @@ import { catchError } from 'rxjs/operators';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { AuthService } from '../../auth/services/auth.service';
+import { LocalStoreService } from '../../services/local-store.service';
 
 interface HomeCalendarDay {
   label: number;
@@ -34,6 +35,12 @@ export class HomeComponent implements OnInit {
   totalUsuarios = 0;
   totalReservas = 0;
   totalMultas = 0;
+  herramientasActivas = 14;
+  financialHealth = 0;
+  estimatedMonthlyIncome = 0;
+  estimatedPendingIncome = 0;
+  automationQueue = 0;
+  managementReadiness = 0;
 
   reservasRecientes: any[] = [];
   multasRecientes: any[] = [];
@@ -41,12 +48,14 @@ export class HomeComponent implements OnInit {
   homeCalendarDays: HomeCalendarDay[] = [];
   homeCalendarMonth = new Date();
   reservedDates = new Set<string>();
+  alertasOperativas: Array<{ title: string; value: string; detail: string; level: 'ok' | 'warning' | 'info' }> = [];
 
   constructor(
     private http: HttpClient,
     private torresService: TorresService,
     private departamentosService: DepartamentosService,
-    private authService: AuthService
+    private authService: AuthService,
+    private localStore: LocalStoreService
   ) { }
 
   ngOnInit(): void {
@@ -86,6 +95,11 @@ export class HomeComponent implements OnInit {
         this.totalCondominos = this.filterByAuthorizedTorres(condominos).length;
         this.totalReservas = reservasAutorizadas.length;
         this.totalMultas = multasAutorizadas.length;
+        this.financialHealth = this.calculateFinancialHealth(departamentosAutorizados, multasAutorizadas);
+        this.estimatedMonthlyIncome = this.calculateEstimatedIncome(departamentosAutorizados);
+        this.estimatedPendingIncome = this.calculateEstimatedPendingIncome(multasAutorizadas);
+        this.automationQueue = this.totalReservas + this.totalMultas;
+        this.managementReadiness = 100;
         this.reservasCalendario = reservasAutorizadas;
         this.reservasRecientes = [...reservasAutorizadas]
           .sort((a, b) => String(b.fecha || '').localeCompare(String(a.fecha || '')))
@@ -97,6 +111,7 @@ export class HomeComponent implements OnInit {
             .map((reserva) => String(reserva.fecha || '').slice(0, 10))
             .filter(Boolean)
         );
+        this.buildOperationalAlerts(reservasAutorizadas, multasAutorizadas);
         this.buildHomeCalendar();
       },
       error: (error) => console.error('Error cargando estadisticas:', error)
@@ -233,5 +248,76 @@ export class HomeComponent implements OnInit {
     };
 
     return labels[String(reserva?.estado || '')] || String(reserva?.estado || 'Reserva');
+  }
+
+  private calculateFinancialHealth(departamentos: any[], multas: any[]): number {
+    if (departamentos.length === 0) {
+      return 0;
+    }
+
+    const risk = Math.min(multas.length / Math.max(departamentos.length, 1), 1);
+    return Math.max(0, Math.round((1 - risk) * 100));
+  }
+
+  private calculateEstimatedIncome(departamentos: any[]): number {
+    return departamentos.reduce((total, departamento) => {
+      const value = Number(
+        departamento.alicuota ??
+        departamento.valor_alicuota ??
+        departamento.valorAlicuota ??
+        0
+      );
+
+      return total + (Number.isFinite(value) ? value : 0);
+    }, 0);
+  }
+
+  private calculateEstimatedPendingIncome(multas: any[]): number {
+    return multas.reduce((total, multa) => {
+      const value = Number(multa.valor ?? multa.monto ?? multa.total ?? 0);
+      return total + (Number.isFinite(value) ? value : 0);
+    }, 0);
+  }
+
+  private buildOperationalAlerts(reservas: any[], multas: any[]): void {
+    const today = this.formatDate(new Date());
+    const accesos = this.localStore.read<any[]>('casales_acceso_guardia', []);
+    const movimientos = this.localStore.read<any[]>('casales_finanzas_movimientos', []);
+    const visitantesDentro = accesos.filter((item) => item.estado === 'ingreso').length;
+    const reservasHoy = reservas.filter((item) => String(item.fecha || '').slice(0, 10) === today).length;
+    const ingresos = movimientos
+      .filter((item) => item.tipo === 'ingreso')
+      .reduce((total, item) => total + Number(item.valor || 0), 0);
+    const gastos = movimientos
+      .filter((item) => item.tipo === 'gasto')
+      .reduce((total, item) => total + Number(item.valor || 0), 0);
+    const saldo = ingresos - gastos;
+
+    this.alertasOperativas = [
+      {
+        title: 'Visitantes dentro',
+        value: String(visitantesDentro),
+        detail: visitantesDentro > 0 ? 'Revisar salidas pendientes en Acceso.' : 'Sin visitantes activos.',
+        level: visitantesDentro > 0 ? 'warning' : 'ok'
+      },
+      {
+        title: 'Reservas de hoy',
+        value: String(reservasHoy),
+        detail: reservasHoy > 0 ? 'Hay áreas comunales por revisar hoy.' : 'Sin reservas para hoy.',
+        level: reservasHoy > 0 ? 'info' : 'ok'
+      },
+      {
+        title: 'Multas recientes',
+        value: String(multas.slice(0, 7).length),
+        detail: multas.length > 0 ? 'Hay registros de multas para seguimiento.' : 'Sin multas registradas.',
+        level: multas.length > 0 ? 'warning' : 'ok'
+      },
+      {
+        title: 'Saldo financiero',
+        value: `$${saldo.toFixed(2)}`,
+        detail: movimientos.length > 0 ? 'Calculado con movimientos manuales registrados.' : 'Sin movimientos financieros manuales.',
+        level: saldo >= 0 ? 'ok' : 'warning'
+      }
+    ];
   }
 }

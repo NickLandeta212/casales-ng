@@ -15,58 +15,36 @@
     </div>
   </div>
 
-  <section class="quick-menu" aria-label="Menu principal">
-    <a class="quick-card primary" routerLink="/dashboard/departamentos">
-      <span class="quick-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24">
-          <path d="M6 21V4.8C6 3.8 6.8 3 7.8 3h8.4c1 0 1.8.8 1.8 1.8V21" />
-          <path d="M10 21V8h4v13M8 7h8M8 11h2M14 11h2M8 15h2M14 15h2" />
-        </svg>
-      </span>
-      <span>
-        <strong>Departamentos</strong>
-        <small>Consulta torres, viviendas y asignaciones.</small>
-      </span>
-    </a>
+  <section class="executive-grid" aria-label="Indicadores gerenciales">
+    <article class="executive-card">
+      <span>Salud financiera</span>
+      <strong>{{ financialHealth }}%</strong>
+      <div class="progress-track"><i [style.width.%]="financialHealth"></i></div>
+      <small>Indicador estimado con base en departamentos y multas registradas.</small>
+    </article>
+    <article class="executive-card">
+      <span>Ingreso mensual base</span>
+      <strong>{{ estimatedMonthlyIncome | currency:'USD':'symbol':'1.0-2' }}</strong>
+      <small>Preparado para alícuotas, cuentas por cobrar y presupuesto.</small>
+    </article>
+    <article class="executive-card">
+      <span>Cartera por revisar</span>
+      <strong>{{ estimatedPendingIncome | currency:'USD':'symbol':'1.0-2' }}</strong>
+      <small>Mora, multas y recordatorios quedarán conectados a reportes.</small>
+    </article>
+    <article class="executive-card">
+      <span>Herramientas activas</span>
+      <strong>{{ managementReadiness }}%</strong>
+      <small>{{ herramientasActivas }} herramientas disponibles para operar el conjunto.</small>
+    </article>
+  </section>
 
-    <a class="quick-card" routerLink="/dashboard/reservas">
-      <span class="quick-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24">
-          <path d="M5 6.8C5 5.8 5.8 5 6.8 5h10.4c1 0 1.8.8 1.8 1.8v10.4c0 1-.8 1.8-1.8 1.8H6.8c-1 0-1.8-.8-1.8-1.8V6.8Z" />
-          <path d="M8 3v4M16 3v4M5 10h14M9 14l2 2 4-4" />
-        </svg>
-      </span>
-      <span>
-        <strong>Reservas</strong>
-        <small>Revisa solicitudes y espacios comunes.</small>
-      </span>
-    </a>
-
-    <a class="quick-card" routerLink="/dashboard/personas">
-      <span class="quick-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24">
-          <path d="M8.5 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM15.5 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
-          <path d="M3 20c.4-3.2 2.4-5 5.5-5s5.1 1.8 5.5 5M10 20c.4-3.2 2.4-5 5.5-5s5.1 1.8 5.5 5" />
-        </svg>
-      </span>
-      <span>
-        <strong>Condominos</strong>
-        <small>Administra residentes y contactos.</small>
-      </span>
-    </a>
-
-    <a class="quick-card" routerLink="/dashboard/multas">
-      <span class="quick-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24">
-          <path d="M10.4 4.2 3.3 17c-.7 1.2.2 2.7 1.6 2.7h14.2c1.4 0 2.3-1.5 1.6-2.7L13.6 4.2c-.7-1.2-2.5-1.2-3.2 0Z" />
-          <path d="M12 8.5v5M12 16.8h.1" />
-        </svg>
-      </span>
-      <span>
-        <strong>Multas</strong>
-        <small>Controla registros y comprobantes.</small>
-      </span>
-    </a>
+  <section class="alerts-grid" aria-label="Alertas operativas">
+    <article class="alert-card" *ngFor="let alerta of alertasOperativas" [class.warning]="alerta.level === 'warning'" [class.info]="alerta.level === 'info'">
+      <span>{{ alerta.title }}</span>
+      <strong>{{ alerta.value }}</strong>
+      <small>{{ alerta.detail }}</small>
+    </article>
   </section>
 
   <div class="stats-grid">
@@ -215,4 +193,5 @@
       </div>
     </div>
   </div>
+
 </div>

@@ -29,7 +29,7 @@ export class LoginComponent implements OnInit {
     private authService: AuthService
   ) {
     this.loginForm = this.fb.group({
-      username: ['', [Validators.required, Validators.email]],
+      username: ['', [Validators.required]],
       password: ['', [Validators.required, Validators.minLength(8)]]
     });
 
@@ -85,6 +85,11 @@ export class LoginComponent implements OnInit {
         }
       },
       error: (err: any) => {
+        if (!hasRetried && !payload.username.includes('@')) {
+          this.submitLogin({ ...payload, username: `${payload.username}@casales.app` }, true);
+          return;
+        }
+
         if (!hasRetried && this.shouldRetryLogin(err)) {
           setTimeout(() => this.submitLogin(payload, true), 450);
           return;
@@ -116,8 +121,10 @@ export class LoginComponent implements OnInit {
   }
 
   private getCredentialsPayload(): { username: string; password: string } {
+    const username = String(this.loginForm.get('username')?.value || '').trim().toLowerCase();
+
     return {
-      username: String(this.loginForm.get('username')?.value || '').trim().toLowerCase(),
+      username,
       password: String(this.loginForm.get('password')?.value || '')
     };
   }

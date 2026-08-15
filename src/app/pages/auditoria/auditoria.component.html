@@ -1,0 +1,38 @@
+<div class="auditoria-container">
+  <header class="auditoria-header">
+    <div>
+      <h1>Auditoría</h1>
+      <p>Últimas acciones registradas en módulos sensibles.</p>
+    </div>
+    <span>{{ entries.length }} eventos</span>
+  </header>
+
+  <section class="auditoria-card">
+    <div class="empty-state" *ngIf="entries.length === 0">
+      No hay eventos registrados todavía.
+    </div>
+
+    <div class="table-scroll" *ngIf="entries.length > 0">
+      <table>
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Usuario</th>
+            <th>Módulo</th>
+            <th>Acción</th>
+            <th>Detalle</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let entry of entries">
+            <td>{{ formatDate(entry.fecha) }}</td>
+            <td>{{ entry.usuario }}</td>
+            <td>{{ entry.modulo }}</td>
+            <td>{{ entry.accion }}</td>
+            <td>{{ entry.detalle }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
