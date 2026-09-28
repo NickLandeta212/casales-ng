@@ -47,7 +47,9 @@
           [class.selected]="selectedPago?.id === pago.id"
           [class.approved]="pago.estado === 'aprobado'"
           [class.review]="pago.estado === 'en_revision'"
-          [disabled]="pago.estado === 'aprobado'"
+          [class.rejected]="pago.estado === 'rechazado'"
+          [disabled]="pago.estado === 'aprobado' || pago.estado === 'en_revision'"
+          [title]="pago.motivoRechazo ? 'Rechazado: ' + pago.motivoRechazo : ''"
           (click)="selectPago(pago)"
         >
           <span>{{ pago.mes }}</span>
@@ -55,6 +57,10 @@
           <small>{{ getEstadoLabel(pago.estado) }}</small>
         </button>
       </div>
+
+      <p class="alert-error" *ngIf="selectedPago?.estado === 'rechazado' && selectedPago?.motivoRechazo">
+        El comprobante anterior fue rechazado: {{ selectedPago?.motivoRechazo }}. Sube uno nuevo.
+      </p>
 
       <div class="upload-panel" *ngIf="selectedPago">
         <div>
@@ -70,6 +76,7 @@
         </label>
         <input type="file" accept="image/png,image/jpeg,image/webp" (change)="onComprobanteChange($event)" />
         <span class="file-name" *ngIf="comprobanteNombre">{{ comprobanteNombre }}</span>
+<div class="captcha-slot" #captchaSlot></div>
         <button type="button" class="btn-submit" [disabled]="loading" (click)="enviarComprobante()">Enviar pago para aprobacion</button>
       </div>
     </section>

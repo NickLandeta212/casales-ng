@@ -345,3 +345,10 @@ th {
     grid-template-columns: 1fr;
   }
 }
+
+.form-error {
+  margin: 0;
+  color: var(--sl-color-danger);
+  font-size: 13px;
+  font-weight: 600;
+}

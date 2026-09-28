@@ -44,7 +44,7 @@ export class PagoAlicuotaTorreFormComponent implements OnInit {
   }
 
   selectPago(pago: AlicuotaTorrePago): void {
-    if (pago.estado === 'aprobado') {
+    if (pago.estado === 'aprobado' || pago.estado === 'en_revision') {
       return;
     }
 
@@ -130,7 +130,8 @@ export class PagoAlicuotaTorreFormComponent implements OnInit {
     const labels: Record<string, string> = {
       pendiente: 'Pendiente',
       en_revision: 'En revision',
-      aprobado: 'Aprobado'
+      aprobado: 'Aprobado',
+      rechazado: 'Rechazado'
     };
 
     return labels[estado] || estado;

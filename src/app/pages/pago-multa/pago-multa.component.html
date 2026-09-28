@@ -82,8 +82,8 @@
               >
               <div class="multa-info">
                 <div>
-                  <strong>{{ multa.motivoNombre || 'Multa registrada' }}</strong>
-                  <span>{{ getPersonaEtiqueta(multa) }}</span>
+                  <strong>{{ multa.motivo_nombre || 'Multa registrada' }}</strong>
+                  <span>{{ getMultaDetalle(multa) }}</span>
                 </div>
                 <b>{{ multa.monto | currency:'USD' }}</b>
               </div>
@@ -92,7 +92,7 @@
 
           <ng-template #emptyMultas>
             <div class="empty-state">
-              {{ pagoForm.get('departamento')?.value ? 'No hay multas registradas para este departamento.' : 'Selecciona un departamento para ver sus multas.' }}
+              {{ pagoForm.get('departamento')?.value ? 'No hay multas pendientes para este departamento.' : 'Selecciona un departamento para ver sus multas.' }}
             </div>
           </ng-template>
 
@@ -102,6 +102,7 @@
         </aside>
 
         <div class="form-actions">
+          <div class="captcha-slot" #captchaSlot></div>
           <button type="submit" class="btn-primary" [disabled]="submitting">
             {{ submitting ? 'Enviando...' : 'Enviar pago' }}
           </button>

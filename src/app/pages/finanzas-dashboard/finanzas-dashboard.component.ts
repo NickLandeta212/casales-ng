@@ -5,12 +5,15 @@ import { ActivatedRoute } from '@angular/router';
 import { catchError, of } from 'rxjs';
 import { AuthService } from '../../auth/services/auth.service';
 import { AlicuotasService } from '../../services/alicuotas.service';
-import { AuditService } from '../../services/audit.service';
-import { LocalStoreService } from '../../services/local-store.service';
+import {
+  FinanzasService,
+  MovimientoEstado,
+  MovimientoFinanciero as MovimientoApi,
+  MovimientoTipo
+} from '../../services/finanzas.service';
+import { TorresService } from '../../services/torres.service';
 
-type MovimientoTipo = 'ingreso' | 'gasto';
-type MovimientoEstado = 'pendiente' | 'pagado';
-
+// Vista comun para movimientos manuales (guardados en la API) y alicuotas aprobadas (automaticas).
 interface MovimientoFinanciero {
   id: string;
   fecha: string;
@@ -20,6 +23,7 @@ interface MovimientoFinanciero {
   estado: MovimientoEstado;
   alcance: 'conjunto' | 'torre';
   torre: string;
+  torreId: number | null;
 }
 
 @Component({
@@ -34,15 +38,17 @@ export class FinanzasDashboardComponent implements OnInit {
   movimientos: MovimientoFinanciero[] = [];
   pagosAprobados: MovimientoFinanciero[] = [];
   filtro = 'todos';
-  readonly storageKey = 'casales_finanzas_movimientos';
+  torresDisponibles: Array<{ id: number; numero: number }> = [];
+  guardando = false;
+  errorMessage = '';
 
   constructor(
     private fb: FormBuilder,
     private route: ActivatedRoute,
     private authService: AuthService,
     private alicuotasService: AlicuotasService,
-    private auditService: AuditService,
-    private localStore: LocalStoreService
+    private finanzasService: FinanzasService,
+    private torresService: TorresService
   ) {}
 
   ngOnInit(): void {
@@ -53,9 +59,10 @@ export class FinanzasDashboardComponent implements OnInit {
       valor: [0, [Validators.required, Validators.min(0.01)]],
       estado: ['pagado', Validators.required],
       alcance: [this.isConjuntoView ? 'conjunto' : 'torre', Validators.required],
-      torre: [this.defaultTorreLabel()]
+      torre: [this.authService.getAuthorizedTorreIds()[0] ?? null]
     });
 
+    this.loadTorres();
     this.load();
     this.loadPagosAprobados();
   }
@@ -76,9 +83,10 @@ export class FinanzasDashboardComponent implements OnInit {
 
   get movimientosVisibles(): MovimientoFinanciero[] {
     const allMovimientos = [...this.pagosAprobados, ...this.movimientos];
+    const torresPermitidas = this.authService.getAuthorizedTorreIds();
     const base = this.isConjuntoView
       ? allMovimientos
-      : allMovimientos.filter((item) => item.alcance === 'torre' && this.torresPermitidas().includes(item.torre));
+      : allMovimientos.filter((item) => item.alcance === 'torre' && item.torreId !== null && torresPermitidas.includes(item.torreId));
 
     if (this.filtro === 'todos') {
       return base;
@@ -116,43 +124,59 @@ export class FinanzasDashboardComponent implements OnInit {
   }
 
   save(): void {
-    if (this.form.invalid) {
+    if (this.form.invalid || this.guardando) {
       this.form.markAllAsTouched();
       return;
     }
 
     const value = this.form.value;
-    const movimiento: MovimientoFinanciero = {
-      id: crypto.randomUUID(),
+    const alcance = this.isConjuntoView ? 'conjunto' : 'torre';
+    const torreId = alcance === 'torre' ? Number(value.torre) : null;
+
+    if (alcance === 'torre' && !torreId) {
+      this.errorMessage = 'Selecciona la torre del movimiento.';
+      return;
+    }
+
+    this.guardando = true;
+    this.errorMessage = '';
+
+    this.finanzasService.crear({
       fecha: value.fecha,
       concepto: String(value.concepto || '').trim(),
       tipo: value.tipo,
       valor: Number(value.valor),
       estado: value.estado,
-      alcance: this.isConjuntoView ? 'conjunto' : 'torre',
-      torre: this.isConjuntoView ? '' : String(value.torre || this.defaultTorreLabel()).trim()
-    };
-
-    this.movimientos = [movimiento, ...this.movimientos];
-    this.persist();
-    this.auditService.log('Finanzas', 'Crear movimiento', `${movimiento.concepto} por $${movimiento.valor.toFixed(2)}`);
-    this.form.patchValue({
-      concepto: '',
-      valor: 0,
-      estado: 'pagado',
-      alcance: this.isConjuntoView ? 'conjunto' : 'torre',
-      torre: this.defaultTorreLabel()
+      alcance,
+      torre_id: torreId
+    }).subscribe({
+      next: (movimiento) => {
+        this.guardando = false;
+        this.movimientos = [this.toVista(movimiento), ...this.movimientos];
+        this.form.patchValue({ concepto: '', valor: 0, estado: 'pagado' });
+      },
+      error: (error) => {
+        this.guardando = false;
+        this.errorMessage = error?.error?.message || 'No se pudo guardar el movimiento.';
+      }
     });
   }
 
   remove(id: string): void {
-    const removed = this.movimientos.find((item) => item.id === id);
-    this.movimientos = this.movimientos.filter((item) => item.id !== id);
-    this.persist();
+    const movimiento = this.movimientos.find((item) => item.id === id);
 
-    if (removed) {
-      this.auditService.log('Finanzas', 'Eliminar movimiento', `${removed.concepto} por $${removed.valor.toFixed(2)}`);
+    if (!movimiento || !window.confirm(`Eliminar el movimiento "${movimiento.concepto}"?`)) {
+      return;
     }
+
+    this.finanzasService.eliminar(Number(id)).subscribe({
+      next: () => {
+        this.movimientos = this.movimientos.filter((item) => item.id !== id);
+      },
+      error: (error) => {
+        this.errorMessage = error?.error?.message || 'No se pudo eliminar el movimiento.';
+      }
+    });
   }
 
   exportarExcel(): void {
@@ -176,7 +200,6 @@ export class FinanzasDashboardComponent implements OnInit {
     link.download = `${this.getReportFileName()}.csv`;
     link.click();
     URL.revokeObjectURL(url);
-    this.auditService.log('Finanzas', 'Exportar Excel', `${this.movimientosVisibles.length} movimientos exportados`);
   }
 
   generarInforme(): void {
@@ -237,7 +260,6 @@ export class FinanzasDashboardComponent implements OnInit {
       </html>
     `);
     report.document.close();
-    this.auditService.log('Finanzas', 'Generar informe', `${this.movimientosVisibles.length} movimientos incluidos`);
   }
 
   private sumByType(tipo: MovimientoTipo): number {
@@ -247,25 +269,41 @@ export class FinanzasDashboardComponent implements OnInit {
   }
 
   private load(): void {
-    this.movimientos = this.localStore.read<MovimientoFinanciero[]>(this.storageKey, []);
+    this.finanzasService.listar(this.isConjuntoView ? undefined : 'torre').pipe(
+      catchError((error) => {
+        this.errorMessage = error?.error?.message || 'No se pudieron cargar los movimientos.';
+        return of([]);
+      })
+    ).subscribe((movimientos) => {
+      this.movimientos = movimientos.map((movimiento) => this.toVista(movimiento));
+    });
   }
 
-  private persist(): void {
-    this.localStore.write(this.storageKey, this.movimientos);
+  private loadTorres(): void {
+    this.torresService.list().pipe(catchError(() => of([]))).subscribe((res: any) => {
+      const lista = Array.isArray(res) ? res : Array.isArray(res?.data) ? res.data : [];
+      this.torresDisponibles = lista
+        .map((torre: any) => ({ id: Number(torre.id), numero: Number(torre.numero) }))
+        .sort((a: { numero: number }, b: { numero: number }) => a.numero - b.numero);
+    });
+  }
+
+  private toVista(movimiento: MovimientoApi): MovimientoFinanciero {
+    return {
+      id: String(movimiento.id),
+      fecha: movimiento.fecha,
+      concepto: movimiento.concepto,
+      tipo: movimiento.tipo,
+      valor: Number(movimiento.valor),
+      estado: movimiento.estado,
+      alcance: movimiento.alcance,
+      torre: movimiento.torre_numero ? `Torre ${movimiento.torre_numero}` : '',
+      torreId: movimiento.torre_id
+    };
   }
 
   private today(): string {
     return new Date().toISOString().slice(0, 10);
-  }
-
-  private torresPermitidas(): string[] {
-    const ids = this.authService.getAuthorizedTorreIds();
-    return ids.length > 0 ? ids.map((id) => `Torre ${id}`) : [this.defaultTorreLabel()];
-  }
-
-  private defaultTorreLabel(): string {
-    const [torreId] = this.authService.getAuthorizedTorreIds();
-    return torreId ? `Torre ${torreId}` : 'Torre asignada';
   }
 
   private loadPagosAprobados(): void {
@@ -281,8 +319,9 @@ export class FinanzasDashboardComponent implements OnInit {
           tipo: 'ingreso' as MovimientoTipo,
           valor: Number(pago.valor || 0),
           estado: 'pagado' as MovimientoEstado,
-          alcance: 'torre',
-          torre: `Torre ${pago.torreId || pago.torreNumero || ''}`.trim()
+          alcance: 'torre' as const,
+          torre: `Torre ${pago.torreNumero || ''}`.trim(),
+          torreId: pago.torreId || null
         }));
     });
   }

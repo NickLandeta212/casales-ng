@@ -4,6 +4,8 @@ import { BehaviorSubject } from 'rxjs';
 import { map, switchMap, tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
+export type EstadoMulta = 'pendiente' | 'en_pago' | 'pagada';
+
 export interface Multa {
   id?: number | string;
   numeroConsecutivo?: number;
@@ -18,6 +20,7 @@ export interface Multa {
   descripcion: string;
   monto: number;
   aprobada?: boolean;
+  estado: EstadoMulta;
   fecha?: string;
 }
 
@@ -44,6 +47,7 @@ export interface PagoMultasPayload {
   total: number;
   comprobante_base64: string;
   email_destinatario: string;
+  captcha_token?: string;
 }
 
 export interface PagoMultaDetalle {
@@ -62,7 +66,8 @@ export interface PagoMulta {
   torre_numero?: string;
   total: number;
   comprobante_url: string;
-  estado: 'en_proceso' | 'aprobado' | string;
+  estado: 'en_proceso' | 'aprobado' | 'rechazado' | string;
+  motivo_rechazo?: string | null;
   created_at?: string;
   updated_at?: string;
   email_destinatario?: string;
@@ -131,6 +136,10 @@ export class MultasService {
     return this.http.put<any>(`${this.apiUrl}/pagos/${id}/aprobar`, {});
   }
 
+  rechazarPagoMultas(id: number | string, motivo: string) {
+    return this.http.put<any>(`${this.apiUrl}/pagos/${id}/rechazar`, { motivo });
+  }
+
   private normalizeList(res: any): Multa[] {
     const raw = Array.isArray(res) ? res : res?.data;
     const lista = Array.isArray(raw) ? raw : [];
@@ -164,6 +173,7 @@ export class MultasService {
       descripcion: (raw.descripcion ?? '').toString(),
       monto: Number(raw.monto ?? 0),
       aprobada: Boolean(raw.aprobada),
+      estado: (raw.estado ?? 'pendiente') as EstadoMulta,
       fecha: raw.fecha
     };
   }
@@ -194,6 +204,7 @@ export class MultasService {
       total: Number(item.total ?? 0),
       comprobante_url: (item.comprobante_url ?? item.comprobanteUrl ?? '').toString(),
       estado: (item.estado ?? 'en_proceso').toString(),
+      motivo_rechazo: item.motivo_rechazo ?? null,
       created_at: item.created_at ?? item.createdAt,
       updated_at: item.updated_at ?? item.updatedAt,
       email_destinatario: (item.email_destinatario ?? item.emailDestinatario ?? '').toString(),

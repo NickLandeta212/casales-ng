@@ -9,7 +9,7 @@ import { catchError } from 'rxjs/operators';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { AuthService } from '../../auth/services/auth.service';
-import { LocalStoreService } from '../../services/local-store.service';
+import { GESTION, SEGURIDAD } from '../../auth/permisos';
 
 interface HomeCalendarDay {
   label: number;
@@ -54,8 +54,7 @@ export class HomeComponent implements OnInit {
     private http: HttpClient,
     private torresService: TorresService,
     private departamentosService: DepartamentosService,
-    private authService: AuthService,
-    private localStore: LocalStoreService
+    private authService: AuthService
   ) { }
 
   ngOnInit(): void {
@@ -72,7 +71,9 @@ export class HomeComponent implements OnInit {
       usuarios: this.fetchCollection('/usuarios'),
       condominos: this.fetchCollection('/personas'),
       reservas: this.fetchCollection('/reservas'),
-      multas: this.fetchCollection('/multas')
+      multas: this.fetchCollection('/multas'),
+      accesos: this.authService.hasRole(SEGURIDAD) ? this.fetchCollection('/accesos') : of([]),
+      movimientos: this.authService.hasRole(GESTION) ? this.fetchCollection('/finanzas/movimientos') : of([])
     }).subscribe({
       next: (resultados: any) => {
         const torres = this.normalizeList(resultados.torres);
@@ -111,7 +112,12 @@ export class HomeComponent implements OnInit {
             .map((reserva) => String(reserva.fecha || '').slice(0, 10))
             .filter(Boolean)
         );
-        this.buildOperationalAlerts(reservasAutorizadas, multasAutorizadas);
+        this.buildOperationalAlerts(
+          reservasAutorizadas,
+          multasAutorizadas,
+          this.normalizeList(resultados.accesos),
+          this.normalizeList(resultados.movimientos)
+        );
         this.buildHomeCalendar();
       },
       error: (error) => console.error('Error cargando estadisticas:', error)
@@ -279,10 +285,8 @@ export class HomeComponent implements OnInit {
     }, 0);
   }
 
-  private buildOperationalAlerts(reservas: any[], multas: any[]): void {
+  private buildOperationalAlerts(reservas: any[], multas: any[], accesos: any[], movimientos: any[]): void {
     const today = this.formatDate(new Date());
-    const accesos = this.localStore.read<any[]>('casales_acceso_guardia', []);
-    const movimientos = this.localStore.read<any[]>('casales_finanzas_movimientos', []);
     const visitantesDentro = accesos.filter((item) => item.estado === 'ingreso').length;
     const reservasHoy = reservas.filter((item) => String(item.fecha || '').slice(0, 10) === today).length;
     const ingresos = movimientos

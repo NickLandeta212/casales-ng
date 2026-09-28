@@ -15,6 +15,8 @@ export interface Persona {
   cedula: string;
   telefono: string;
   tipoResidencia: 'dueno' | 'arrendatario';
+  vehiculo?: string;
+  parqueadero?: string;
 }
 
 export interface PersonaDraft {
@@ -59,6 +61,12 @@ export class PersonasService {
     );
   }
 
+  updateMovilidad(id: number | string, movilidad: { vehiculo: string; parqueadero: string }) {
+    return this.http.put<any>(`${this.apiUrl}/${id}/movilidad`, movilidad).pipe(
+      switchMap(() => this.loadPersonas())
+    );
+  }
+
   deletePersona(id: number | string) {
     return this.http.delete<void>(`${this.apiUrl}/${id}`).pipe(
       switchMap(() => this.loadPersonas())
@@ -85,7 +93,9 @@ export class PersonasService {
       apellidos: (raw.apellidos ?? '').toString(),
       cedula: (raw.documento ?? raw.cedula ?? '').toString(),
       telefono: (raw.telefono ?? raw.celular ?? '').toString(),
-      tipoResidencia: (raw.tipo_ocupacion ?? raw.tipoResidencia) === 'arrendatario' ? 'arrendatario' : 'dueno'
+      tipoResidencia: (raw.tipo_ocupacion ?? raw.tipoResidencia) === 'arrendatario' ? 'arrendatario' : 'dueno',
+      vehiculo: (raw.vehiculo ?? '').toString(),
+      parqueadero: (raw.parqueadero ?? '').toString()
     };
   }
 

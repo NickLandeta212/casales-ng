@@ -10,6 +10,7 @@
   <section class="acceso-layout">
     <form class="access-form" [formGroup]="form" (ngSubmit)="registrar()">
       <h2>Registrar visitante</h2>
+      <p class="form-error" *ngIf="errorMessage">{{ errorMessage }}</p>
 
       <div class="two-cols">
         <label>
@@ -70,7 +71,7 @@
         <textarea rows="3" formControlName="observacion" placeholder="Detalle adicional para portería"></textarea>
       </label>
 
-      <button type="submit">Registrar ingreso</button>
+      <button type="submit" [disabled]="guardando">{{ guardando ? 'Guardando...' : 'Registrar ingreso' }}</button>
     </form>
 
     <div class="access-table-card">

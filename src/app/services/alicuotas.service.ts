@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { map } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
-export type EstadoAlicuota = 'pendiente' | 'en_revision' | 'aprobado';
+export type EstadoAlicuota = 'pendiente' | 'en_revision' | 'aprobado' | 'rechazado';
 
 export interface AlicuotaPago {
   id: string | number;
@@ -21,6 +21,7 @@ export interface AlicuotaPago {
   comprobanteUrl?: string;
   comprobanteNombre?: string;
   emailDestinatario?: string;
+  motivoRechazo?: string | null;
 }
 
 export interface AlicuotaDepartamento {
@@ -43,6 +44,17 @@ export interface AlicuotaTorrePago {
   fechaPago?: string;
   comprobanteUrl?: string;
   comprobanteNombre?: string;
+  motivoRechazo?: string | null;
+}
+
+export interface AlicuotaValor {
+  id: number;
+  torre_id: number | null;
+  torre_numero: number | null;
+  anio: number;
+  valor: number;
+  updated_at: string;
+  updated_by_nombre: string | null;
 }
 
 @Injectable({
@@ -81,7 +93,7 @@ export class AlicuotasService {
     );
   }
 
-  registrarComprobante(pago: AlicuotaPago, comprobanteBase64: string, comprobanteNombre: string, emailDestinatario?: string) {
+  registrarComprobante(pago: AlicuotaPago, comprobanteBase64: string, comprobanteNombre: string, emailDestinatario?: string, captchaToken?: string) {
     return this.http.post<any>(`${this.apiUrl}/pagos`, {
       torre_id: pago.torreId,
       departamento_id: pago.departamentoId,
@@ -89,7 +101,8 @@ export class AlicuotasService {
       mes: pago.mesNumero,
       comprobante_base64: comprobanteBase64,
       comprobante_nombre: comprobanteNombre,
-      email_destinatario: String(emailDestinatario || '').trim() || null
+      email_destinatario: String(emailDestinatario || '').trim() || null,
+      captcha_token: captchaToken || undefined
     }).pipe(
       map((res) => this.toPago(res?.pago ?? res))
     );
@@ -99,6 +112,10 @@ export class AlicuotasService {
     return this.http.put<any>(`${this.apiUrl}/pagos/${id}/aprobar`, {}).pipe(
       map((res) => this.toPago(res?.pago ?? res))
     );
+  }
+
+  rechazarPago(id: string | number, motivo: string) {
+    return this.http.put<any>(`${this.apiUrl}/pagos/${id}/rechazar`, { motivo });
   }
 
   getMesesTorre(torreId: number | string) {
@@ -136,6 +153,22 @@ export class AlicuotasService {
     return this.http.put<any>(`${this.apiUrl}/pagos-torres/${id}/aprobar`, {}).pipe(
       map((res) => this.toPagoTorre(res?.pago ?? res))
     );
+  }
+
+  rechazarPagoTorre(id: string | number, motivo: string) {
+    return this.http.put<any>(`${this.apiUrl}/pagos-torres/${id}/rechazar`, { motivo });
+  }
+
+  getValores() {
+    return this.http.get<AlicuotaValor[]>(`${this.apiUrl}/valores`);
+  }
+
+  guardarValor(valor: { torre_id: number | null; anio: number; valor: number }) {
+    return this.http.put<AlicuotaValor>(`${this.apiUrl}/valores`, valor);
+  }
+
+  eliminarValor(id: number) {
+    return this.http.delete<{ message: string }>(`${this.apiUrl}/valores/${id}`);
   }
 
   private normalizeDepartamentos(res: any): AlicuotaDepartamento[] {
@@ -184,7 +217,8 @@ export class AlicuotasService {
       fechaPago: raw.fecha_pago ?? raw.fechaPago,
       comprobanteUrl: raw.comprobante_url ?? raw.comprobanteUrl,
       comprobanteNombre: raw.comprobante_nombre ?? raw.comprobanteNombre,
-      emailDestinatario: raw.email_destinatario ?? raw.emailDestinatario
+      emailDestinatario: raw.email_destinatario ?? raw.emailDestinatario,
+      motivoRechazo: raw.motivo_rechazo ?? null
     };
   }
 
@@ -205,7 +239,8 @@ export class AlicuotasService {
       estado: (raw.estado ?? 'pendiente') as EstadoAlicuota,
       fechaPago: raw.fecha_pago ?? raw.fechaPago,
       comprobanteUrl: raw.comprobante_url ?? raw.comprobanteUrl,
-      comprobanteNombre: raw.comprobante_nombre ?? raw.comprobanteNombre
+      comprobanteNombre: raw.comprobante_nombre ?? raw.comprobanteNombre,
+      motivoRechazo: raw.motivo_rechazo ?? null
     };
   }
 }

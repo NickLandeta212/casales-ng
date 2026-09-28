@@ -53,9 +53,12 @@
               <button type="button" (click)="editarMovilidad(persona)">Asignar</button>
             </div>
             <div class="inline-actions" *ngIf="personaEditando === getPersonaKey(persona)">
-              <button type="button" (click)="guardarMovilidad(persona)">Guardar</button>
+              <button type="button" (click)="guardarMovilidad(persona)" [disabled]="guardandoMovilidad">
+                {{ guardandoMovilidad ? 'Guardando...' : 'Guardar' }}
+              </button>
               <button type="button" class="secondary" (click)="cancelarMovilidad()">Cancelar</button>
             </div>
+            <small class="movilidad-error" *ngIf="movilidadError && personaEditando === getPersonaKey(persona)">{{ movilidadError }}</small>
           </td>
         </tr>
       </tbody>

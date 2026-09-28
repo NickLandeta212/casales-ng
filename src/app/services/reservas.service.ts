@@ -6,16 +6,17 @@ import { environment } from '../../environments/environment';
 export interface CrearReservaPayload {
   departamento_id: number;
   fecha: string;
-  estado: 'disponible' | 'en_proceso' | 'reservado';
   observaciones?: string;
+  captcha_token?: string;
 }
 
 export interface ReservaResponse {
   id: number;
   departamento_id: number;
   fecha: string;
-  estado: string;
+  estado: 'en_proceso' | 'reservado' | 'rechazado' | string;
   observaciones?: string | null;
+  motivo_rechazo?: string | null;
   departamento_numero?: string;
   torre_numero?: string;
 }
@@ -42,8 +43,12 @@ export class ReservasService {
     return this.http.post<ReservaResponse>(this.apiUrl, payload);
   }
 
-  actualizarEstado(id: number, estado: 'disponible' | 'en_proceso' | 'reservado'): Observable<ReservaResponse> {
-    return this.http.put<ReservaResponse>(`${this.apiUrl}/${id}/estado`, { estado });
+  aprobar(id: number): Observable<ReservaResponse> {
+    return this.http.put<ReservaResponse>(`${this.apiUrl}/${id}/estado`, { estado: 'reservado' });
+  }
+
+  rechazar(id: number, motivo: string): Observable<ReservaResponse> {
+    return this.http.put<ReservaResponse>(`${this.apiUrl}/${id}/rechazar`, { motivo });
   }
 
   subirComprobante(id: number, comprobante_base64: string): Observable<ReservaComprobanteResponse> {

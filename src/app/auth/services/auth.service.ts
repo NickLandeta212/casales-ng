@@ -1,90 +1,24 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { BehaviorSubject } from 'rxjs';
+import { PAGINA_KEYS, PERMISOS_POR_ROL, ROLES } from '../permisos';
+
+export interface SessionUser {
+  nombre?: string;
+  role?: string;
+  page_permissions?: string[];
+  torre_ids?: number[];
+  must_change_password?: boolean;
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private readonly allowedRoles = [
-    'superadmin',
-    'admin_general',
-    'admin_conjunto',
-    'tesorero',
-    'guardia',
-    'condomino',
-    'residente',
-    'propietario',
-    'proveedor'
-  ];
-  private readonly allowedPermissions = [
-    'home',
-    'plataforma',
-    'conjuntos',
-    'torres',
-    'pagos_alicuota',
-    'pagos_alicuota_torre',
-    'pagos_torres',
-    'pagos_departamentos',
-    'departamentos',
-    'residentes',
-    'propietarios',
-    'inquilinos',
-    'vehiculos',
-    'parqueaderos',
-    'mascotas',
-    'visitantes',
-    'control_acceso',
-    'reservas',
-    'comunicados',
-    'incidencias',
-    'documentos',
-    'proveedores',
-    'reportes',
-    'finanzas',
-    'cuentas_cobrar',
-    'estados_cuenta',
-    'mora',
-    'recordatorios_pago',
-    'gastos_comunes',
-    'presupuestos',
-    'automatizaciones',
-    'asistente_ia',
-    'marketplace',
-    'marca_blanca',
-    'multi_conjunto',
-    'configuracion_conjunto',
-    'auditoria',
-    'personas',
-    'personas_crear',
-    'multas',
-    'multas_crear',
-    'usuarios',
-    'usuarios_crear'
-  ];
+  private readonly allowedRoles: string[] = ROLES;
+  private readonly allowedPermissions: string[] = PAGINA_KEYS;
   private readonly sessionMaxIdleMs = 30 * 60 * 1000;
-  private readonly defaultPermissionsByRole: Record<string, string[]> = {
-    superadmin: this.allowedPermissions,
-    admin_general: this.allowedPermissions,
-    admin_conjunto: [
-      'home', 'conjuntos', 'torres', 'pagos_alicuota', 'departamentos', 'residentes',
-      'pagos_alicuota_torre', 'pagos_torres',
-      'propietarios', 'inquilinos', 'vehiculos', 'parqueaderos', 'mascotas', 'visitantes',
-      'control_acceso', 'reservas', 'comunicados', 'incidencias', 'documentos',
-      'proveedores', 'reportes', 'personas', 'personas_crear', 'multas', 'multas_crear',
-      'usuarios', 'usuarios_crear', 'gastos_comunes', 'recordatorios_pago', 'auditoria'
-    ],
-    tesorero: [
-      'home', 'torres', 'pagos_departamentos', 'departamentos', 'reservas', 'personas', 'multas',
-      'finanzas', 'cuentas_cobrar', 'estados_cuenta', 'mora', 'recordatorios_pago',
-      'gastos_comunes', 'presupuestos', 'reportes'
-    ],
-    guardia: ['home', 'visitantes', 'control_acceso', 'incidencias'],
-    condomino: ['home', 'reservas', 'visitantes', 'pagos_alicuota'],
-    residente: ['home', 'vehiculos', 'mascotas', 'visitantes', 'reservas', 'incidencias', 'documentos', 'pagos_alicuota'],
-    propietario: ['home', 'vehiculos', 'mascotas', 'reservas', 'incidencias', 'documentos', 'estados_cuenta'],
-    proveedor: ['home', 'control_acceso', 'incidencias']
-  };
+  private readonly defaultPermissionsByRole: Record<string, string[]> = PERMISOS_POR_ROL;
 
   private tokenSubject = new BehaviorSubject<string | null>(this.getTokenFromStorage());
 
@@ -134,14 +68,14 @@ export class AuthService {
   }
 
   getUserRole(): string {
-    const rawRole = sessionStorage.getItem('role') || localStorage.getItem('role') || 'vendor';
+    const rawRole = sessionStorage.getItem('role') || '';
 
     try {
       const parsed = JSON.parse(rawRole);
-      const role = Array.isArray(parsed) ? parsed[0] || 'residente' : String(parsed);
-      return this.allowedRoles.includes(role) ? role : 'residente';
+      const role = Array.isArray(parsed) ? parsed[0] || '' : String(parsed);
+      return this.allowedRoles.includes(role) ? role : '';
     } catch {
-      return this.allowedRoles.includes(rawRole) ? rawRole : 'residente';
+      return this.allowedRoles.includes(rawRole) ? rawRole : '';
     }
   }
 
@@ -163,6 +97,30 @@ export class AuthService {
 
     sessionStorage.setItem('page_permissions', JSON.stringify(Array.from(new Set(permissions))));
     sessionStorage.setItem('torre_ids', JSON.stringify(Array.from(new Set(authorizedTorreIds))));
+  }
+
+  // Actualiza rol, permisos y torres con los datos vigentes del servidor (login o /auth/me).
+  applySessionUser(user: SessionUser): void {
+    const role = String(user.role || '').trim();
+
+    if (this.allowedRoles.includes(role)) {
+      sessionStorage.setItem('role', JSON.stringify([role]));
+    }
+
+    if (user.nombre) {
+      sessionStorage.setItem('user_display_name', this.sanitizeDisplayText(user.nombre));
+    }
+
+    this.setPermissions(user.page_permissions || [], user.torre_ids || []);
+    this.setMustChangePassword(Boolean(user.must_change_password));
+  }
+
+  setMustChangePassword(value: boolean): void {
+    sessionStorage.setItem('must_change_password', value ? 'true' : 'false');
+  }
+
+  mustChangePassword(): boolean {
+    return sessionStorage.getItem('must_change_password') === 'true';
   }
 
   getPagePermissions(): string[] {
@@ -190,7 +148,7 @@ export class AuthService {
   }
 
   hasPagePermission(permission?: string): boolean {
-    if (!permission || ['superadmin', 'admin_general'].includes(this.getUserRole())) {
+    if (!permission || this.getUserRole() === 'admin_general') {
       return true;
     }
 
@@ -237,6 +195,7 @@ export class AuthService {
     sessionStorage.removeItem('torre_ids');
     sessionStorage.removeItem('user_display_name');
     sessionStorage.removeItem('last_activity');
+    sessionStorage.removeItem('must_change_password');
     this.clearLegacyLocalStorage();
     this.tokenSubject.next(null);
   }

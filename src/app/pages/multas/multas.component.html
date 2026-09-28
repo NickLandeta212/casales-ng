@@ -48,7 +48,7 @@
 						<td>{{ pago.total | currency:'USD' }}</td>
 						<td>{{ pago.email_destinatario || 'Sin correo' }}</td>
 						<td>
-							<span class="estado-badge" [class.aprobada]="pago.estado === 'aprobado'" [class.en-proceso]="pago.estado !== 'aprobado'">
+							<span class="estado-badge" [class.aprobada]="pago.estado === 'aprobado'" [class.en-proceso]="pago.estado === 'en_proceso'" [class.rechazado]="pago.estado === 'rechazado'">
 								{{ getPagoEstadoLabel(pago) }}
 							</span>
 						</td>
@@ -58,14 +58,24 @@
 							</a>
 						</td>
 						<td class="acciones-cell">
-							<button
-								class="btn-aprobar"
-								type="button"
-								[disabled]="pago.estado === 'aprobado' || approvingPagoId === pago.id"
-								(click)="aprobarPago(pago)"
-							>
-								{{ pago.estado === 'aprobado' ? 'Aprobado' : approvingPagoId === pago.id ? 'Aprobando...' : 'Aprobar' }}
-							</button>
+							<ng-container *ngIf="pago.estado === 'en_proceso'">
+								<button
+									class="btn-aprobar"
+									type="button"
+									[disabled]="approvingPagoId === pago.id"
+									(click)="aprobarPago(pago)"
+								>
+									{{ approvingPagoId === pago.id ? 'Guardando...' : 'Aprobar' }}
+								</button>
+								<button
+									class="btn-rechazar"
+									type="button"
+									[disabled]="approvingPagoId === pago.id"
+									(click)="rechazarPago(pago)"
+								>
+									Rechazar
+								</button>
+							</ng-container>
 							<button class="btn-inspeccionar" type="button" (click)="seleccionarPago(pago)">Ver</button>
 						</td>
 					</tr>
@@ -77,8 +87,12 @@
 			</table>
 
 			<div class="table-title secondary">
-				<h3>Multas pendientes</h3>
-				<span>{{ listaMultas.length }} multa(s)</span>
+				<h3>Multas</h3>
+				<label class="toggle-pagadas">
+					<input type="checkbox" [checked]="mostrarPagadas" (change)="togglePagadas($event)" />
+					Mostrar pagadas
+				</label>
+				<span>{{ multasVisibles.length }} multa(s)</span>
 			</div>
 			<table class="multas-table multas-list-table">
 				<thead>
@@ -94,7 +108,7 @@
 					</tr>
 				</thead>
 				<tbody>
-					<tr *ngFor="let multa of listaMultas; let i = index" [class.even]="i % 2 === 0">
+					<tr *ngFor="let multa of multasVisibles; let i = index" [class.even]="i % 2 === 0">
 						<td>{{ i + 1 }}</td>
 						<td>{{ getFechaEtiqueta(multa) }}</td>
 						<td>{{ getDepartamentoEtiqueta(multa) }}</td>
@@ -102,7 +116,7 @@
 						<td>{{ multa.motivoNombre || '-' }}</td>
 						<td>{{ multa.monto | currency:'USD' }}</td>
 						<td>
-							<span class="estado-badge" [class.aprobada]="multa.aprobada" [class.en-proceso]="!multa.aprobada">
+							<span class="estado-badge" [class.aprobada]="multa.estado === 'pagada'" [class.en-proceso]="multa.estado !== 'pagada'">
 								{{ getEstadoLabel(multa) }}
 							</span>
 						</td>
@@ -110,6 +124,7 @@
 							<button
 								class="btn-aprobar"
 								type="button"
+								*ngIf="multa.estado === 'pendiente'"
 								[disabled]="multa.aprobada || approvingId === multa.id"
 								(click)="aprobarMulta(multa)"
 							>
@@ -119,7 +134,7 @@
 						</td>
 					</tr>
 
-					<tr *ngIf="!listaMultas.length && !cargando">
+					<tr *ngIf="!multasVisibles.length && !cargando">
 						<td colspan="8" class="empty-cell">No hay multas registradas.</td>
 					</tr>
 				</tbody>
@@ -158,6 +173,11 @@
 					<span class="detail-value">{{ getPagoEstadoLabel(pagoSeleccionado) }}</span>
 				</div>
 
+				<div class="detail-item" *ngIf="pagoSeleccionado.motivo_rechazo">
+					<label>Motivo del rechazo</label>
+					<span class="detail-value">{{ pagoSeleccionado.motivo_rechazo }}</span>
+				</div>
+
 				<div class="detail-item">
 					<label>Comprobante</label>
 					<a class="detail-link" [href]="getPagoComprobanteUrl(pagoSeleccionado)" target="_blank" rel="noopener noreferrer">
@@ -166,7 +186,7 @@
 				</div>
 
 				<div class="detail-item">
-					<label>Multas pagadas</label>
+					<label>Multas incluidas</label>
 					<div class="pago-detalle-list">
 						<div class="pago-detalle-item" *ngFor="let detalle of pagoSeleccionado.multas">
 							<strong>{{ detalle.motivo_nombre || 'Multa registrada' }}</strong>
@@ -223,7 +243,7 @@
 
 				<div class="detail-item">
 					<label>Estado</label>
-					<span class="detail-value">{{ getEstadoLabel(multaSeleccionada) }}</span>
+					<span class="detail-value">{{ getEstadoLabel(multaSeleccionada) }}{{ multaSeleccionada.aprobada ? ' (validada)' : '' }}</span>
 				</div>
 			</div>
 		</div>

@@ -37,7 +37,9 @@
           [class.selected]="selectedPago?.id === pago.id"
           [class.approved]="pago.estado === 'aprobado'"
           [class.review]="pago.estado === 'en_revision'"
-          [disabled]="pago.estado === 'aprobado'"
+          [class.rejected]="pago.estado === 'rechazado'"
+          [disabled]="pago.estado === 'aprobado' || pago.estado === 'en_revision'"
+          [title]="pago.motivoRechazo ? 'Rechazado: ' + pago.motivoRechazo : ''"
           (click)="selectPago(pago)"
         >
           <span>{{ pago.mes }}</span>
@@ -45,6 +47,10 @@
           <small>{{ getEstadoLabel(pago.estado) }}</small>
         </button>
       </div>
+
+      <p class="alert-error" *ngIf="selectedPago?.estado === 'rechazado' && selectedPago?.motivoRechazo">
+        El comprobante anterior fue rechazado: {{ selectedPago?.motivoRechazo }}. Sube uno nuevo.
+      </p>
 
       <div class="upload-panel" *ngIf="selectedPago">
         <div>

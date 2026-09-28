@@ -1,10 +1,10 @@
 import { Component, OnInit } from '@angular/core';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
+import { AuthService } from '../../auth/services/auth.service';
 import { LoginService } from '../../auth/services/login.service';
-import { NavbarComponent } from "../navbar/navbar.component";
-import { SidebarComponent } from "../sidebar/sidebar.component";
-import { SidebarMenuComponent } from "../sidebar-menu/sidebar-menu.component";
-
+import { NavbarComponent } from '../navbar/navbar.component';
+import { SidebarComponent } from '../sidebar/sidebar.component';
+import { SidebarMenuComponent } from '../sidebar-menu/sidebar-menu.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -13,11 +13,23 @@ import { SidebarMenuComponent } from "../sidebar-menu/sidebar-menu.component";
   styleUrl: './dashboard.component.scss'
 })
 export class DashboardComponent implements OnInit {
+  constructor(
+    private loginService: LoginService,
+    private authService: AuthService,
+    private router: Router
+  ) { }
 
-  constructor(private loginService: LoginService) { }
-
+  // Refresca rol, permisos y torres desde el servidor: los cambios que haga un
+  // administrador se reflejan sin que el usuario tenga que volver a iniciar sesion.
   ngOnInit(): void {
+    this.loginService.me().subscribe({
+      next: ({ user }) => {
+        this.authService.applySessionUser(user);
 
+        if (this.authService.mustChangePassword() && !this.router.url.startsWith('/dashboard/settings')) {
+          this.router.navigate(['/dashboard/settings']);
+        }
+      }
+    });
   }
-
 }

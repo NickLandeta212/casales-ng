@@ -1,23 +1,11 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { of, switchMap } from 'rxjs';
-import { DepartamentosService } from '../../services/departamentos.service';
+import { PublicDepartamento, PublicService, PublicTorre } from '../../services/public.service';
 import { ReservasService } from '../../services/reservas.service';
-import { TorresService } from '../../services/torres.service';
 import { PublicFormSecurityService } from '../../services/public-form-security.service';
-
-interface ReservaTorre {
-  id: number;
-  numero: number;
-}
-
-interface ReservaDepartamento {
-  id: number;
-  numero: string;
-  torre_id: number | null;
-  torre_numero: number | null;
-}
+import { CaptchaHandle, CaptchaService } from '../../services/captcha.service';
 
 interface CalendarDay {
   label: number;
@@ -37,14 +25,14 @@ interface CalendarDay {
 })
 export class ReservaComponent implements OnInit {
   private fb = inject(FormBuilder);
-  private torresService = inject(TorresService);
-  private departamentosService = inject(DepartamentosService);
+  private publicService = inject(PublicService);
   private reservasService = inject(ReservasService);
   private publicFormSecurity = inject(PublicFormSecurityService);
+  private captchaService = inject(CaptchaService);
   private readonly formStartedAt = Date.now();
 
-  torres: ReservaTorre[] = [];
-  departamentos: ReservaDepartamento[] = [];
+  torres: PublicTorre[] = [];
+  departamentos: PublicDepartamento[] = [];
   calendarDays: CalendarDay[] = [];
   currentMonth = new Date();
   selectedDate = '';
@@ -57,6 +45,25 @@ export class ReservaComponent implements OnInit {
   errorMessage = '';
   comprobanteBase64: string | null = null;
   comprobanteName = '';
+
+  captcha: CaptchaHandle | null = null;
+  private captchaRendered = false;
+
+  // El contenedor del captcha puede aparecer despues (ngIf); se dibuja una sola vez.
+  @ViewChild('captchaSlot') set captchaSlot(ref: ElementRef<HTMLElement> | undefined) {
+    if (!ref || this.captchaRendered) {
+      return;
+    }
+
+    this.captchaRendered = true;
+    this.captchaService.render(ref.nativeElement)
+      .then((handle) => { this.captcha = handle; })
+      .catch(() => { this.captcha = null; });
+  }
+
+  private captchaPendiente(): boolean {
+    return Boolean(this.captcha?.enabled && !this.captcha.token());
+  }
 
   reservaForm = this.fb.group({
     nombre: ['', [Validators.required, Validators.maxLength(80)]],
@@ -71,8 +78,9 @@ export class ReservaComponent implements OnInit {
     this.loadReservedDates();
     this.buildCalendar();
 
-    this.reservaForm.get('torre')?.valueChanges.subscribe(() => {
+    this.reservaForm.get('torre')?.valueChanges.subscribe((torreId) => {
       this.reservaForm.get('departamento')?.setValue('');
+      this.loadDepartamentos(torreId || '');
     });
   }
 
@@ -83,17 +91,8 @@ export class ReservaComponent implements OnInit {
     }).format(this.currentMonth);
   }
 
-  get departamentosFiltrados(): ReservaDepartamento[] {
-    const torreValue = this.reservaForm.get('torre')?.value;
-
-    if (!torreValue) {
-      return [];
-    }
-
-    return this.departamentos.filter((departamento) =>
-      departamento.torre_id?.toString() === torreValue.toString() ||
-      departamento.torre_numero?.toString() === torreValue.toString()
-    );
+  get departamentosFiltrados(): PublicDepartamento[] {
+    return this.departamentos;
   }
 
   previousMonth(): void {
@@ -141,8 +140,13 @@ export class ReservaComponent implements OnInit {
     if (this.reservaForm.invalid || !this.selectedDate || this.reservedDates.has(this.selectedDate)) {
       this.reservaForm.markAllAsTouched();
       if (this.selectedDate && this.reservedDates.has(this.selectedDate)) {
-        this.errorMessage = 'La fecha seleccionada ya tiene una reserva aprobada.';
+        this.errorMessage = 'La fecha seleccionada ya tiene una reserva.';
       }
+      return;
+    }
+
+    if (this.captchaPendiente()) {
+      this.errorMessage = 'Completa la verificacion de seguridad.';
       return;
     }
 
@@ -159,7 +163,7 @@ export class ReservaComponent implements OnInit {
     this.reservasService.crear({
       departamento_id: Number(raw.departamento),
       fecha: this.selectedDate,
-      estado: 'en_proceso',
+      captcha_token: this.captcha?.token() || undefined,
       observaciones
     }).pipe(
       switchMap((reserva) => {
@@ -172,15 +176,19 @@ export class ReservaComponent implements OnInit {
     ).subscribe({
       next: () => {
         this.submitting = false;
+        this.captcha?.reset();
         this.successMessage = 'Reserva enviada correctamente. Queda pendiente de revision.';
-        this.reservaForm.reset();
+        this.reservedDates.add(this.selectedDate);
+        this.reservaForm.reset({ nombre: '', apellido: '', telefono: '', torre: '', departamento: '' });
         this.selectedDate = '';
+        this.buildCalendar();
         this.comprobanteBase64 = null;
         this.comprobanteName = '';
         this.submitted = false;
       },
       error: (error) => {
         this.submitting = false;
+        this.captcha?.reset();
         this.errorMessage = error?.error?.message || 'No se pudo registrar la reserva. Intenta nuevamente.';
       }
     });
@@ -231,56 +239,41 @@ export class ReservaComponent implements OnInit {
   private loadOptions(): void {
     this.loadingData = true;
 
-    this.torresService.list().subscribe({
-      next: (res: any) => {
-        const raw = Array.isArray(res) ? res : res?.data;
-        const lista = Array.isArray(raw) ? raw : [];
-
-        this.torres = lista
-          .map((item: any) => ({
-            id: Number(item.id),
-            numero: Number(item.numero)
-          }))
-          .filter((item: ReservaTorre) => item.id > 0 && item.numero > 0)
-          .sort((a: ReservaTorre, b: ReservaTorre) => a.numero - b.numero);
-
+    this.publicService.getTorres().subscribe({
+      next: (torres) => {
+        this.torres = [...torres].sort((a, b) => a.numero - b.numero);
         this.loadingData = false;
       },
       error: () => {
         this.torres = [];
         this.loadingData = false;
-      }
-    });
-
-    this.departamentosService.list().subscribe({
-      next: (res: any) => {
-        const raw = Array.isArray(res) ? res : res?.data;
-        const lista = Array.isArray(raw) ? raw : [];
-
-        this.departamentos = lista
-          .map((item: any) => ({
-            id: Number(item.id),
-            numero: String(item.numero ?? ''),
-            torre_id: item.torre_id !== undefined && item.torre_id !== null ? Number(item.torre_id) : null,
-            torre_numero: item.torre_numero !== undefined && item.torre_numero !== null ? Number(item.torre_numero) : null
-          }))
-          .filter((item: ReservaDepartamento) => item.id > 0 && item.numero);
-      },
-      error: () => {
-        this.departamentos = [];
+        this.errorMessage = 'No se pudieron cargar las torres. Intenta nuevamente.';
       }
     });
   }
 
+  private loadDepartamentos(torreId: string): void {
+    this.departamentos = [];
+
+    if (!torreId) {
+      return;
+    }
+
+    this.publicService.getDepartamentos(torreId).subscribe({
+      next: (departamentos) => {
+        this.departamentos = departamentos;
+      },
+      error: () => {
+        this.errorMessage = 'No se pudieron cargar los departamentos.';
+      }
+    });
+  }
+
+  // Incluye reservas en revision: la fecha queda bloqueada hasta que se aprueben o rechacen.
   private loadReservedDates(): void {
-    this.reservasService.listar().subscribe({
-      next: (reservas) => {
-        this.reservedDates = new Set(
-          (Array.isArray(reservas) ? reservas : [])
-            .filter((reserva) => reserva.estado === 'reservado')
-            .map((reserva) => String(reserva.fecha || '').slice(0, 10))
-            .filter(Boolean)
-        );
+    this.publicService.getFechasOcupadas().subscribe({
+      next: (fechas) => {
+        this.reservedDates = new Set(Array.isArray(fechas) ? fechas : []);
         this.buildCalendar();
       },
       error: () => {

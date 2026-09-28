@@ -1,0 +1,73 @@
+<div class="valores-container">
+  <header class="valores-card valores-header">
+    <div>
+      <h1>Valor de alícuotas</h1>
+      <p>El valor rige desde el año indicado hasta que se defina uno nuevo. Un valor por torre reemplaza al general.</p>
+    </div>
+  </header>
+
+  <div class="valores-layout">
+    <form class="valores-card valores-form" [formGroup]="form" (ngSubmit)="guardar()">
+      <h2>Definir valor</h2>
+
+      <label>
+        <span>Aplica a</span>
+        <select formControlName="torre_id">
+          <option [ngValue]="null">Todas las torres (valor general)</option>
+          <option *ngFor="let torre of torres" [ngValue]="torre.id">Torre {{ torre.numero }}</option>
+        </select>
+      </label>
+
+      <label>
+        <span>Desde el año</span>
+        <input type="number" formControlName="anio" min="2000" max="2200" />
+      </label>
+
+      <label>
+        <span>Valor mensual (USD)</span>
+        <input type="number" formControlName="valor" min="0.01" step="0.01" placeholder="Ej: 45" />
+      </label>
+
+      <p class="msg error" *ngIf="errorMessage">{{ errorMessage }}</p>
+      <p class="msg success" *ngIf="successMessage">{{ successMessage }}</p>
+
+      <button type="submit" [disabled]="form.invalid || guardando">{{ guardando ? 'Guardando...' : 'Guardar valor' }}</button>
+    </form>
+
+    <section class="valores-card">
+      <h2>Vigente este año</h2>
+      <div class="vigentes-grid">
+        <div class="vigente" *ngFor="let item of valoresVigentes">
+          <span>{{ item.torre }}</span>
+          <strong>{{ item.valor | currency:'USD' }}</strong>
+          <small *ngIf="item.desde">desde {{ item.desde }}</small>
+        </div>
+      </div>
+
+      <h2>Historial de valores</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Desde</th>
+            <th>Aplica a</th>
+            <th>Valor</th>
+            <th>Actualizado por</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let valor of valores">
+            <td>{{ valor.anio }}</td>
+            <td>{{ valor.torre_numero ? 'Torre ' + valor.torre_numero : 'Todas las torres' }}</td>
+            <td>{{ valor.valor | currency:'USD' }}</td>
+            <td>{{ valor.updated_by_nombre || 'Sistema' }}</td>
+            <td><button type="button" class="btn-rechazar" (click)="eliminar(valor)">Eliminar</button></td>
+          </tr>
+          <tr *ngIf="!valores.length">
+            <td colspan="5" class="empty">No hay valores definidos.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </div>
+</div>

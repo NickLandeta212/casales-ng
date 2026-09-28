@@ -2,7 +2,6 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { environment } from '../../../environments/environment';
 import { AlicuotaPago, AlicuotasService } from '../../services/alicuotas.service';
 import { Multa, MultasService } from '../../services/multas.service';
 import { Persona, PersonasService } from '../../services/personas.service';
@@ -25,8 +24,9 @@ export class DepartamentoPersonasComponent implements OnInit {
   cargandoMultas = true;
   cargandoPagos = true;
   pagosError = '';
-  asignacionesMovilidad: Record<string, { vehiculo: string; parqueadero: string }> = {};
   personaEditando = '';
+  guardandoMovilidad = false;
+  movilidadError = '';
   movilidadDraft = {
     vehiculo: '',
     parqueadero: ''
@@ -44,7 +44,6 @@ export class DepartamentoPersonasComponent implements OnInit {
     this.departamentoId = Number(this.route.snapshot.paramMap.get('id')) || null;
     this.torreId = Number(this.route.snapshot.queryParamMap.get('torreId')) || this.getTorreIdFromCodigo();
     this.departamentoCodigo = this.route.snapshot.queryParamMap.get('codigo') || '';
-    this.cargarAsignacionesMovilidad();
 
     this.personasService.personas$.subscribe(personas => {
       this.aplicarFiltro(personas);
@@ -102,7 +101,7 @@ export class DepartamentoPersonasComponent implements OnInit {
   }
 
   getMovilidad(persona: Persona): { vehiculo: string; parqueadero: string } {
-    return this.asignacionesMovilidad[this.getPersonaKey(persona)] || { vehiculo: '', parqueadero: '' };
+    return { vehiculo: persona.vehiculo || '', parqueadero: persona.parqueadero || '' };
   }
 
   editarMovilidad(persona: Persona): void {
@@ -117,18 +116,26 @@ export class DepartamentoPersonasComponent implements OnInit {
   }
 
   guardarMovilidad(persona: Persona): void {
-    const key = this.getPersonaKey(persona);
-    const vehiculo = this.movilidadDraft.vehiculo.trim();
-    const parqueadero = this.movilidadDraft.parqueadero.trim();
-
-    if (!vehiculo && !parqueadero) {
-      delete this.asignacionesMovilidad[key];
-    } else {
-      this.asignacionesMovilidad[key] = { vehiculo, parqueadero };
+    if (persona.id === undefined || this.guardandoMovilidad) {
+      return;
     }
 
-    this.persistirAsignacionesMovilidad();
-    this.cancelarMovilidad();
+    this.guardandoMovilidad = true;
+    this.movilidadError = '';
+
+    this.personasService.updateMovilidad(persona.id, {
+      vehiculo: this.movilidadDraft.vehiculo.trim(),
+      parqueadero: this.movilidadDraft.parqueadero.trim()
+    }).subscribe({
+      next: () => {
+        this.guardandoMovilidad = false;
+        this.cancelarMovilidad();
+      },
+      error: (error) => {
+        this.guardandoMovilidad = false;
+        this.movilidadError = error?.error?.message || 'No se pudo guardar el vehiculo/parqueadero.';
+      }
+    });
   }
 
   cancelarMovilidad(): void {
@@ -145,7 +152,8 @@ export class DepartamentoPersonasComponent implements OnInit {
     const labels: Record<string, string> = {
       pendiente: 'Pendiente',
       en_revision: 'En revision',
-      aprobado: 'Aprobado'
+      aprobado: 'Aprobado',
+      rechazado: 'Rechazado'
     };
 
     return labels[estado] || estado;
@@ -158,7 +166,7 @@ export class DepartamentoPersonasComponent implements OnInit {
   getComprobanteUrl(pago: AlicuotaPago): string {
     const rawUrl = String(pago.comprobanteUrl || '').trim();
 
-    return this.securityUrlService.sanitizeResourceUrl(rawUrl, this.getApiOrigin());
+    return this.securityUrlService.resolveUploadUrl(rawUrl);
   }
 
   private cargarPagosAlicuotas(): void {
@@ -189,29 +197,5 @@ export class DepartamentoPersonasComponent implements OnInit {
     const codigo = this.route.snapshot.queryParamMap.get('codigo') || '';
     const match = codigo.match(/^T(\d+)/i);
     return match ? Number(match[1]) : null;
-  }
-
-  private getApiOrigin(): string {
-    if (/^https?:\/\//i.test(environment.endpoint)) {
-      return new URL(environment.endpoint).origin;
-    }
-
-    return environment.production ? window.location.origin : 'http://localhost:3000';
-  }
-
-  private cargarAsignacionesMovilidad(): void {
-    try {
-      this.asignacionesMovilidad = JSON.parse(localStorage.getItem(this.movilidadStorageKey) || '{}');
-    } catch {
-      this.asignacionesMovilidad = {};
-    }
-  }
-
-  private persistirAsignacionesMovilidad(): void {
-    localStorage.setItem(this.movilidadStorageKey, JSON.stringify(this.asignacionesMovilidad));
-  }
-
-  private get movilidadStorageKey(): string {
-    return `casales_departamento_${this.departamentoId || 'sin_id'}_movilidad`;
   }
 }

@@ -77,9 +77,9 @@ export class LoginComponent implements OnInit {
             [String(res.user.role || '')],
             String(res.user.nombre || 'Usuario')
           );
-          this.authService.setPermissions(res.user.page_permissions || [], res.user.torre_ids || []);
+          this.authService.applySessionUser(res.user);
 
-          this.router.navigate(['/dashboard']);
+          this.router.navigate([this.authService.mustChangePassword() ? '/dashboard/settings' : '/dashboard']);
         } else {
           this.errorMessage = 'Respuesta inválida del servidor';
         }

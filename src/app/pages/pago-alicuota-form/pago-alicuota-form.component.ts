@@ -1,10 +1,11 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { AlicuotaDepartamento, AlicuotaPago, AlicuotasService } from '../../services/alicuotas.service';
-import { TorresService } from '../../services/torres.service';
+import { PublicService } from '../../services/public.service';
 import { PublicFormSecurityService } from '../../services/public-form-security.service';
+import { CaptchaHandle, CaptchaService } from '../../services/captcha.service';
 
 @Component({
   selector: 'app-pago-alicuota-form',
@@ -38,9 +39,29 @@ export class PagoAlicuotaFormComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private alicuotasService: AlicuotasService,
-    private torresService: TorresService,
-    private publicFormSecurity: PublicFormSecurityService
+    private publicService: PublicService,
+    private publicFormSecurity: PublicFormSecurityService,
+    private captchaService: CaptchaService
   ) {}
+
+  captcha: CaptchaHandle | null = null;
+  private captchaRendered = false;
+
+  // El contenedor del captcha puede aparecer despues (ngIf); se dibuja una sola vez.
+  @ViewChild('captchaSlot') set captchaSlot(ref: ElementRef<HTMLElement> | undefined) {
+    if (!ref || this.captchaRendered) {
+      return;
+    }
+
+    this.captchaRendered = true;
+    this.captchaService.render(ref.nativeElement)
+      .then((handle) => { this.captcha = handle; })
+      .catch(() => { this.captcha = null; });
+  }
+
+  private captchaPendiente(): boolean {
+    return Boolean(this.captcha?.enabled && !this.captcha.token());
+  }
 
   ngOnInit(): void {
     this.loadData();
@@ -49,7 +70,7 @@ export class PagoAlicuotaFormComponent implements OnInit {
   }
 
   selectPago(pago: AlicuotaPago): void {
-    if (pago.estado === 'aprobado') {
+    if (pago.estado === 'aprobado' || pago.estado === 'en_revision') {
       return;
     }
 
@@ -112,13 +133,20 @@ export class PagoAlicuotaFormComponent implements OnInit {
 
     this.loading = true;
     this.publicFormSecurity.markSubmitted('pago-alicuota');
+    if (this.captchaPendiente()) {
+      this.errorMessage = 'Completa la verificacion de seguridad.';
+      return;
+    }
+
     this.alicuotasService.registrarComprobante(
       this.selectedPago,
       this.comprobanteBase64,
       this.comprobanteNombre,
-      this.facturaEmailControl.value
+      this.facturaEmailControl.value,
+      this.captcha?.token() || undefined
     ).subscribe({
       next: () => {
+        this.captcha?.reset();
         this.successMessage = 'Pago enviado correctamente. Ahora aparece en Pagos departamentos para revision del tesorero.';
         this.comprobanteBase64 = '';
         this.comprobanteNombre = '';
@@ -138,7 +166,8 @@ export class PagoAlicuotaFormComponent implements OnInit {
     const labels: Record<string, string> = {
       pendiente: 'Pendiente',
       en_revision: 'En revision',
-      aprobado: 'Aprobado'
+      aprobado: 'Aprobado',
+      rechazado: 'Rechazado'
     };
 
     return labels[estado] || estado;
@@ -154,10 +183,9 @@ export class PagoAlicuotaFormComponent implements OnInit {
       return;
     }
 
-    this.torresService.list().subscribe({
-      next: (res: any) => {
-        const raw = Array.isArray(res) ? res : res?.data;
-        this.torres = Array.isArray(raw) ? raw : [];
+    this.publicService.getTorres().subscribe({
+      next: (torres) => {
+        this.torres = torres;
         this.loading = false;
 
         if (torreId) {

@@ -41,19 +41,31 @@
             <td>{{ reserva.torre_numero || '-' }}</td>
             <td>{{ reserva.departamento_numero || reserva.departamento_id }}</td>
             <td>
-              <span class="estado-badge" [class.en-proceso]="reserva.estado === 'en_proceso'" [class.reservado]="reserva.estado === 'reservado'">
+              <span class="estado-badge" [class.en-proceso]="reserva.estado === 'en_proceso'" [class.reservado]="reserva.estado === 'reservado'" [class.rechazado]="reserva.estado === 'rechazado'">
                 {{ getEstadoLabel(reserva.estado) }}
               </span>
             </td>
             <td class="acciones-cell">
-              <button
-                class="btn-aprobar"
-                type="button"
-                [disabled]="reserva.estado === 'reservado' || approvingId === reserva.id"
-                (click)="aprobarReserva(reserva)"
-              >
-                {{ reserva.estado === 'reservado' ? 'Aprobada' : approvingId === reserva.id ? 'Aprobando...' : 'Aprobar' }}
-              </button>
+              <ng-container *ngIf="puedeGestionar">
+                <button
+                  class="btn-aprobar"
+                  type="button"
+                  *ngIf="reserva.estado === 'en_proceso'"
+                  [disabled]="approvingId === reserva.id"
+                  (click)="aprobarReserva(reserva)"
+                >
+                  {{ approvingId === reserva.id ? 'Guardando...' : 'Aprobar' }}
+                </button>
+                <button
+                  class="btn-rechazar"
+                  type="button"
+                  *ngIf="reserva.estado !== 'rechazado'"
+                  [disabled]="approvingId === reserva.id"
+                  (click)="rechazarReserva(reserva)"
+                >
+                  {{ reserva.estado === 'reservado' ? 'Cancelar' : 'Rechazar' }}
+                </button>
+              </ng-container>
               <button class="btn-inspeccionar" type="button" (click)="seleccionarReserva(reserva)">
                 Ver
               </button>
@@ -92,6 +104,11 @@
         <div class="detail-item">
           <label>Estado</label>
           <span class="detail-value">{{ getEstadoLabel(reservaSeleccionada.estado) }}</span>
+        </div>
+
+        <div class="detail-item" *ngIf="reservaSeleccionada.motivo_rechazo">
+          <label>Motivo del rechazo</label>
+          <span class="detail-value">{{ reservaSeleccionada.motivo_rechazo }}</span>
         </div>
 
         <div class="detail-item" *ngIf="reservaSeleccionada.observaciones">

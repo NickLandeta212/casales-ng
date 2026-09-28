@@ -2,11 +2,12 @@ import { Component, OnInit } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../auth/services/auth.service';
 import { CommonModule } from '@angular/common';
+import { ADMINS, GESTION, SEGURIDAD, TODOS } from '../../auth/permisos';
 
-const CASALES_ADMIN_ROLES = ['superadmin', 'admin_general', 'admin_conjunto'];
-const CASALES_FINANCE_ROLES = ['superadmin', 'admin_general', 'admin_conjunto', 'tesorero'];
-const CASALES_RESIDENT_ROLES = ['superadmin', 'admin_general', 'admin_conjunto', 'condomino', 'residente', 'propietario'];
-const CASALES_SECURITY_ROLES = ['superadmin', 'admin_general', 'admin_conjunto', 'guardia'];
+const CASALES_ADMIN_ROLES = ADMINS;
+const CASALES_FINANCE_ROLES = GESTION;
+const CASALES_RESIDENT_ROLES = ['admin_general', 'admin_conjunto', 'tesorero', 'condomino'];
+const CASALES_SECURITY_ROLES = SEGURIDAD;
 
 @Component({
   selector: 'app-sidebar-menu',
@@ -26,7 +27,7 @@ export class SidebarMenuComponent implements OnInit {
       title: 'Inicio',
       icon: 'bi bi-house-door',
       link: '/dashboard/home',
-      roles: ['superadmin', 'admin_general', 'admin_conjunto', 'tesorero', 'guardia', 'condomino', 'residente', 'propietario', 'proveedor'],
+      roles: TODOS,
       permission: 'home'
     },
     {
@@ -55,7 +56,7 @@ export class SidebarMenuComponent implements OnInit {
           link: '/pago-alicuota-torre',
           dynamicLink: 'pago-alicuota-torre-tesorero',
           target: '_blank',
-          roles: CASALES_ADMIN_ROLES,
+          roles: ['admin_general', 'tesorero'],
           permission: 'pagos_alicuota_torre'
         }
       ]
@@ -197,20 +198,21 @@ export class SidebarMenuComponent implements OnInit {
     {
       title: 'Ajustes',
       icon: 'bi bi-sliders',
-      roles: ['superadmin', 'admin_general'],
+      roles: CASALES_ADMIN_ROLES,
       children: [
+        {
+          title: 'Valor de alícuotas',
+          icon: 'bi bi-currency-dollar',
+          link: '/dashboard/valores-alicuota',
+          roles: CASALES_ADMIN_ROLES,
+          permission: 'valores_alicuota'
+        },
         {
           title: 'Auditoría',
           icon: 'bi bi-shield-lock',
           link: '/dashboard/auditoria',
           roles: CASALES_ADMIN_ROLES,
           permission: 'auditoria'
-        },
-        {
-          title: 'Emails',
-          icon: 'bi bi-envelope-paper',
-          link: '/dashboard/emails',
-          roles: ['admin_general']
         }
       ]
     }

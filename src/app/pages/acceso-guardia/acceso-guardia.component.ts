@@ -2,12 +2,12 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { catchError, of } from 'rxjs';
-import { AuditService } from '../../services/audit.service';
-import { LocalStoreService } from '../../services/local-store.service';
+import { AccesosService, RegistroAcceso as RegistroApi } from '../../services/accesos.service';
 import { Persona, PersonasService } from '../../services/personas.service';
 
+// Vista del registro con los nombres que usa la plantilla.
 interface RegistroAcceso {
-  id: string;
+  id: number;
   fecha: string;
   horaIngreso: string;
   horaSalida?: string;
@@ -18,8 +18,8 @@ interface RegistroAcceso {
   documento: string;
   placaVehiculo: string;
   horaIngresoVehiculo: string;
-  autorizacion: 'pendiente' | 'autorizado' | 'rechazado';
-  estado: 'en_porteria' | 'ingreso' | 'salio' | 'rechazado';
+  autorizacion: RegistroApi['autorizacion'];
+  estado: RegistroApi['estado'];
   observacion: string;
 }
 
@@ -34,13 +34,13 @@ export class AccesoGuardiaComponent implements OnInit {
   form!: FormGroup;
   registros: RegistroAcceso[] = [];
   personas: Persona[] = [];
-  readonly storageKey = 'casales_acceso_guardia';
+  guardando = false;
+  errorMessage = '';
 
   constructor(
     private fb: FormBuilder,
     private personasService: PersonasService,
-    private auditService: AuditService,
-    private localStore: LocalStoreService
+    private accesosService: AccesosService
   ) {}
 
   ngOnInit(): void {
@@ -89,72 +89,58 @@ export class AccesoGuardiaComponent implements OnInit {
   }
 
   registrar(): void {
-    if (this.form.invalid) {
+    if (this.form.invalid || this.guardando) {
       this.form.markAllAsTouched();
       return;
     }
 
     const value = this.form.value;
-    const autorizado = value.autorizacion === 'autorizado';
-    const registro: RegistroAcceso = {
-      id: crypto.randomUUID(),
-      fecha: new Date().toISOString().slice(0, 10),
-      horaIngreso: this.currentTime(),
+    this.guardando = true;
+    this.errorMessage = '';
+
+    this.accesosService.registrar({
       torre: String(value.torre).trim(),
       departamento: String(value.departamento).trim(),
-      duenioContactado: String(value.duenioContactado).trim(),
+      duenio_contactado: String(value.duenioContactado).trim(),
       visitante: String(value.visitante).trim(),
       documento: String(value.documento || '').trim(),
-      placaVehiculo: String(value.placaVehiculo || '').trim(),
-      horaIngresoVehiculo: String(value.horaIngresoVehiculo || '').trim(),
+      placa_vehiculo: String(value.placaVehiculo || '').trim(),
+      hora_ingreso_vehiculo: String(value.horaIngresoVehiculo || '').trim(),
       autorizacion: value.autorizacion,
-      estado: autorizado ? 'ingreso' : value.autorizacion === 'rechazado' ? 'rechazado' : 'en_porteria',
       observacion: String(value.observacion || '').trim()
-    };
-
-    this.registros = [registro, ...this.registros];
-    this.persist();
-    this.auditService.log(
-      'Acceso',
-      'Registrar visitante',
-      `${registro.visitante} para ${registro.torre}/${registro.departamento} (${this.getEstadoLabel(registro)})`
-    );
-    this.form.reset({
-      torre: value.torre,
-      departamento: value.departamento,
-      duenioContactado: '',
-      visitante: '',
-      documento: '',
-      placaVehiculo: '',
-      horaIngresoVehiculo: this.currentTime(),
-      autorizacion: 'pendiente',
-      observacion: ''
+    }).subscribe({
+      next: (registro) => {
+        this.guardando = false;
+        this.registros = [this.toVista(registro), ...this.registros];
+        this.form.reset({
+          torre: value.torre,
+          departamento: value.departamento,
+          duenioContactado: '',
+          visitante: '',
+          documento: '',
+          placaVehiculo: '',
+          horaIngresoVehiculo: this.currentTime(),
+          autorizacion: 'pendiente',
+          observacion: ''
+        });
+      },
+      error: (error) => {
+        this.guardando = false;
+        this.errorMessage = error?.error?.message || 'No se pudo registrar el visitante.';
+      }
     });
   }
 
   marcarAutorizado(registro: RegistroAcceso): void {
-    this.updateRegistro(registro.id, {
-      autorizacion: 'autorizado',
-      estado: 'ingreso',
-      horaIngreso: registro.horaIngreso || this.currentTime()
-    });
-    this.auditService.log('Acceso', 'Autorizar ingreso', `${registro.visitante} - ${registro.torre}/${registro.departamento}`);
+    this.cambiarEstado(registro, 'autorizar');
   }
 
   marcarSalida(registro: RegistroAcceso): void {
-    this.updateRegistro(registro.id, {
-      estado: 'salio',
-      horaSalida: this.currentTime()
-    });
-    this.auditService.log('Acceso', 'Registrar salida', `${registro.visitante} - ${registro.torre}/${registro.departamento}`);
+    this.cambiarEstado(registro, 'salida');
   }
 
   marcarRechazado(registro: RegistroAcceso): void {
-    this.updateRegistro(registro.id, {
-      autorizacion: 'rechazado',
-      estado: 'rechazado'
-    });
-    this.auditService.log('Acceso', 'Rechazar ingreso', `${registro.visitante} - ${registro.torre}/${registro.departamento}`);
+    this.cambiarEstado(registro, 'rechazar');
   }
 
   usarResidente(persona: Persona): void {
@@ -177,17 +163,54 @@ export class AccesoGuardiaComponent implements OnInit {
     return labels[registro.estado];
   }
 
-  private updateRegistro(id: string, changes: Partial<RegistroAcceso>): void {
-    this.registros = this.registros.map((registro) => registro.id === id ? { ...registro, ...changes } : registro);
-    this.persist();
+  private cambiarEstado(registro: RegistroAcceso, accion: 'autorizar' | 'rechazar' | 'salida'): void {
+    this.errorMessage = '';
+
+    this.accesosService.cambiarEstado(registro.id, accion).subscribe({
+      next: (actualizado) => {
+        this.registros = this.registros.map((item) => item.id === registro.id ? this.toVista(actualizado) : item);
+      },
+      error: (error) => {
+        this.errorMessage = error?.error?.message || 'No se pudo actualizar el registro.';
+        this.load();
+      }
+    });
   }
 
   private load(): void {
-    this.registros = this.localStore.read<RegistroAcceso[]>(this.storageKey, []);
+    this.accesosService.listar().subscribe({
+      next: (registros) => {
+        this.registros = registros.map((registro) => this.toVista(registro));
+      },
+      error: (error) => {
+        this.errorMessage = error?.error?.message || 'No se pudieron cargar los registros de acceso.';
+      }
+    });
   }
 
-  private persist(): void {
-    this.localStore.write(this.storageKey, this.registros);
+  private toVista(registro: RegistroApi): RegistroAcceso {
+    return {
+      id: registro.id,
+      fecha: String(registro.created_at || '').slice(0, 10),
+      horaIngreso: this.formatTime(registro.ingreso_at) || '-',
+      horaSalida: this.formatTime(registro.salida_at) || undefined,
+      torre: registro.torre,
+      departamento: registro.departamento,
+      duenioContactado: registro.duenio_contactado,
+      visitante: registro.visitante,
+      documento: registro.documento || '',
+      placaVehiculo: registro.placa_vehiculo || '',
+      horaIngresoVehiculo: registro.hora_ingreso_vehiculo || '',
+      autorizacion: registro.autorizacion,
+      estado: registro.estado,
+      observacion: registro.observacion || ''
+    };
+  }
+
+  private formatTime(value: string | null): string {
+    return value
+      ? new Intl.DateTimeFormat('es-EC', { hour: '2-digit', minute: '2-digit' }).format(new Date(value))
+      : '';
   }
 
   private currentTime(): string {

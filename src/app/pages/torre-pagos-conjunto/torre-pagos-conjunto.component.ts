@@ -3,10 +3,10 @@ import { Component, OnInit } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { startWith } from 'rxjs';
-import { environment } from '../../../environments/environment';
 import { AlicuotaTorrePago, AlicuotasService } from '../../services/alicuotas.service';
 import { TorresService } from '../../services/torres.service';
 import { SecurityUrlService } from '../../services/security-url.service';
+import { pedirMotivoRechazo } from '../../shared/utils/motivo-rechazo';
 
 @Component({
   selector: 'app-torre-pagos-conjunto',
@@ -65,7 +65,7 @@ export class TorrePagosConjuntoComponent implements OnInit {
   }
 
   aprobarPago(pago: AlicuotaTorrePago): void {
-    if (!pago || pago.estado === 'aprobado' || this.approvingPagoId !== null) {
+    if (!pago || pago.estado !== 'en_revision' || this.approvingPagoId !== null) {
       return;
     }
 
@@ -88,16 +88,42 @@ export class TorrePagosConjuntoComponent implements OnInit {
     });
   }
 
+  rechazarPago(pago: AlicuotaTorrePago): void {
+    if (!pago || pago.estado !== 'en_revision' || this.approvingPagoId !== null) {
+      return;
+    }
+
+    const motivo = pedirMotivoRechazo(`la alicuota de Torre ${pago.torreNumero} - ${pago.mes}`);
+
+    if (!motivo) {
+      return;
+    }
+
+    this.approvingPagoId = pago.id;
+
+    this.alicuotasService.rechazarPagoTorre(pago.id, motivo).subscribe({
+      next: () => {
+        this.approvingPagoId = null;
+        this.filtrarPagos();
+      },
+      error: (error) => {
+        this.approvingPagoId = null;
+        window.alert(error?.error?.message || 'No se pudo rechazar el pago.');
+      }
+    });
+  }
+
   getPaymentLink(torre: any): string {
     const id = torre?.id ?? torre?.numero;
-    return `${window.location.origin}/pago-alicuota-torre/${id}`;
+    return this.securityUrlService.buildPublicLink(`/pago-alicuota-torre/${id}`);
   }
 
   getEstadoLabel(estado: string): string {
     const labels: Record<string, string> = {
       pendiente: 'Pendiente',
       en_revision: 'En revision',
-      aprobado: 'Aprobado'
+      aprobado: 'Aprobado',
+      rechazado: 'Rechazado'
     };
 
     return labels[estado] || estado;
@@ -106,14 +132,7 @@ export class TorrePagosConjuntoComponent implements OnInit {
   getComprobanteUrl(pago: AlicuotaTorrePago): string {
     const rawUrl = String(pago.comprobanteUrl || '').trim();
 
-    return this.securityUrlService.sanitizeResourceUrl(rawUrl, this.getApiOrigin());
+    return this.securityUrlService.resolveUploadUrl(rawUrl);
   }
 
-  private getApiOrigin(): string {
-    if (/^https?:\/\//i.test(environment.endpoint)) {
-      return new URL(environment.endpoint).origin;
-    }
-
-    return environment.production ? window.location.origin : 'http://localhost:3000';
-  }
 }

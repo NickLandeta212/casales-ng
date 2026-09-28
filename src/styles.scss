@@ -323,26 +323,6 @@ nav .nav-link:hover {
 }
 
 
-quill-editor {
-  display: block;
-  width: 100%;
-  min-height: 200px; /* ajusta si quieres más alto */
-}
-
-.ql-container {
-  width: 100%;
-  min-height: 200px;
-  font-family: 'Poppins', sans-serif;
-}
-
-.ql-toolbar {
-  border-radius: 8px 8px 0 0;
-}
-
-.ql-container.ql-snow {
-  border-radius: 0 0 8px 8px;
-}
-
 .sticky-footer {
   position: sticky;
   bottom: 0;
@@ -420,3 +400,50 @@ quill-editor {
 
 
 
+
+/* Accion de rechazo compartida por pagos y reservas */
+.btn-rechazar {
+  min-width: 84px;
+  margin-left: 6px;
+  padding: 6px 12px;
+  border: 1px solid #f0c4bf;
+  border-radius: var(--sl-radius-sm);
+  background-color: #fff6f5;
+  color: var(--sl-color-danger);
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 12px;
+  transition: all 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background-color: var(--sl-color-danger);
+    color: #fff;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+/* Filtro 'Mostrar pagadas' de la pantalla de multas */
+.toggle-pagadas {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  margin-right: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--sl-color-muted);
+  cursor: pointer;
+}
+
+/* Widget de captcha de los formularios publicos (vacio si el captcha esta desactivado) */
+.captcha-slot:empty {
+  display: none;
+}
+
+.captcha-slot {
+  margin-bottom: 10px;
+}

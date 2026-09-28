@@ -1,42 +1,38 @@
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { AuthService } from '../auth/services/auth.service';
-import { LocalStoreService } from './local-store.service';
+import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface AuditEntry {
-  id: string;
-  fecha: string;
-  usuario: string;
-  accion: string;
+  id: number;
+  created_at: string;
+  usuario_nombre: string | null;
+  role: string | null;
   modulo: string;
-  detalle: string;
+  accion: string;
+  detalle: string | null;
+  metodo: string;
+  ruta: string;
+  status: number;
+  ip: string | null;
 }
 
+// El servidor registra la auditoria automaticamente; el frontend solo la consulta.
 @Injectable({
   providedIn: 'root'
 })
 export class AuditService {
-  private readonly storageKey = 'casales_auditoria';
+  private readonly apiUrl = `${environment.endpoint}/auditoria`;
 
-  constructor(
-    private authService: AuthService,
-    private localStore: LocalStoreService
-  ) {}
+  constructor(private http: HttpClient) {}
 
-  log(modulo: string, accion: string, detalle: string): void {
-    const entries = this.getEntries();
-    const entry: AuditEntry = {
-      id: crypto.randomUUID(),
-      fecha: new Date().toISOString(),
-      usuario: this.authService.getDisplayName(),
-      modulo,
-      accion,
-      detalle
-    };
+  getEntries(options: { limit?: number; modulo?: string } = {}): Observable<AuditEntry[]> {
+    let params = new HttpParams().set('limit', String(options.limit ?? 300));
 
-    this.localStore.write(this.storageKey, [entry, ...entries].slice(0, 300));
-  }
+    if (options.modulo) {
+      params = params.set('modulo', options.modulo);
+    }
 
-  getEntries(): AuditEntry[] {
-    return this.localStore.read<AuditEntry[]>(this.storageKey, []);
+    return this.http.get<AuditEntry[]>(this.apiUrl, { params });
   }
 }

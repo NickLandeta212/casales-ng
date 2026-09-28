@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { PAGINAS, PERMISOS_POR_ROL, Rol, ROLES } from '../../auth/permisos';
 import { HttpClient } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -45,7 +46,7 @@ interface PagePermissionOption {
   description: string;
 }
 
-type EditableRole = 'superadmin' | 'admin_general' | 'admin_conjunto' | 'guardia' | 'tesorero' | 'condomino';
+type EditableRole = Rol;
 
 interface TorreAutorizadaDetalle {
   id: number;
@@ -105,25 +106,7 @@ export class UsuariosComponent implements OnInit {
     Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/)
   ]);
 
-  pageOptions: PagePermissionOption[] = [
-    { key: 'home', label: 'Inicio', description: 'Resumen general del conjunto.' },
-    { key: 'torres', label: 'Torres', description: 'Listado e informacion de torres.' },
-    { key: 'pagos_alicuota', label: 'Aprobar pagos', description: 'Aprobacion de alicuotas que pagan las torres.' },
-    { key: 'pagos_alicuota_torre', label: 'Link de pago', description: 'Enlace de pago por torre.' },
-    { key: 'pagos_torres', label: 'Pagos por torres', description: 'Control de pagos que administra el conjunto.' },
-    { key: 'pagos_departamentos', label: 'Pagos departamentos', description: 'Aprobacion de alicuotas por departamento.' },
-    { key: 'departamentos', label: 'Departamentos', description: 'Informacion de departamentos autorizados.' },
-    { key: 'control_acceso', label: 'Acceso', description: 'Registro de visitantes por guardia.' },
-    { key: 'reservas', label: 'Reservas', description: 'Revision de reservas.' },
-    { key: 'personas', label: 'Personas', description: 'Listado de residentes.' },
-    { key: 'personas_crear', label: 'Crear personas', description: 'Registro de nuevos residentes.' },
-    { key: 'multas', label: 'Multas', description: 'Listado de multas.' },
-    { key: 'multas_crear', label: 'Crear multas', description: 'Registro de nuevas multas.' },
-    { key: 'gastos_comunes', label: 'Finanzas', description: 'Ganancias, gastos y reportes.' },
-    { key: 'auditoria', label: 'Auditoria', description: 'Seguimiento de acciones importantes.' },
-    { key: 'usuarios', label: 'Usuarios', description: 'Listado e inspeccion de usuarios.' },
-    { key: 'usuarios_crear', label: 'Crear usuarios', description: 'Alta de usuarios y permisos.' }
-  ];
+  pageOptions: PagePermissionOption[] = PAGINAS;
 
   constructor(
     private http: HttpClient,
@@ -598,14 +581,14 @@ export class UsuariosComponent implements OnInit {
   }
 
   aplicarPermisosPorRol(role: string) {
-    if (role === 'superadmin' || role === 'admin_general') {
+    if (role === 'admin_general') {
       this.pagePermissionsControl.setValue(this.pageOptions.map((option) => option.key));
       this.torreIdsControl.setValue(this.torres.map((torre) => torre.id));
       return;
     }
 
     if (role === 'admin_conjunto') {
-      this.pagePermissionsControl.setValue(['home', 'torres', 'pagos_alicuota', 'pagos_torres', 'departamentos', 'control_acceso', 'reservas', 'personas', 'multas', 'usuarios', 'usuarios_crear', 'gastos_comunes', 'auditoria']);
+      this.pagePermissionsControl.setValue(PERMISOS_POR_ROL.admin_conjunto);
       this.torreIdsControl.setValue(this.torres.map((torre) => torre.id));
       return;
     }
@@ -669,8 +652,8 @@ export class UsuariosComponent implements OnInit {
   }
 
   private normalizarRolAdministrativo(role: string): EditableRole {
-    if (role === 'superadmin' || role === 'admin_general' || role === 'admin_conjunto' || role === 'guardia' || role === 'tesorero' || role === 'condomino') {
-      return role;
+    if ((ROLES as string[]).includes(role)) {
+      return role as Rol;
     }
 
     return 'tesorero';
@@ -679,7 +662,7 @@ export class UsuariosComponent implements OnInit {
   private getRelatedPermissions(permission: string): string[] {
     const role = this.editRoleControl.value || 'tesorero';
     const groups: Record<string, string[]> = {
-      torres: role === 'superadmin' || role === 'admin_general'
+      torres: role === 'admin_general'
         ? ['torres', 'pagos_alicuota', 'pagos_alicuota_torre', 'pagos_torres', 'pagos_departamentos']
         : role === 'admin_conjunto'
         ? ['torres', 'pagos_alicuota']
@@ -775,20 +758,13 @@ export class UsuariosComponent implements OnInit {
   }
 
   private permisosBasePorRol(role: EditableRole): string[] {
-    const permisos: Record<EditableRole, string[]> = {
-      superadmin: this.pageOptions.map((option) => option.key),
-      admin_general: this.pageOptions.map((option) => option.key),
-      admin_conjunto: ['home', 'torres', 'pagos_alicuota', 'pagos_alicuota_torre', 'pagos_torres', 'departamentos', 'control_acceso', 'reservas', 'personas', 'personas_crear', 'multas', 'multas_crear', 'usuarios', 'usuarios_crear', 'gastos_comunes', 'auditoria'],
-      guardia: ['home', 'control_acceso'],
-      tesorero: ['home', 'torres', 'pagos_departamentos', 'departamentos', 'reservas', 'personas', 'multas', 'gastos_comunes'],
-      condomino: ['home', 'reservas', 'pagos_alicuota']
-    };
+    const permisos: Record<EditableRole, string[]> = PERMISOS_POR_ROL;
 
     return permisos[role];
   }
 
   private torresAutorizadasParaRol(role: EditableRole, torreBase: number): number[] {
-    if (role === 'superadmin' || role === 'admin_general' || role === 'admin_conjunto' || role === 'guardia') {
+    if (role === 'admin_general' || role === 'admin_conjunto' || role === 'guardia') {
       return this.torres.map((torre) => torre.id);
     }
 

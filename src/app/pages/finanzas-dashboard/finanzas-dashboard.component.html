@@ -93,11 +93,14 @@
         <label>
           <span>{{ isConjuntoView ? 'Alcance' : 'Torre' }}</span>
           <input *ngIf="isConjuntoView" type="text" value="Conjunto" disabled />
-          <input *ngIf="!isConjuntoView" type="text" formControlName="torre" />
+          <select *ngIf="!isConjuntoView" formControlName="torre">
+            <option *ngFor="let torre of torresDisponibles" [ngValue]="torre.id">Torre {{ torre.numero }}</option>
+          </select>
         </label>
       </div>
 
-      <button type="submit">Guardar</button>
+      <p class="form-error" *ngIf="errorMessage">{{ errorMessage }}</p>
+      <button type="submit" [disabled]="guardando">{{ guardando ? 'Guardando...' : 'Guardar' }}</button>
     </form>
 
     <div class="finance-table-card">

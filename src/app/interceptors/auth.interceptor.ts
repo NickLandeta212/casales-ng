@@ -28,7 +28,8 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(authReq).pipe(
     catchError(err => {
-      if (err.status === 403 || err.status === 401) {
+      // 401 = token invalido/expirado. Un 403 solo indica falta de permiso y no debe cerrar la sesion.
+      if (err.status === 401) {
         authService.clearSession();
         router.navigateByUrl('/');
       }

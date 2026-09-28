@@ -81,3 +81,27 @@ th {
     flex-direction: column;
   }
 }
+
+.auditoria-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+
+  select,
+  button {
+    padding: 7px 10px;
+    border: 1px solid var(--sl-color-border);
+    border-radius: var(--sl-radius-sm);
+    background: #fff;
+    font-size: 13px;
+  }
+
+  button {
+    background: var(--sl-color-primary);
+    border-color: var(--sl-color-primary);
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+  }
+}

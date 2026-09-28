@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { AuthService } from '../../auth/services/auth.service';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { ROLES } from '../../auth/permisos';
 
 @Component({
   selector: 'app-user-menu',
@@ -10,7 +11,7 @@ import { RouterModule } from '@angular/router';
   styleUrl: './user-menu.component.scss'
 })
 export class UserMenuComponent implements OnInit {
-  readonly allRoles = ['superadmin', 'admin_general', 'admin_conjunto', 'guardia', 'tesorero', 'condomino'];
+  readonly allRoles: string[] = ROLES;
 
   constructor(public authService: AuthService) { }
 

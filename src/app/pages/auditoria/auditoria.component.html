@@ -2,17 +2,26 @@
   <header class="auditoria-header">
     <div>
       <h1>Auditoría</h1>
-      <p>Últimas acciones registradas en módulos sensibles.</p>
+      <p>Acciones registradas por el servidor: aprobaciones, rechazos, cambios de datos e inicios de sesión.</p>
     </div>
-    <span>{{ entries.length }} eventos</span>
+    <div class="auditoria-actions">
+      <select (change)="filtrar($event)" aria-label="Filtrar por módulo">
+        <option value="">Todos los módulos</option>
+        <option *ngFor="let modulo of modulos" [value]="modulo">{{ modulo }}</option>
+      </select>
+      <button type="button" (click)="cargar()" [disabled]="cargando">{{ cargando ? 'Cargando...' : 'Actualizar' }}</button>
+      <span>{{ entriesFiltradas.length }} eventos</span>
+    </div>
   </header>
 
   <section class="auditoria-card">
-    <div class="empty-state" *ngIf="entries.length === 0">
+    <div class="empty-state" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+    <div class="empty-state" *ngIf="!errorMessage && !cargando && entriesFiltradas.length === 0">
       No hay eventos registrados todavía.
     </div>
 
-    <div class="table-scroll" *ngIf="entries.length > 0">
+    <div class="table-scroll" *ngIf="entriesFiltradas.length > 0">
       <table>
         <thead>
           <tr>
@@ -24,12 +33,12 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let entry of entries">
-            <td>{{ formatDate(entry.fecha) }}</td>
-            <td>{{ entry.usuario }}</td>
+          <tr *ngFor="let entry of entriesFiltradas">
+            <td>{{ formatDate(entry.created_at) }}</td>
+            <td>{{ entry.usuario_nombre || 'Sistema' }}<small *ngIf="entry.role"> ({{ entry.role }})</small></td>
             <td>{{ entry.modulo }}</td>
             <td>{{ entry.accion }}</td>
-            <td>{{ entry.detalle }}</td>
+            <td>{{ entry.detalle || entry.metodo + ' ' + entry.ruta }}</td>
           </tr>
         </tbody>
       </table>

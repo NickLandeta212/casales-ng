@@ -131,6 +131,18 @@
     background-color: var(--sl-color-primary-soft);
     cursor: not-allowed;
   }
+
+  &.review {
+    cursor: not-allowed;
+  }
+
+  &.rejected {
+    background-color: #fff6f5;
+
+    small {
+      color: var(--sl-color-danger);
+    }
+  }
 }
 
 .upload-panel {

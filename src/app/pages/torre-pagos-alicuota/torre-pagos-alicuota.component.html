@@ -63,6 +63,7 @@
         <option value="en_revision">Por revisar</option>
         <option value="pendiente">Pendientes</option>
         <option value="aprobado">Aprobados</option>
+        <option value="rechazado">Rechazados</option>
       </select>
     </label>
   </div>
@@ -91,7 +92,7 @@
           <td>${{ pago.valor }}</td>
           <td>{{ pago.emailDestinatario || 'Sin correo' }}</td>
           <td>
-            <span class="status-pill" [class.review]="pago.estado === 'en_revision'" [class.approved]="pago.estado === 'aprobado'">
+            <span class="status-pill" [class.review]="pago.estado === 'en_revision'" [class.approved]="pago.estado === 'aprobado'" [class.rejected]="pago.estado === 'rechazado'" [title]="pago.motivoRechazo || ''">
               {{ getEstadoLabel(pago.estado) }}
             </span>
           </td>
@@ -102,14 +103,27 @@
             <span *ngIf="!pago.comprobanteUrl">Sin comprobante</span>
           </td>
           <td>
-            <button
-              class="btn-aprobar"
-              type="button"
-              [disabled]="pago.estado !== 'en_revision' || approvingPagoId !== null"
-              (click)="aprobarPago(pago)"
-            >
-              {{ pago.estado === 'aprobado' ? 'Aprobado' : approvingPagoId === pago.id ? 'Aprobando...' : 'Aprobar' }}
-            </button>
+            <ng-container *ngIf="pago.estado === 'en_revision'; else sinAccion">
+              <button
+                class="btn-aprobar"
+                type="button"
+                [disabled]="approvingPagoId !== null"
+                (click)="aprobarPago(pago)"
+              >
+                {{ approvingPagoId === pago.id ? 'Guardando...' : 'Aprobar' }}
+              </button>
+              <button
+                class="btn-rechazar"
+                type="button"
+                [disabled]="approvingPagoId !== null"
+                (click)="rechazarPago(pago)"
+              >
+                Rechazar
+              </button>
+            </ng-container>
+            <ng-template #sinAccion>
+              <small class="motivo-rechazo" *ngIf="pago.motivoRechazo">{{ pago.motivoRechazo }}</small>
+            </ng-template>
           </td>
         </tr>
 

@@ -277,6 +277,18 @@
     background-color: var(--sl-color-primary-soft);
     color: var(--sl-color-primary-dark);
   }
+
+  &.rejected {
+    background-color: #fff6f5;
+    color: var(--sl-color-danger);
+  }
+}
+
+.motivo-rechazo {
+  display: block;
+  max-width: 220px;
+  color: var(--sl-color-muted);
+  font-size: 12px;
 }
 
 .empty-cell {

@@ -3,10 +3,10 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { startWith } from 'rxjs/operators';
-import { environment } from '../../../environments/environment';
 import { DepartamentosService } from '../../services/departamentos.service';
-import { MotivoOption, Multa, MultaDraft, MultasService, PagoMulta, PagoMultaDetalle } from '../../services/multas.service';
+import { EstadoMulta, MotivoOption, Multa, MultaDraft, MultasService, PagoMulta, PagoMultaDetalle } from '../../services/multas.service';
 import { SecurityUrlService } from '../../services/security-url.service';
+import { pedirMotivoRechazo } from '../../shared/utils/motivo-rechazo';
 
 interface DepartamentoOption {
   id: number;
@@ -33,6 +33,7 @@ export class MultasComponent implements OnInit {
   departamentosDisponibles: DepartamentoOption[] = [];
   motivos: MotivoOption[] = [];
   torres: number[] = [];
+  mostrarPagadas = false;
 
   torreControl = new FormControl<string>('');
   departamentoControl = new FormControl<string>('');
@@ -42,14 +43,6 @@ export class MultasComponent implements OnInit {
   descripcionControl = new FormControl<string>('');
   montoControl = new FormControl<number | null>(null);
 
-  editTorreControl = new FormControl<string>('');
-  editDepartamentoControl = new FormControl<string>('');
-  editPersonaControl = new FormControl<string>('');
-  editPersonaCedulaControl = new FormControl<string>('');
-  editMotivoIdControl = new FormControl<string>('');
-  editDescripcionControl = new FormControl<string>('');
-  editMontoControl = new FormControl<number | null>(null);
-  editDepartamentosDisponibles: DepartamentoOption[] = [];
   cargando = false;
   approvingId: string | number | null = null;
   approvingPagoId: string | number | null = null;
@@ -89,7 +82,6 @@ export class MultasComponent implements OnInit {
     });
 
     this.setupBusquedaDepartamentos();
-    this.setupBusquedaDepartamentosEdicion();
   }
 
   ngOnInit(): void {
@@ -189,20 +181,6 @@ export class MultasComponent implements OnInit {
       });
   }
 
-  private setupBusquedaDepartamentosEdicion() {
-    this.editTorreControl.valueChanges
-      .pipe(startWith(this.editTorreControl.value))
-      .subscribe((torreSeleccionada) => {
-        const torre = Number(torreSeleccionada);
-        this.editDepartamentosDisponibles = this.filtrarDepartamentosPorTorre(torre);
-
-        const deptoActual = Number(this.editDepartamentoControl.value);
-        if (!this.editDepartamentosDisponibles.some((item) => item.id === deptoActual)) {
-          this.editDepartamentoControl.setValue('');
-        }
-      });
-  }
-
   private filtrarDepartamentosPorTorre(torre: number): DepartamentoOption[] {
     if (Number.isNaN(torre) || torre <= 0) {
       return [];
@@ -216,14 +194,16 @@ export class MultasComponent implements OnInit {
     this.pagoSeleccionadoId = null;
     this.multaSeleccionada = multa;
     this.multaSeleccionadaId = multa.id ?? null;
+  }
 
-    this.editTorreControl.setValue(multa.torreNumero > 0 ? multa.torreNumero.toString() : '');
-    this.editDepartamentoControl.setValue(multa.departamentoId > 0 ? multa.departamentoId.toString() : '');
-    this.editPersonaControl.setValue(this.getPersonaEtiqueta(multa));
-    this.editPersonaCedulaControl.setValue(multa.personaCedula ?? '');
-    this.editMotivoIdControl.setValue(multa.motivoId > 0 ? multa.motivoId.toString() : '');
-    this.editDescripcionControl.setValue(multa.descripcion);
-    this.editMontoControl.setValue(multa.monto);
+  get multasVisibles(): Multa[] {
+    return this.mostrarPagadas
+      ? this.listaMultas
+      : this.listaMultas.filter((multa) => multa.estado !== 'pagada');
+  }
+
+  togglePagadas(event: Event): void {
+    this.mostrarPagadas = (event.target as HTMLInputElement).checked;
   }
 
   cerrarDetalles(): void {
@@ -241,7 +221,7 @@ export class MultasComponent implements OnInit {
   }
 
   aprobarPago(pago: PagoMulta): void {
-    if (pago.estado === 'aprobado' || this.approvingPagoId !== null) {
+    if (pago.estado !== 'en_proceso' || this.approvingPagoId !== null) {
       return;
     }
 
@@ -258,11 +238,8 @@ export class MultasComponent implements OnInit {
     this.multasService.aprobarPagoMultas(pago.id).subscribe({
       next: () => {
         this.approvingPagoId = null;
-        this.multasService.loadMultas().subscribe({
-          next: () => this.cargarPagosMultas(),
-          error: () => this.cargarPagosMultas()
-        });
-        this.successMessage = 'Pago aprobado correctamente. Las multas pagadas fueron eliminadas del listado pendiente.';
+        this.recargarTodo();
+        this.successMessage = 'Pago aprobado correctamente. Se envio la factura y las multas quedaron como pagadas.';
       },
       error: (err) => {
         console.error('Error aprobando pago de multas', err);
@@ -272,8 +249,45 @@ export class MultasComponent implements OnInit {
     });
   }
 
+  rechazarPago(pago: PagoMulta): void {
+    if (pago.estado !== 'en_proceso' || this.approvingPagoId !== null) {
+      return;
+    }
+
+    const motivo = pedirMotivoRechazo(`el pago de multas #${pago.id}`);
+
+    if (!motivo) {
+      return;
+    }
+
+    this.approvingPagoId = pago.id;
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    this.multasService.rechazarPagoMultas(pago.id, motivo).subscribe({
+      next: (res) => {
+        this.approvingPagoId = null;
+        this.recargarTodo();
+        this.successMessage = res?.notificado
+          ? 'Pago rechazado. Se notifico al residente y las multas volvieron a quedar pendientes.'
+          : 'Pago rechazado. Las multas volvieron a quedar pendientes (no se pudo enviar el aviso por correo).';
+      },
+      error: (err) => {
+        this.approvingPagoId = null;
+        this.errorMessage = err?.error?.message || 'No se pudo rechazar el pago de multas.';
+      }
+    });
+  }
+
+  private recargarTodo(): void {
+    this.multasService.loadMultas().subscribe({
+      next: () => this.cargarPagosMultas(),
+      error: () => this.cargarPagosMultas()
+    });
+  }
+
   aprobarMulta(multa: Multa): void {
-    if (multa.aprobada || multa.id === undefined || multa.id === null || this.approvingId !== null) {
+    if (multa.aprobada || multa.estado !== 'pendiente' || multa.id === undefined || multa.id === null || this.approvingId !== null) {
       return;
     }
 
@@ -296,45 +310,6 @@ export class MultasComponent implements OnInit {
         console.error('Error aprobando multa', err);
         this.approvingId = null;
         this.errorMessage = err?.error?.message || 'No se pudo aprobar la multa.';
-      }
-    });
-  }
-
-  guardarEdicionMulta() {
-    if (this.multaSeleccionadaId === null || !this.formularioEdicionValido()) {
-      return;
-    }
-
-    const payload: MultaDraft = {
-      departamentoId: Number(this.editDepartamentoControl.value),
-      motivoId: Number(this.editMotivoIdControl.value),
-      ...this.parsePersonaCompleta(this.editPersonaControl.value),
-      personaCedula: (this.editPersonaCedulaControl.value || '').trim(),
-      descripcion: (this.editDescripcionControl.value || '').trim(),
-      monto: Number(this.editMontoControl.value),
-      aprobada: this.multaSeleccionada?.aprobada ?? false,
-      fecha: this.multaSeleccionada?.fecha,
-    };
-
-    this.multasService.updateMulta(this.multaSeleccionadaId, payload).subscribe({
-      error: (err) => {
-        console.error('Error actualizando multa', err);
-      }
-    });
-  }
-
-  eliminarMultaSeleccionada() {
-    if (this.multaSeleccionadaId === null) {
-      return;
-    }
-
-    this.multasService.deleteMulta(this.multaSeleccionadaId).subscribe({
-      next: () => {
-        this.multaSeleccionada = null;
-        this.multaSeleccionadaId = null;
-      },
-      error: (err) => {
-        console.error('Error eliminando multa', err);
       }
     });
   }
@@ -389,21 +364,6 @@ export class MultasComponent implements OnInit {
     );
   }
 
-  private formularioEdicionValido(): boolean {
-    const monto = Number(this.editMontoControl.value);
-
-    return Boolean(
-      this.editTorreControl.value &&
-      this.editDepartamentoControl.value &&
-      (this.editPersonaControl.value || '').trim() &&
-      (this.editPersonaCedulaControl.value || '').trim() &&
-      this.editMotivoIdControl.value &&
-      (this.editDescripcionControl.value || '').trim() &&
-      Number.isFinite(monto) &&
-      monto > 0
-    );
-  }
-
   private parsePersonaCompleta(valor: string | null): Pick<MultaDraft, 'personaNombre' | 'personaApellidos'> {
     const texto = (valor || '').trim();
 
@@ -437,7 +397,13 @@ export class MultasComponent implements OnInit {
   }
 
   getEstadoLabel(multa: Multa): string {
-    return multa.aprobada ? 'Aprobada' : 'En proceso';
+    const labels: Record<EstadoMulta, string> = {
+      pendiente: 'Pendiente',
+      en_pago: 'Pago en revision',
+      pagada: 'Pagada'
+    };
+
+    return labels[multa.estado] || multa.estado;
   }
 
   getFechaEtiqueta(multa: Multa): string {
@@ -449,7 +415,13 @@ export class MultasComponent implements OnInit {
   }
 
   getPagoEstadoLabel(pago: PagoMulta): string {
-    return pago.estado === 'aprobado' ? 'Aprobado' : 'En proceso';
+    const labels: Record<string, string> = {
+      en_proceso: 'En proceso',
+      aprobado: 'Aprobado',
+      rechazado: 'Rechazado'
+    };
+
+    return labels[pago.estado] || pago.estado;
   }
 
   getPagoDepartamentoEtiqueta(pago: PagoMulta): string {
@@ -461,20 +433,12 @@ export class MultasComponent implements OnInit {
   getPagoComprobanteUrl(pago: PagoMulta): string {
     const rawUrl = String(pago.comprobante_url || '').trim();
 
-    return this.securityUrlService.sanitizeResourceUrl(rawUrl, this.getApiOrigin());
+    return this.securityUrlService.resolveUploadUrl(rawUrl);
   }
 
   getPagoPersonaEtiqueta(detalle: PagoMultaDetalle): string {
     const nombre = `${detalle.persona_nombre ?? ''} ${detalle.persona_apellidos ?? ''}`.trim();
     return nombre || 'Sin persona';
-  }
-
-  private getApiOrigin(): string {
-    if (/^https?:\/\//i.test(environment.endpoint)) {
-      return new URL(environment.endpoint).origin;
-    }
-
-    return environment.production ? window.location.origin : 'http://localhost:3000';
   }
 
   private toDraft(multa: Multa, aprobada: boolean): MultaDraft {

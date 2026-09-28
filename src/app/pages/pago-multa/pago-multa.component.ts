@@ -1,22 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { DepartamentosService } from '../../services/departamentos.service';
-import { Multa, MultasService } from '../../services/multas.service';
-import { TorresService } from '../../services/torres.service';
+import { MultasService } from '../../services/multas.service';
+import { PublicDepartamento, PublicMultaPendiente, PublicService, PublicTorre } from '../../services/public.service';
 import { PublicFormSecurityService } from '../../services/public-form-security.service';
-
-interface PagoMultaTorre {
-  id: number;
-  numero: number;
-}
-
-interface PagoMultaDepartamento {
-  id: number;
-  numero: string;
-  torre_id: number | null;
-  torre_numero: number | null;
-}
+import { CaptchaHandle, CaptchaService } from '../../services/captcha.service';
 
 @Component({
   selector: 'app-pago-multa',
@@ -27,15 +15,15 @@ interface PagoMultaDepartamento {
 })
 export class PagoMultaComponent implements OnInit {
   private fb = inject(FormBuilder);
-  private torresService = inject(TorresService);
-  private departamentosService = inject(DepartamentosService);
+  private publicService = inject(PublicService);
   private multasService = inject(MultasService);
   private publicFormSecurity = inject(PublicFormSecurityService);
+  private captchaService = inject(CaptchaService);
   private readonly formStartedAt = Date.now();
 
-  torres: PagoMultaTorre[] = [];
-  departamentos: PagoMultaDepartamento[] = [];
-  multas: Multa[] = [];
+  torres: PublicTorre[] = [];
+  departamentos: PublicDepartamento[] = [];
+  multas: PublicMultaPendiente[] = [];
   multasSeleccionadasIds = new Set<string>();
   comprobanteBase64: string | null = null;
   comprobanteName = '';
@@ -46,6 +34,25 @@ export class PagoMultaComponent implements OnInit {
   successMessage = '';
   errorMessage = '';
 
+  captcha: CaptchaHandle | null = null;
+  private captchaRendered = false;
+
+  // El contenedor del captcha puede aparecer despues (ngIf); se dibuja una sola vez.
+  @ViewChild('captchaSlot') set captchaSlot(ref: ElementRef<HTMLElement> | undefined) {
+    if (!ref || this.captchaRendered) {
+      return;
+    }
+
+    this.captchaRendered = true;
+    this.captchaService.render(ref.nativeElement)
+      .then((handle) => { this.captcha = handle; })
+      .catch(() => { this.captcha = null; });
+  }
+
+  private captchaPendiente(): boolean {
+    return Boolean(this.captcha?.enabled && !this.captcha.token());
+  }
+
   pagoForm = this.fb.group({
     torre: ['', Validators.required],
     departamento: ['', Validators.required],
@@ -53,48 +60,28 @@ export class PagoMultaComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    this.loadOptions();
-    this.loadMultas();
+    this.loadTorres();
 
-    this.pagoForm.get('torre')?.valueChanges.subscribe(() => {
+    this.pagoForm.get('torre')?.valueChanges.subscribe((torreId) => {
       this.pagoForm.get('departamento')?.setValue('');
-      this.limpiarSeleccionMultas();
+      this.loadDepartamentos(torreId || '');
       this.successMessage = '';
       this.errorMessage = '';
     });
 
-    this.pagoForm.get('departamento')?.valueChanges.subscribe(() => {
-      this.limpiarSeleccionMultas();
+    this.pagoForm.get('departamento')?.valueChanges.subscribe((departamentoId) => {
+      this.loadMultas(departamentoId || '');
       this.successMessage = '';
       this.errorMessage = '';
     });
   }
 
-  get departamentosFiltrados(): PagoMultaDepartamento[] {
-    const torreValue = this.pagoForm.get('torre')?.value;
-
-    if (!torreValue) {
-      return [];
-    }
-
-    return this.departamentos.filter(
-      (departamento) =>
-        departamento.torre_id?.toString() === torreValue.toString() ||
-        departamento.torre_numero?.toString() === torreValue.toString(),
-    );
+  get departamentosFiltrados(): PublicDepartamento[] {
+    return this.departamentos;
   }
 
-  get multasDepartamento(): Multa[] {
-    const departamentoValue = this.pagoForm.get('departamento')?.value;
-
-    if (!departamentoValue) {
-      return [];
-    }
-
-    return this.multas.filter(
-      (multa) =>
-        multa.departamentoId.toString() === departamentoValue.toString(),
-    );
+  get multasDepartamento(): PublicMultaPendiente[] {
+    return this.multas;
   }
 
   get totalCancelar(): number {
@@ -104,7 +91,7 @@ export class PagoMultaComponent implements OnInit {
     );
   }
 
-  get multasSeleccionadas(): Multa[] {
+  get multasSeleccionadas(): PublicMultaPendiente[] {
     return this.multasDepartamento.filter((multa) =>
       this.isMultaSeleccionada(multa),
     );
@@ -150,10 +137,13 @@ export class PagoMultaComponent implements OnInit {
       return;
     }
 
+    if (this.captchaPendiente()) {
+      this.errorMessage = 'Completa la verificacion de seguridad.';
+      return;
+    }
+
     const departamentoId = Number(this.pagoForm.get('departamento')?.value);
-    const multaIds = this.multasSeleccionadas
-      .map((multa) => multa.id)
-      .filter((id): id is number | string => id !== undefined && id !== null);
+    const multaIds = this.multasSeleccionadas.map((multa) => multa.id);
 
     this.submitting = true;
     this.publicFormSecurity.markSubmitted('pago-multa');
@@ -164,13 +154,16 @@ export class PagoMultaComponent implements OnInit {
         total: this.totalCancelar,
         comprobante_base64: this.comprobanteBase64,
         email_destinatario: String(this.pagoForm.get('email_destinatario')?.value || '').trim(),
+        captcha_token: this.captcha?.token() || undefined,
       })
       .subscribe({
         next: () => {
           this.submitting = false;
+          this.captcha?.reset();
           this.successMessage =
             'Pago enviado correctamente. Queda pendiente de revision.';
-          this.pagoForm.reset();
+          this.pagoForm.reset({ torre: '', departamento: '', email_destinatario: '' });
+          this.multas = [];
           this.limpiarSeleccionMultas();
           this.comprobanteBase64 = null;
           this.comprobanteName = '';
@@ -178,6 +171,7 @@ export class PagoMultaComponent implements OnInit {
         },
         error: (error) => {
           this.submitting = false;
+          this.captcha?.reset();
           this.errorMessage = this.getErrorMessage(error);
         },
       });
@@ -224,17 +218,16 @@ export class PagoMultaComponent implements OnInit {
     return departamento ? departamento.numero : 'Sin seleccionar';
   }
 
-  getPersonaEtiqueta(multa: Multa): string {
-    const nombre =
-      `${multa.personaNombre ?? ''} ${multa.personaApellidos ?? ''}`.trim();
-    return nombre || 'Sin persona';
+  getMultaDetalle(multa: PublicMultaPendiente): string {
+    const fecha = multa.fecha ? String(multa.fecha).slice(0, 10) : '';
+    return [fecha, multa.descripcion].filter(Boolean).join(' - ');
   }
 
-  isMultaSeleccionada(multa: Multa): boolean {
+  isMultaSeleccionada(multa: PublicMultaPendiente): boolean {
     return this.multasSeleccionadasIds.has(this.getMultaKey(multa));
   }
 
-  toggleMulta(multa: Multa, event: Event): void {
+  toggleMulta(multa: PublicMultaPendiente, event: Event): void {
     const checked = (event.target as HTMLInputElement).checked;
     const key = this.getMultaKey(multa);
 
@@ -256,69 +249,61 @@ export class PagoMultaComponent implements OnInit {
     this.multasSeleccionadasIds.clear();
   }
 
-  private getMultaKey(multa: Multa): string {
+  private getMultaKey(multa: PublicMultaPendiente): string {
     return multa.id !== undefined && multa.id !== null
       ? multa.id.toString()
       : '';
   }
 
-  private loadOptions(): void {
+  private loadTorres(): void {
     this.loadingData = true;
 
-    this.torresService.list().subscribe({
-      next: (res: any) => {
-        const raw = Array.isArray(res) ? res : res?.data;
-        const lista = Array.isArray(raw) ? raw : [];
-
-        this.torres = lista
-          .map((item: any) => ({
-            id: Number(item.id),
-            numero: Number(item.numero),
-          }))
-          .filter((item: PagoMultaTorre) => item.id > 0 && item.numero > 0)
-          .sort((a: PagoMultaTorre, b: PagoMultaTorre) => a.numero - b.numero);
-
+    this.publicService.getTorres().subscribe({
+      next: (torres) => {
+        this.torres = [...torres].sort((a, b) => a.numero - b.numero);
         this.loadingData = false;
       },
       error: () => {
         this.torres = [];
         this.loadingData = false;
-      },
-    });
-
-    this.departamentosService.list().subscribe({
-      next: (res: any) => {
-        const raw = Array.isArray(res) ? res : res?.data;
-        const lista = Array.isArray(raw) ? raw : [];
-
-        this.departamentos = lista
-          .map((item: any) => ({
-            id: Number(item.id),
-            numero: String(item.numero ?? ''),
-            torre_id:
-              item.torre_id !== undefined && item.torre_id !== null
-                ? Number(item.torre_id)
-                : null,
-            torre_numero:
-              item.torre_numero !== undefined && item.torre_numero !== null
-                ? Number(item.torre_numero)
-                : null,
-          }))
-          .filter((item: PagoMultaDepartamento) => item.id > 0 && item.numero);
-      },
-      error: () => {
-        this.departamentos = [];
+        this.errorMessage = 'No se pudieron cargar las torres. Intenta nuevamente.';
       },
     });
   }
 
-  private loadMultas(): void {
-    this.multasService.loadMultas().subscribe({
+  private loadDepartamentos(torreId: string): void {
+    this.departamentos = [];
+    this.multas = [];
+    this.limpiarSeleccionMultas();
+
+    if (!torreId) {
+      return;
+    }
+
+    this.publicService.getDepartamentos(torreId).subscribe({
+      next: (departamentos) => {
+        this.departamentos = departamentos;
+      },
+      error: () => {
+        this.errorMessage = 'No se pudieron cargar los departamentos.';
+      },
+    });
+  }
+
+  private loadMultas(departamentoId: string): void {
+    this.multas = [];
+    this.limpiarSeleccionMultas();
+
+    if (!departamentoId) {
+      return;
+    }
+
+    this.publicService.getMultasPendientes(departamentoId).subscribe({
       next: (multas) => {
         this.multas = multas;
       },
       error: () => {
-        this.multas = [];
+        this.errorMessage = 'No se pudieron cargar las multas del departamento.';
       },
     });
   }

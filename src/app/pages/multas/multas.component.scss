@@ -287,6 +287,11 @@
 		background-color: #eef6ff;
 		color: #2563eb;
 	}
+
+	&.rechazado {
+		background-color: #fff6f5;
+		color: var(--sl-color-danger);
+	}
 }
 
 .empty-cell {

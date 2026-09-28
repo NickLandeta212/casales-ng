@@ -36,18 +36,18 @@ export const routes: Routes = [
                {
                     path: 'home', loadComponent: () => import('./pages/home/home.component').then(m => m.HomeComponent),
                     canActivate: [AuthGuard, RoleGuard],
-                    data: { roles: ['superadmin', 'admin_general', 'admin_conjunto', 'tesorero', 'guardia', 'condomino', 'residente', 'propietario', 'proveedor'], permission: 'home' }
+                    data: { roles: ['admin_general', 'admin_conjunto', 'tesorero', 'guardia', 'condomino'], permission: 'home' }
                },
                {
                     path: 'torres', loadComponent: () => import('./pages/torres/torres.component').then(m => m.TorresComponent),
                     canActivate: [AuthGuard, RoleGuard],
-                    data: { roles: ['superadmin', 'admin_general', 'admin_conjunto', 'tesorero'], permission: 'torres' }
+                    data: { roles: ['admin_general', 'admin_conjunto', 'tesorero'], permission: 'torres' }
                },
                {
                     path: 'torres/pagos-alicuota',
                     loadComponent: () => import('./pages/torre-pagos-conjunto/torre-pagos-conjunto.component').then(m => m.TorrePagosConjuntoComponent),
                     canActivate: [AuthGuard, RoleGuard],
-                    data: { roles: ['superadmin', 'admin_general', 'admin_conjunto'], permission: 'pagos_alicuota' }
+                    data: { roles: ['admin_general', 'admin_conjunto'], permission: 'pagos_alicuota' }
                },
                {
                     path: 'torres/pagos-departamentos',
@@ -70,51 +70,51 @@ export const routes: Routes = [
                {
                     path: 'departamentos', loadComponent: () => import('./pages/departamentos/departamentos.component').then(m => m.DepartamentosComponent),
                     canActivate: [AuthGuard, RoleGuard],
-                    data: { roles: ['superadmin', 'admin_general', 'admin_conjunto', 'tesorero'], permission: 'departamentos' }
+                    data: { roles: ['admin_general', 'admin_conjunto', 'tesorero'], permission: 'departamentos' }
                },
                {
                     path: 'departamentos/:id/personas',
                     loadComponent: () => import('./pages/departamento-personas/departamento-personas.component').then(m => m.DepartamentoPersonasComponent),
                     canActivate: [AuthGuard, RoleGuard],
-                    data: { roles: ['superadmin', 'admin_general', 'admin_conjunto', 'tesorero'], permission: 'departamentos' }
+                    data: { roles: ['admin_general', 'admin_conjunto', 'tesorero'], permission: 'departamentos' }
                },
                {
                     path: 'acceso',
                     loadComponent: () => import('./pages/acceso-guardia/acceso-guardia.component').then(m => m.AccesoGuardiaComponent),
                     canActivate: [AuthGuard, RoleGuard],
-                    data: { roles: ['superadmin', 'admin_general', 'admin_conjunto', 'guardia'], permission: 'control_acceso' }
+                    data: { roles: ['admin_general', 'admin_conjunto', 'guardia'], permission: 'control_acceso' }
                },
                {
                     path: 'reservas',
                     loadComponent: () => import('./pages/reservas/reservas.component').then(m => m.ReservasComponent),
                     canActivate: [AuthGuard, RoleGuard],
-                    data: { roles: ['superadmin', 'admin_general', 'admin_conjunto', 'tesorero', 'condomino', 'residente'], permission: 'reservas' }
+                    data: { roles: ['admin_general', 'admin_conjunto', 'tesorero', 'condomino'], permission: 'reservas' }
                },
                {
                     path: 'personas', loadComponent: () => import('./pages/personas/personas.component').then(m => m.PersonasComponent),
                     canActivate: [AuthGuard, RoleGuard],
-                    data: { roles: ['superadmin', 'admin_general', 'admin_conjunto', 'tesorero'], permission: 'personas', mode: 'list' }
+                    data: { roles: ['admin_general', 'admin_conjunto', 'tesorero'], permission: 'personas', mode: 'list' }
                },
                {
                     path: 'personas/crear', loadComponent: () => import('./pages/personas/personas.component').then(m => m.PersonasComponent),
                     canActivate: [AuthGuard, RoleGuard],
-                    data: { roles: ['superadmin', 'admin_general', 'admin_conjunto', 'tesorero'], permission: 'personas_crear', mode: 'create' }
+                    data: { roles: ['admin_general', 'admin_conjunto', 'tesorero'], permission: 'personas_crear', mode: 'create' }
                },
                {
                     path: 'multas', loadComponent: () => import('./pages/multas/multas.component').then(m => m.MultasComponent),
                     canActivate: [AuthGuard, RoleGuard],
-                    data: { roles: ['superadmin', 'admin_general', 'admin_conjunto', 'tesorero'], permission: 'multas', mode: 'list' }
+                    data: { roles: ['admin_general', 'admin_conjunto', 'tesorero'], permission: 'multas', mode: 'list' }
                },
                {
                     path: 'multas/crear', loadComponent: () => import('./pages/multas/multas.component').then(m => m.MultasComponent),
                     canActivate: [AuthGuard, RoleGuard],
-                    data: { roles: ['superadmin', 'admin_general', 'admin_conjunto', 'tesorero'], permission: 'multas_crear', mode: 'create' }
+                    data: { roles: ['admin_general', 'admin_conjunto', 'tesorero'], permission: 'multas_crear', mode: 'create' }
                },
                {
                     path: 'finanzas/conjunto',
                     loadComponent: () => import('./pages/finanzas-dashboard/finanzas-dashboard.component').then(m => m.FinanzasDashboardComponent),
                     canActivate: [AuthGuard, RoleGuard],
-                    data: { roles: ['superadmin', 'admin_general', 'admin_conjunto'], permission: 'gastos_comunes', financeScope: 'conjunto' }
+                    data: { roles: ['admin_general', 'admin_conjunto'], permission: 'gastos_comunes', financeScope: 'conjunto' }
                },
                {
                     path: 'finanzas/torres',
@@ -125,18 +125,24 @@ export const routes: Routes = [
                {
                     path: 'usuarios', loadComponent: () => import('./pages/usuarios/usuarios.component').then(m => m.UsuariosComponent),
                     canActivate: [AuthGuard, RoleGuard],
-                    data: { roles: ['superadmin', 'admin_general', 'admin_conjunto'], permission: 'usuarios' }
+                    data: { roles: ['admin_general', 'admin_conjunto'], permission: 'usuarios' }
                },
                {
                     path: 'usuarios/crear', loadComponent: () => import('./pages/usuarios/usuarios.component').then(m => m.UsuariosComponent),
                     canActivate: [AuthGuard, RoleGuard],
-                    data: { roles: ['superadmin', 'admin_general', 'admin_conjunto'], permission: 'usuarios_crear', mode: 'create' }
+                    data: { roles: ['admin_general', 'admin_conjunto'], permission: 'usuarios_crear', mode: 'create' }
+               },
+               {
+                    path: 'valores-alicuota',
+                    loadComponent: () => import('./pages/valores-alicuota/valores-alicuota.component').then(m => m.ValoresAlicuotaComponent),
+                    canActivate: [AuthGuard, RoleGuard],
+                    data: { roles: ['admin_general', 'admin_conjunto'], permission: 'valores_alicuota' }
                },
                {
                     path: 'auditoria',
                     loadComponent: () => import('./pages/auditoria/auditoria.component').then(m => m.AuditoriaComponent),
                     canActivate: [AuthGuard, RoleGuard],
-                    data: { roles: ['superadmin', 'admin_general', 'admin_conjunto'], permission: 'auditoria' }
+                    data: { roles: ['admin_general', 'admin_conjunto'], permission: 'auditoria' }
                },
                {
                     path: 'settings',
@@ -147,9 +153,6 @@ export const routes: Routes = [
                     path: 'unauthorized',
                     loadComponent: () => import('./pages/unauthorized/unauthorized.component').then(m => m.UnauthorizedComponent)
                },
-                
-
-
           ]
      },
      { path: '**', redirectTo: '' }
