@@ -24,7 +24,6 @@ export class TorrePagosAlicuotaComponent implements OnInit {
   pagosFiltrados: AlicuotaPago[] = [];
   torreFilterControl = new FormControl('');
   estadoFilterControl = new FormControl('en_revision');
-  copiedTorreId: string | number | null = null;
   approvingPagoId: string | number | null = null;
   errorMessage = '';
 
@@ -138,21 +137,6 @@ export class TorrePagosAlicuotaComponent implements OnInit {
         this.approvingPagoId = null;
       }
     });
-  }
-
-  getPaymentLink(torre: any): string {
-    const id = torre?.id ?? torre?.numero;
-    return this.securityUrlService.buildPublicLink(`/pago-alicuota/${id}`);
-  }
-
-  copyPaymentLink(torre: any): void {
-    const link = this.getPaymentLink(torre);
-
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(link).then(() => {
-        this.copiedTorreId = torre?.id ?? torre?.numero ?? null;
-      });
-    }
   }
 
   getTotalPorEstado(estado: string): number {

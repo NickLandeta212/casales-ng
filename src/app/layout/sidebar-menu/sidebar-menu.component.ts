@@ -31,6 +31,12 @@ export class SidebarMenuComponent implements OnInit {
       permission: 'home'
     },
     {
+      title: 'Mi cuenta',
+      icon: 'bi bi-wallet2',
+      link: '/dashboard/mi-cuenta',
+      roles: ['condomino']
+    },
+    {
       title: 'Torres',
       icon: 'bi bi-building',
       roles: CASALES_FINANCE_ROLES,
@@ -153,13 +159,6 @@ export class SidebarMenuComponent implements OnInit {
           link: '/dashboard/multas/crear',
           roles: CASALES_FINANCE_ROLES,
           permission: 'multas_crear'
-        },
-        {
-          title: 'Formulario de pago',
-          icon: 'bi bi-box-arrow-up-right',
-          link: '/pago-multa',
-          roles: CASALES_FINANCE_ROLES,
-          permission: 'multas'
         }
       ]
     },

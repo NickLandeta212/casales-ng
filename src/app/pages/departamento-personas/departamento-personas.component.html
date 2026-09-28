@@ -99,6 +99,7 @@
     </table>
   </div>
 
+  <ng-container *ngIf="esTesorero">
   <div class="section-title-row">
     <h3>Historial de alicuotas</h3>
     <span class="status-chip" [class.ok]="listaPagos.length > 0" [class.empty]="listaPagos.length === 0">
@@ -140,6 +141,7 @@
       </tbody>
     </table>
   </div>
+  </ng-container>
 
   <ng-template #loadingState>
     <div class="state-box">Cargando personas...</div>

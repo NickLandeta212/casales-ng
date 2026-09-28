@@ -11,7 +11,7 @@ import { PublicFormSecurityService } from '../../services/public-form-security.s
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './pago-alicuota-torre-form.component.html',
-  styleUrl: '../pago-alicuota-form/pago-alicuota-form.component.scss'
+  styleUrl: './pago-alicuota-torre-form.component.scss'
 })
 export class PagoAlicuotaTorreFormComponent implements OnInit {
   private readonly maxComprobanteSize = 4 * 1024 * 1024;

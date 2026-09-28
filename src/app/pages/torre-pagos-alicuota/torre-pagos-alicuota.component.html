@@ -2,7 +2,7 @@
   <div class="header-row">
     <div>
       <h2>Pagos de alicuotas por departamentos</h2>
-      <p>Flujo de tesoreria para revisar comprobantes y aprobar pagos mensuales por departamento.</p>
+      <p>Los residentes pagan desde su cuenta; aqui revisas y apruebas los comprobantes de tus torres. Cada pago aprobado entra a las finanzas de la torre.</p>
     </div>
     <a class="btn-volver" routerLink="/dashboard/departamentos">Volver a departamentos</a>
   </div>
@@ -24,25 +24,6 @@
       <span>Pendientes</span>
       <strong>{{ getTotalPorEstado('pendiente') }}</strong>
     </article>
-  </section>
-
-  <section class="links-section">
-    <div class="section-heading">
-      <h3>Link de cobro para departamentos</h3>
-      <p>Comparte el enlace de la torre correspondiente para que el residente seleccione su departamento y suba el comprobante.</p>
-    </div>
-
-    <div class="payment-link-list">
-      <a
-        class="btn-payment-link"
-        *ngFor="let torre of torresAutorizadas"
-        [href]="getPaymentLink(torre)"
-        target="_blank"
-        rel="noopener"
-      >
-        Torre {{ torre.numero }}
-      </a>
-    </div>
   </section>
 
   <div class="filters-row">

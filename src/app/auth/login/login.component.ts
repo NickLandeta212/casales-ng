@@ -79,7 +79,10 @@ export class LoginComponent implements OnInit {
           );
           this.authService.applySessionUser(res.user);
 
-          this.router.navigate([this.authService.mustChangePassword() ? '/dashboard/settings' : '/dashboard']);
+          const destino = this.authService.mustChangePassword()
+            ? '/dashboard/settings'
+            : this.authService.getUserRole() === 'condomino' ? '/dashboard/mi-cuenta' : '/dashboard';
+          this.router.navigate([destino]);
         } else {
           this.errorMessage = 'Respuesta inválida del servidor';
         }

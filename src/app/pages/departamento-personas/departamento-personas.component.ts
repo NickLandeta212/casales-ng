@@ -6,6 +6,7 @@ import { AlicuotaPago, AlicuotasService } from '../../services/alicuotas.service
 import { Multa, MultasService } from '../../services/multas.service';
 import { Persona, PersonasService } from '../../services/personas.service';
 import { SecurityUrlService } from '../../services/security-url.service';
+import { AuthService } from '../../auth/services/auth.service';
 
 @Component({
   selector: 'app-departamento-personas',
@@ -25,6 +26,7 @@ export class DepartamentoPersonasComponent implements OnInit {
   cargandoPagos = true;
   pagosError = '';
   personaEditando = '';
+  readonly esTesorero: boolean;
   guardandoMovilidad = false;
   movilidadError = '';
   movilidadDraft = {
@@ -37,8 +39,11 @@ export class DepartamentoPersonasComponent implements OnInit {
     private personasService: PersonasService,
     private multasService: MultasService,
     private alicuotasService: AlicuotasService,
-    private securityUrlService: SecurityUrlService
-  ) { }
+    private securityUrlService: SecurityUrlService,
+    authService: AuthService
+  ) {
+    this.esTesorero = authService.getUserRole() === 'tesorero';
+  }
 
   ngOnInit(): void {
     this.departamentoId = Number(this.route.snapshot.paramMap.get('id')) || null;
@@ -71,7 +76,9 @@ export class DepartamentoPersonasComponent implements OnInit {
       }
     });
 
-    this.cargarPagosAlicuotas();
+    if (this.esTesorero) {
+      this.cargarPagosAlicuotas();
+    }
   }
 
   private aplicarFiltro(personas: Persona[]) {

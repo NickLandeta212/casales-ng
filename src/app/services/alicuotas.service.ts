@@ -69,12 +69,6 @@ export class AlicuotasService {
 
   constructor(private http: HttpClient) {}
 
-  getDepartamentosPorTorre(torreId: number | string) {
-    return this.http.get<any>(`${this.apiUrl}/torres/${torreId}/departamentos`).pipe(
-      map((res) => this.normalizeDepartamentos(res))
-    );
-  }
-
   getPagosDepartamento(torreId: number | string, departamentoId: number | string) {
     return this.http.get<any>(`${this.apiUrl}/torres/${torreId}/departamentos/${departamentoId}`).pipe(
       map((res) => this.normalizePagos(res))
@@ -90,21 +84,6 @@ export class AlicuotasService {
 
     return this.http.get<any>(`${this.apiUrl}/pagos`, { params }).pipe(
       map((res) => this.normalizePagos(res))
-    );
-  }
-
-  registrarComprobante(pago: AlicuotaPago, comprobanteBase64: string, comprobanteNombre: string, emailDestinatario?: string, captchaToken?: string) {
-    return this.http.post<any>(`${this.apiUrl}/pagos`, {
-      torre_id: pago.torreId,
-      departamento_id: pago.departamentoId,
-      anio: pago.anio,
-      mes: pago.mesNumero,
-      comprobante_base64: comprobanteBase64,
-      comprobante_nombre: comprobanteNombre,
-      email_destinatario: String(emailDestinatario || '').trim() || null,
-      captcha_token: captchaToken || undefined
-    }).pipe(
-      map((res) => this.toPago(res?.pago ?? res))
     );
   }
 

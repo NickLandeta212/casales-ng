@@ -15,15 +15,7 @@ export interface PublicDepartamento {
   torre_numero: number;
 }
 
-export interface PublicMultaPendiente {
-  id: number;
-  monto: number;
-  descripcion: string;
-  fecha: string;
-  motivo_nombre: string;
-}
-
-// Endpoints sin sesion que usan los formularios publicos (QR).
+// Endpoints sin sesion que usa el formulario publico de reservas.
 @Injectable({
   providedIn: 'root'
 })
@@ -38,10 +30,6 @@ export class PublicService {
 
   getDepartamentos(torreId: number | string): Observable<PublicDepartamento[]> {
     return this.http.get<PublicDepartamento[]>(`${this.apiUrl}/torres/${torreId}/departamentos`);
-  }
-
-  getMultasPendientes(departamentoId: number | string): Observable<PublicMultaPendiente[]> {
-    return this.http.get<PublicMultaPendiente[]>(`${this.apiUrl}/departamentos/${departamentoId}/multas-pendientes`);
   }
 
   getFechasOcupadas(): Observable<string[]> {

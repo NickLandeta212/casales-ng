@@ -143,10 +143,10 @@
               <td>{{ item.alcance === 'conjunto' ? 'Conjunto' : item.torre }}</td>
               <td>{{ item.estado === 'pagado' ? 'Pagado' : 'Pendiente' }}</td>
               <td>
-                <button type="button" class="delete-btn" (click)="remove(item.id)" *ngIf="!item.id.toString().startsWith('alicuota-')">
+                <button type="button" class="delete-btn" (click)="remove(item.id)" *ngIf="!item.automatico">
                   Eliminar
                 </button>
-                <span class="auto-label" *ngIf="item.id.toString().startsWith('alicuota-')">Automático</span>
+                <span class="auto-label" *ngIf="item.automatico">Automático</span>
               </td>
             </tr>
           </tbody>

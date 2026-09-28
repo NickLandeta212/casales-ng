@@ -5,6 +5,7 @@ import { PAGINA_KEYS, PERMISOS_POR_ROL, ROLES } from '../permisos';
 
 export interface SessionUser {
   nombre?: string;
+  email?: string;
   role?: string;
   page_permissions?: string[];
   torre_ids?: number[];

@@ -10,18 +10,6 @@ export const routes: Routes = [
           path: 'reserva',
           loadComponent: () => import('./pages/reserva/reserva.component').then(m => m.ReservaComponent)
      },
-     {
-          path: 'pago-multa',
-          loadComponent: () => import('./pages/pago-multa/pago-multa.component').then(m => m.PagoMultaComponent)
-     },
-          {
-               path: 'pago-alicuota',
-               loadComponent: () => import('./pages/pago-alicuota-form/pago-alicuota-form.component').then(m => m.PagoAlicuotaFormComponent)
-          },
-          {
-               path: 'pago-alicuota/:torreId',
-               loadComponent: () => import('./pages/pago-alicuota-form/pago-alicuota-form.component').then(m => m.PagoAlicuotaFormComponent)
-          },
           {
                path: 'pago-alicuota-torre',
                loadComponent: () => import('./pages/pago-alicuota-torre-form/pago-alicuota-torre-form.component').then(m => m.PagoAlicuotaTorreFormComponent)
@@ -37,6 +25,12 @@ export const routes: Routes = [
                     path: 'home', loadComponent: () => import('./pages/home/home.component').then(m => m.HomeComponent),
                     canActivate: [AuthGuard, RoleGuard],
                     data: { roles: ['admin_general', 'admin_conjunto', 'tesorero', 'guardia', 'condomino'], permission: 'home' }
+               },
+               {
+                    path: 'mi-cuenta',
+                    loadComponent: () => import('./pages/mi-cuenta/mi-cuenta.component').then(m => m.MiCuentaComponent),
+                    canActivate: [AuthGuard, RoleGuard],
+                    data: { roles: ['condomino'] }
                },
                {
                     path: 'torres', loadComponent: () => import('./pages/torres/torres.component').then(m => m.TorresComponent),

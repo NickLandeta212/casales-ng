@@ -41,15 +41,6 @@ export interface MotivoOption {
   nombre: string;
 }
 
-export interface PagoMultasPayload {
-  departamento_id: number;
-  multa_ids: Array<number | string>;
-  total: number;
-  comprobante_base64: string;
-  email_destinatario: string;
-  captcha_token?: string;
-}
-
 export interface PagoMultaDetalle {
   multa_id?: number | string | null;
   monto: number;
@@ -120,10 +111,6 @@ export class MultasService {
     return this.http.delete<void>(`${this.apiUrl}/${id}`).pipe(
       switchMap(() => this.loadMultas())
     );
-  }
-
-  registrarPagoMultas(payload: PagoMultasPayload) {
-    return this.http.post<any>(`${this.apiUrl}/pagos`, payload);
   }
 
   loadPagosMultas() {

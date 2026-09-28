@@ -1,0 +1,132 @@
+<div class="cuenta-container">
+  <header class="cuenta-card cuenta-header">
+    <div>
+      <span class="kicker">Mi cuenta</span>
+      <h1 *ngIf="cuenta">Torre {{ cuenta.departamento.torre_numero }} · {{ cuenta.departamento.numero }}</h1>
+      <p>Paga tus alícuotas y multas con transferencia y sube el comprobante. El tesorero de tu torre lo revisa.</p>
+    </div>
+    <div class="resumen" *ngIf="cuenta">
+      <div class="total" [class.al-dia]="cuenta.resumen.total_adeudado === 0">
+        <span>{{ cuenta.resumen.total_adeudado === 0 ? 'Estás al día' : 'Pendiente a la fecha (' + cuenta.resumen.anio + ')' }}</span>
+        <strong>{{ cuenta.resumen.total_adeudado | currency:'USD' }}</strong>
+      </div>
+      <small>Alícuotas {{ cuenta.resumen.alicuotas_adeudadas | currency:'USD' }} · Multas {{ cuenta.resumen.multas_adeudadas | currency:'USD' }}</small>
+    </div>
+  </header>
+
+  <p class="msg error" *ngIf="errorMessage">{{ errorMessage }}</p>
+  <p class="msg success" *ngIf="successMessage">{{ successMessage }}</p>
+  <p class="msg" *ngIf="cargando && !cuenta">Cargando tu estado de cuenta...</p>
+
+  <ng-container *ngIf="cuenta">
+    <label class="cuenta-card email-field">
+      <span>Correo para recibir la factura</span>
+      <input type="email" [formControl]="emailControl" placeholder="tu-correo@ejemplo.com" autocomplete="email" />
+    </label>
+
+    <section class="cuenta-card">
+      <div class="section-head">
+        <h2>Alícuotas {{ anio }}</h2>
+        <div class="anio-nav">
+          <button type="button" (click)="cambiarAnio(-1)" aria-label="Año anterior">‹</button>
+          <span>{{ anio }}</span>
+          <button type="button" (click)="cambiarAnio(1)" [disabled]="anio >= anioActual + 1" aria-label="Año siguiente">›</button>
+        </div>
+      </div>
+
+      <div class="meses-grid">
+        <button
+          type="button"
+          class="mes"
+          *ngFor="let mes of cuenta.alicuotas"
+          [class.seleccionado]="mesesSeleccionados.has(mes.mes)"
+          [class.pagado]="mes.estado === 'aprobado'"
+          [class.revision]="mes.estado === 'en_revision'"
+          [class.rechazado]="mes.estado === 'rechazado'"
+          [disabled]="!puedePagarMes(mes)"
+          (click)="toggleMes(mes)"
+        >
+          <span>{{ nombreMes(mes.mes) }}</span>
+          <strong>{{ mes.valor | currency:'USD' }}</strong>
+          <small>{{ estadoMes(mes) }}</small>
+          <small class="motivo" *ngIf="mes.estado === 'rechazado' && mes.motivo_rechazo">{{ mes.motivo_rechazo }}</small>
+        </button>
+      </div>
+
+      <div class="facturas" *ngIf="cuenta.alicuotas.length">
+        <ng-container *ngFor="let mes of cuenta.alicuotas">
+          <button type="button" class="link" *ngIf="mes.estado === 'aprobado'" (click)="descargarFactura('alicuotas', mes.id)">
+            Factura {{ nombreMes(mes.mes) }}
+          </button>
+        </ng-container>
+      </div>
+
+      <div class="pago-panel" *ngIf="mesesSeleccionados.size">
+        <p>{{ mesesSeleccionados.size }} mes(es) seleccionado(s): <strong>{{ totalMesesSeleccionados | currency:'USD' }}</strong></p>
+        <label class="file">
+          <input type="file" accept="image/png,image/jpeg,image/webp" (change)="onComprobante($event, 'alicuotas')" />
+          <span>{{ comprobanteAlicuotas?.nombre || 'Subir comprobante' }}</span>
+        </label>
+        <button type="button" class="primary" [disabled]="enviando" (click)="pagarAlicuotas()">
+          {{ enviando ? 'Enviando...' : 'Enviar pago' }}
+        </button>
+      </div>
+    </section>
+
+    <section class="cuenta-card">
+      <div class="section-head">
+        <h2>Multas</h2>
+      </div>
+
+      <p class="vacio" *ngIf="!multasPendientes.length">No tienes multas pendientes.</p>
+
+      <label class="multa" *ngFor="let multa of multasPendientes" [class.revision]="multa.estado === 'en_pago'">
+        <input
+          type="checkbox"
+          [checked]="multasSeleccionadas.has(multa.id)"
+          [disabled]="multa.estado !== 'pendiente'"
+          (change)="toggleMulta(multa)"
+        />
+        <div>
+          <strong>{{ multa.motivo_nombre }}</strong>
+          <span>{{ multa.fecha | date:'dd/MM/yyyy' }} · {{ multa.descripcion }}</span>
+        </div>
+        <b>{{ multa.monto | currency:'USD' }}</b>
+        <small *ngIf="multa.estado === 'en_pago'">Pago en revisión</small>
+      </label>
+
+      <div class="pago-panel" *ngIf="multasSeleccionadas.size">
+        <p>{{ multasSeleccionadas.size }} multa(s) seleccionada(s): <strong>{{ totalMultasSeleccionadas | currency:'USD' }}</strong></p>
+        <label class="file">
+          <input type="file" accept="image/png,image/jpeg,image/webp" (change)="onComprobante($event, 'multas')" />
+          <span>{{ comprobanteMultas?.nombre || 'Subir comprobante' }}</span>
+        </label>
+        <button type="button" class="primary" [disabled]="enviando" (click)="pagarMultas()">
+          {{ enviando ? 'Enviando...' : 'Enviar pago' }}
+        </button>
+      </div>
+
+      <ng-container *ngIf="cuenta.pagos_multas.length">
+        <h3>Historial de pagos de multas</h3>
+        <table>
+          <thead>
+            <tr><th>Fecha</th><th>Total</th><th>Estado</th><th></th></tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let pago of cuenta.pagos_multas">
+              <td>{{ pago.created_at | date:'dd/MM/yyyy' }}</td>
+              <td>{{ pago.total | currency:'USD' }}</td>
+              <td>
+                <span class="estado" [class.pagado]="pago.estado === 'aprobado'" [class.rechazado]="pago.estado === 'rechazado'">{{ estadoPago(pago) }}</span>
+                <small class="motivo" *ngIf="pago.motivo_rechazo">{{ pago.motivo_rechazo }}</small>
+              </td>
+              <td>
+                <button type="button" class="link" *ngIf="pago.estado === 'aprobado'" (click)="descargarFactura('multas', pago.id)">Factura</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </ng-container>
+    </section>
+  </ng-container>
+</div>

@@ -4,7 +4,6 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { ActivatedRoute } from '@angular/router';
 import { catchError, of } from 'rxjs';
 import { AuthService } from '../../auth/services/auth.service';
-import { AlicuotasService } from '../../services/alicuotas.service';
 import {
   FinanzasService,
   MovimientoEstado,
@@ -13,7 +12,7 @@ import {
 } from '../../services/finanzas.service';
 import { TorresService } from '../../services/torres.service';
 
-// Vista comun para movimientos manuales (guardados en la API) y alicuotas aprobadas (automaticas).
+// Movimientos de la API: manuales o generados automaticamente al aprobar un pago.
 interface MovimientoFinanciero {
   id: string;
   fecha: string;
@@ -24,6 +23,7 @@ interface MovimientoFinanciero {
   alcance: 'conjunto' | 'torre';
   torre: string;
   torreId: number | null;
+  automatico: boolean;
 }
 
 @Component({
@@ -36,7 +36,6 @@ interface MovimientoFinanciero {
 export class FinanzasDashboardComponent implements OnInit {
   form!: FormGroup;
   movimientos: MovimientoFinanciero[] = [];
-  pagosAprobados: MovimientoFinanciero[] = [];
   filtro = 'todos';
   torresDisponibles: Array<{ id: number; numero: number }> = [];
   guardando = false;
@@ -46,7 +45,6 @@ export class FinanzasDashboardComponent implements OnInit {
     private fb: FormBuilder,
     private route: ActivatedRoute,
     private authService: AuthService,
-    private alicuotasService: AlicuotasService,
     private finanzasService: FinanzasService,
     private torresService: TorresService
   ) {}
@@ -64,7 +62,6 @@ export class FinanzasDashboardComponent implements OnInit {
 
     this.loadTorres();
     this.load();
-    this.loadPagosAprobados();
   }
 
   get isConjuntoView(): boolean {
@@ -77,12 +74,12 @@ export class FinanzasDashboardComponent implements OnInit {
 
   get viewSubtitle(): string {
     return this.isConjuntoView
-      ? 'Vista exclusiva para administradores del conjunto.'
-      : 'Vista exclusiva para tesorería de torres asignadas.';
+      ? 'Ingresos por pagos de las torres y gastos del conjunto. Los pagos aprobados se registran solos.'
+      : 'Finanzas de tus torres: los pagos aprobados de los departamentos se registran solos.';
   }
 
   get movimientosVisibles(): MovimientoFinanciero[] {
-    const allMovimientos = [...this.pagosAprobados, ...this.movimientos];
+    const allMovimientos = this.movimientos;
     const torresPermitidas = this.authService.getAuthorizedTorreIds();
     const base = this.isConjuntoView
       ? allMovimientos
@@ -298,32 +295,13 @@ export class FinanzasDashboardComponent implements OnInit {
       estado: movimiento.estado,
       alcance: movimiento.alcance,
       torre: movimiento.torre_numero ? `Torre ${movimiento.torre_numero}` : '',
-      torreId: movimiento.torre_id
+      torreId: movimiento.torre_id,
+      automatico: movimiento.origen !== 'manual'
     };
   }
 
   private today(): string {
     return new Date().toISOString().slice(0, 10);
-  }
-
-  private loadPagosAprobados(): void {
-    this.alicuotasService.getPagosPorTorre(this.isConjuntoView ? null : this.authService.getAuthorizedTorreIds()[0]).pipe(
-      catchError(() => of([]))
-    ).subscribe((pagos) => {
-      this.pagosAprobados = pagos
-        .filter((pago) => pago.estado === 'aprobado')
-        .map((pago) => ({
-          id: `alicuota-${pago.id}`,
-          fecha: String(pago.fechaPago || '').slice(0, 10) || this.today(),
-          concepto: `Alícuota ${pago.departamentoNumero || ''} - ${pago.mes}`,
-          tipo: 'ingreso' as MovimientoTipo,
-          valor: Number(pago.valor || 0),
-          estado: 'pagado' as MovimientoEstado,
-          alcance: 'torre' as const,
-          torre: `Torre ${pago.torreNumero || ''}`.trim(),
-          torreId: pago.torreId || null
-        }));
-    });
   }
 
   private escapeCsvCell(value: string | number): string {

@@ -1,12 +1,13 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { startWith } from 'rxjs/operators';
 import { DepartamentosService } from '../../services/departamentos.service';
 import { EstadoMulta, MotivoOption, Multa, MultaDraft, MultasService, PagoMulta, PagoMultaDetalle } from '../../services/multas.service';
 import { SecurityUrlService } from '../../services/security-url.service';
 import { pedirMotivoRechazo } from '../../shared/utils/motivo-rechazo';
+import { AuthService } from '../../auth/services/auth.service';
 
 interface DepartamentoOption {
   id: number;
@@ -16,7 +17,7 @@ interface DepartamentoOption {
 
 @Component({
   selector: 'app-multas',
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './multas.component.html',
   styleUrl: './multas.component.scss'
 })
@@ -34,6 +35,8 @@ export class MultasComponent implements OnInit {
   motivos: MotivoOption[] = [];
   torres: number[] = [];
   mostrarPagadas = false;
+  // Los pagos de multas los revisa solo el tesorero de la torre.
+  readonly esTesorero: boolean;
 
   torreControl = new FormControl<string>('');
   departamentoControl = new FormControl<string>('');
@@ -53,8 +56,11 @@ export class MultasComponent implements OnInit {
     private route: ActivatedRoute,
     private multasService: MultasService,
     private departamentosService: DepartamentosService,
-    private securityUrlService: SecurityUrlService
+    private securityUrlService: SecurityUrlService,
+    authService: AuthService
   ) {
+    this.esTesorero = authService.getUserRole() === 'tesorero';
+
     this.route.data.subscribe(data => {
       const mode = data['mode'];
       this.vistaActual = mode === 'create' ? 'create' : 'list';
@@ -112,6 +118,10 @@ export class MultasComponent implements OnInit {
   }
 
   cargarPagosMultas(): void {
+    if (!this.esTesorero) {
+      return;
+    }
+
     this.multasService.loadPagosMultas().subscribe({
       next: (pagos) => {
         this.listaPagos = pagos;

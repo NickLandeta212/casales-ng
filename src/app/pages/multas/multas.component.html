@@ -2,10 +2,9 @@
 	<div class="multas-page-header" *ngIf="vistaActual === 'list'">
 		<div>
 			<h2>Multas</h2>
-			<p>Revisa las multas registradas y comparte el formulario de pago.</p>
+			<p>Registra multas; los residentes las pagan desde su cuenta y el tesorero de la torre revisa los pagos.</p>
 		</div>
 		<div class="multas-actions">
-			<a class="btn-pago-link" routerLink="/pago-multa">Abrir formulario de pago</a>
 			<button class="btn-recargar" type="button" (click)="cargarMultas()" [disabled]="cargando">
 				<i class="bi bi-arrow-clockwise"></i>
 				{{ cargando ? 'Cargando...' : 'Actualizar' }}
@@ -23,6 +22,7 @@
 
 	<div class="multas-content" *ngIf="vistaActual === 'list'">
 		<div class="multas-table-wrapper table-section">
+			<ng-container *ngIf="esTesorero">
 			<div class="table-title">
 				<h3>Pagos enviados</h3>
 				<span>{{ listaPagos.length }} registro(s)</span>
@@ -85,6 +85,8 @@
 					</tr>
 				</tbody>
 			</table>
+
+			</ng-container>
 
 			<div class="table-title secondary">
 				<h3>Multas</h3>

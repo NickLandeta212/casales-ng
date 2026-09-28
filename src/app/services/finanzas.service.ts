@@ -17,10 +17,12 @@ export interface MovimientoFinanciero {
   alcance: MovimientoAlcance;
   torre_id: number | null;
   torre_numero: number | null;
+  origen: 'manual' | 'pago_alicuota' | 'pago_multa' | 'pago_torre';
+  origen_id: number | null;
   creado_por_nombre?: string | null;
 }
 
-export type NuevoMovimiento = Omit<MovimientoFinanciero, 'id' | 'torre_numero' | 'creado_por_nombre'>;
+export type NuevoMovimiento = Omit<MovimientoFinanciero, 'id' | 'torre_numero' | 'creado_por_nombre' | 'origen' | 'origen_id'>;
 
 @Injectable({
   providedIn: 'root'
