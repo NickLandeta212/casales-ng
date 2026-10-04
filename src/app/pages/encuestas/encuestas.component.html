@@ -1,0 +1,86 @@
+<div class="encuestas-container">
+  <header class="encuestas-card encuestas-header">
+    <h1>Encuestas y votaciones</h1>
+    <p *ngIf="esResidente">Cada departamento tiene un voto por encuesta. El voto es reservado: solo se publican los totales.</p>
+    <p *ngIf="!esResidente">Un voto por departamento. Solo se muestran los totales, nunca qué eligió cada departamento.</p>
+  </header>
+
+  <p class="msg error" *ngIf="errorMessage">{{ errorMessage }}</p>
+  <p class="msg success" *ngIf="successMessage">{{ successMessage }}</p>
+
+  <div class="encuestas-layout" [class.una-columna]="!puedeAdministrar">
+    <form *ngIf="puedeAdministrar" class="encuestas-card encuestas-form" [formGroup]="form" (ngSubmit)="crear()">
+      <h2>Nueva encuesta</h2>
+
+      <label>
+        <span>Pregunta</span>
+        <input type="text" formControlName="titulo" maxlength="150" placeholder="Ej: ¿Aprobamos pintar la fachada?" />
+      </label>
+
+      <label>
+        <span>Detalle (opcional)</span>
+        <textarea formControlName="descripcion" rows="3" maxlength="2000"></textarea>
+      </label>
+
+      <div class="opciones-form" formArrayName="opciones">
+        <span class="etiqueta">Opciones</span>
+        <div class="opcion-fila" *ngFor="let opcion of opciones.controls; let i = index">
+          <input type="text" [formControlName]="i" maxlength="150" [placeholder]="'Opción ' + (i + 1)" />
+          <button type="button" *ngIf="puedeQuitarOpcion" (click)="quitarOpcion(i)" [attr.aria-label]="'Quitar opción ' + (i + 1)">&times;</button>
+        </div>
+        <button type="button" *ngIf="puedeAgregarOpcion" (click)="agregarOpcion()">Agregar opción</button>
+      </div>
+
+      <button type="submit" class="btn-principal" [disabled]="form.invalid || guardando">
+        {{ guardando ? 'Guardando...' : 'Publicar encuesta' }}
+      </button>
+    </form>
+
+    <section class="encuestas-lista">
+      <p class="encuestas-card empty" *ngIf="cargando">Cargando encuestas...</p>
+      <p class="encuestas-card empty" *ngIf="!cargando && !encuestas.length">Todavía no hay encuestas.</p>
+
+      <article class="encuestas-card encuesta" *ngFor="let encuesta of encuestas">
+        <div class="encuesta-top">
+          <h3>{{ encuesta.titulo }}</h3>
+          <span class="estado" [ngClass]="encuesta.estado">{{ encuesta.estado === 'abierta' ? 'Abierta' : 'Cerrada' }}</span>
+        </div>
+
+        <p class="encuesta-meta">
+          Publicada el {{ encuesta.created_at | date:'dd/MM/yyyy' }}
+          <ng-container *ngIf="encuesta.cerrada_at"> · cerrada el {{ encuesta.cerrada_at | date:'dd/MM/yyyy' }}</ng-container>
+        </p>
+
+        <p class="encuesta-texto" *ngIf="encuesta.descripcion">{{ encuesta.descripcion }}</p>
+
+        <!-- Votar -->
+        <div class="votacion" *ngIf="puedeVotar(encuesta)">
+          <label class="opcion-voto" *ngFor="let opcion of encuesta.opciones">
+            <input type="radio" [name]="'encuesta-' + encuesta.id" [value]="opcion.id" [checked]="seleccion[encuesta.id] === opcion.id" (change)="seleccion[encuesta.id] = opcion.id" />
+            <span>{{ opcion.texto }}</span>
+          </label>
+          <button type="button" class="btn-principal" [disabled]="!seleccion[encuesta.id] || guardando" (click)="votar(encuesta)">Votar</button>
+        </div>
+
+        <!-- Resultados -->
+        <div class="resultados" *ngIf="encuesta.resultados_visibles">
+          <div class="resultado" *ngFor="let opcion of encuesta.opciones" [class.mi-voto]="encuesta.mi_voto === opcion.id">
+            <div class="resultado-top">
+              <span>{{ opcion.texto }}<ng-container *ngIf="encuesta.mi_voto === opcion.id"> · tu voto</ng-container></span>
+              <strong>{{ opcion.votos }} ({{ porcentaje(encuesta, opcion) }}%)</strong>
+            </div>
+            <div class="barra"><i [style.width.%]="porcentaje(encuesta, opcion)"></i></div>
+          </div>
+          <p class="encuesta-meta">
+            {{ encuesta.total_votos }} de {{ encuesta.total_departamentos }} departamentos votaron ({{ participacion(encuesta) }}%).
+          </p>
+        </div>
+
+        <div class="encuesta-acciones" *ngIf="puedeAdministrar">
+          <button type="button" *ngIf="encuesta.estado === 'abierta'" [disabled]="guardando" (click)="cerrar(encuesta)">Cerrar votación</button>
+          <button type="button" class="btn-eliminar" [disabled]="guardando" (click)="eliminar(encuesta)">Eliminar</button>
+        </div>
+      </article>
+    </section>
+  </div>
+</div>

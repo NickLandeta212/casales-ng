@@ -43,6 +43,12 @@ export class SidebarMenuComponent implements OnInit {
       roles: CASALES_RESIDENT_ROLES
     },
     {
+      title: 'Encuestas',
+      icon: 'bi bi-bar-chart-line',
+      link: '/dashboard/encuestas',
+      roles: CASALES_RESIDENT_ROLES
+    },
+    {
       title: 'Mi cuenta',
       icon: 'bi bi-wallet2',
       link: '/dashboard/mi-cuenta',
