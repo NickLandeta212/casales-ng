@@ -47,6 +47,19 @@
     </article>
   </section>
 
+  <section class="activity-card comunicados-home" *ngIf="comunicadosRecientes.length > 0" aria-label="Últimos comunicados">
+    <div class="comunicados-home-header">
+      <h3>Últimos comunicados</h3>
+      <a routerLink="/dashboard/comunicados">Ver todos</a>
+    </div>
+    <div class="activity-list">
+      <a class="activity-item" *ngFor="let comunicado of comunicadosRecientes" routerLink="/dashboard/comunicados">
+        <strong>{{ comunicado.titulo }}</strong>
+        <small>{{ comunicado.created_at | date:'dd/MM/yyyy' }}<ng-container *ngIf="comunicado.fijado"> · Fijado</ng-container></small>
+      </a>
+    </div>
+  </section>
+
   <div class="stats-grid">
     <div class="stat-card">
       <div class="stat-icon torres-icon" aria-hidden="true">

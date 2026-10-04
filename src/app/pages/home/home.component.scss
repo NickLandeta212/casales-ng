@@ -90,6 +90,42 @@
   margin-bottom: 24px;
 }
 
+.comunicados-home {
+  margin-bottom: 24px;
+
+  .comunicados-home-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+
+    a {
+      color: var(--sl-color-primary);
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: none;
+    }
+  }
+
+  .activity-item {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    text-decoration: none;
+
+    strong {
+      color: var(--sl-color-text);
+      overflow-wrap: anywhere;
+    }
+
+    small {
+      flex-shrink: 0;
+      color: var(--sl-color-muted);
+    }
+  }
+}
+
 .alert-card {
   padding: 15px;
   border: 1px solid var(--sl-color-border-soft);

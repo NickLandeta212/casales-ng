@@ -10,6 +10,7 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { AuthService } from '../../auth/services/auth.service';
 import { GESTION, SEGURIDAD } from '../../auth/permisos';
+import { Comunicado, ComunicadosService } from '../../services/comunicados.service';
 
 interface HomeCalendarDay {
   label: number;
@@ -44,6 +45,7 @@ export class HomeComponent implements OnInit {
 
   reservasRecientes: any[] = [];
   multasRecientes: any[] = [];
+  comunicadosRecientes: Comunicado[] = [];
   reservasCalendario: any[] = [];
   homeCalendarDays: HomeCalendarDay[] = [];
   homeCalendarMonth = new Date();
@@ -54,11 +56,15 @@ export class HomeComponent implements OnInit {
     private http: HttpClient,
     private torresService: TorresService,
     private departamentosService: DepartamentosService,
-    private authService: AuthService
+    private authService: AuthService,
+    private comunicadosService: ComunicadosService
   ) { }
 
   ngOnInit(): void {
     this.cargarEstadisticas();
+    this.comunicadosService.listar(3).pipe(catchError(() => of([]))).subscribe((comunicados) => {
+      this.comunicadosRecientes = comunicados;
+    });
   }
 
   cargarEstadisticas() {

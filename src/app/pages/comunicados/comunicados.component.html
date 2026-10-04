@@ -1,0 +1,64 @@
+<div class="comunicados-container">
+  <header class="comunicados-card comunicados-header">
+    <h1>Comunicados</h1>
+    <p>Avisos de la administración para todo el conjunto.</p>
+  </header>
+
+  <div class="comunicados-layout" [class.solo-lectura]="!puedePublicar">
+    <form *ngIf="puedePublicar" class="comunicados-card comunicados-form" [formGroup]="form" (ngSubmit)="guardar()">
+      <h2>{{ editando ? 'Editar comunicado' : 'Publicar comunicado' }}</h2>
+
+      <label>
+        <span>Título</span>
+        <input type="text" formControlName="titulo" maxlength="150" placeholder="Ej: Corte de agua el sábado" />
+      </label>
+
+      <label>
+        <span>Mensaje</span>
+        <textarea formControlName="contenido" rows="8" maxlength="5000" placeholder="Escribe el aviso para los residentes"></textarea>
+      </label>
+
+      <label class="check">
+        <input type="checkbox" formControlName="fijado" />
+        <span>Fijar arriba de la lista</span>
+      </label>
+
+      <p class="msg error" *ngIf="errorMessage">{{ errorMessage }}</p>
+      <p class="msg success" *ngIf="successMessage">{{ successMessage }}</p>
+
+      <div class="form-actions">
+        <button type="submit" [disabled]="form.invalid || guardando">
+          {{ guardando ? 'Guardando...' : (editando ? 'Guardar cambios' : 'Publicar') }}
+        </button>
+        <button type="button" class="btn-secundario" *ngIf="editando" (click)="cancelarEdicion()">Cancelar</button>
+      </div>
+    </form>
+
+    <section class="comunicados-lista">
+      <p class="msg error" *ngIf="!puedePublicar && errorMessage">{{ errorMessage }}</p>
+      <p class="comunicados-card empty" *ngIf="cargando">Cargando comunicados...</p>
+      <p class="comunicados-card empty" *ngIf="!cargando && !comunicados.length">Todavía no hay comunicados publicados.</p>
+
+      <article class="comunicados-card comunicado" *ngFor="let comunicado of comunicados" [class.fijado]="comunicado.fijado">
+        <div class="comunicado-top">
+          <h3>{{ comunicado.titulo }}</h3>
+          <span class="fijado-badge" *ngIf="comunicado.fijado"><i class="bi bi-pin-angle-fill"></i> Fijado</span>
+        </div>
+
+        <p class="comunicado-meta">
+          {{ comunicado.created_at | date:'dd/MM/yyyy HH:mm' }}
+          <ng-container *ngIf="comunicado.creado_por_nombre"> · {{ comunicado.creado_por_nombre }}</ng-container>
+          <ng-container *ngIf="fueEditado(comunicado)"> · editado</ng-container>
+        </p>
+
+        <p class="comunicado-contenido">{{ comunicado.contenido }}</p>
+
+        <div class="comunicado-acciones" *ngIf="puedePublicar">
+          <button type="button" (click)="editar(comunicado)">Editar</button>
+          <button type="button" (click)="alternarFijado(comunicado)">{{ comunicado.fijado ? 'Quitar fijado' : 'Fijar' }}</button>
+          <button type="button" class="btn-eliminar" (click)="eliminar(comunicado)">Eliminar</button>
+        </div>
+      </article>
+    </section>
+  </div>
+</div>

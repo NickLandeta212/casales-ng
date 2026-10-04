@@ -31,6 +31,12 @@ export class SidebarMenuComponent implements OnInit {
       permission: 'home'
     },
     {
+      title: 'Comunicados',
+      icon: 'bi bi-megaphone',
+      link: '/dashboard/comunicados',
+      roles: TODOS
+    },
+    {
       title: 'Mi cuenta',
       icon: 'bi bi-wallet2',
       link: '/dashboard/mi-cuenta',

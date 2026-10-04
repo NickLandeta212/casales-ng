@@ -33,6 +33,12 @@ export const routes: Routes = [
                     data: { roles: ['condomino'] }
                },
                {
+                    path: 'comunicados',
+                    loadComponent: () => import('./pages/comunicados/comunicados.component').then(m => m.ComunicadosComponent),
+                    canActivate: [AuthGuard, RoleGuard],
+                    data: { roles: ['admin_general', 'admin_conjunto', 'tesorero', 'guardia', 'condomino'] }
+               },
+               {
                     path: 'torres', loadComponent: () => import('./pages/torres/torres.component').then(m => m.TorresComponent),
                     canActivate: [AuthGuard, RoleGuard],
                     data: { roles: ['admin_general', 'admin_conjunto', 'tesorero'], permission: 'torres' }
