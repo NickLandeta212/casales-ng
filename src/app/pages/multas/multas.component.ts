@@ -5,7 +5,7 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { startWith } from 'rxjs/operators';
 import { DepartamentosService } from '../../services/departamentos.service';
 import { EstadoMulta, MotivoOption, Multa, MultaDraft, MultasService, PagoMulta, PagoMultaDetalle } from '../../services/multas.service';
-import { SecurityUrlService } from '../../services/security-url.service';
+import { ComprobantesService } from '../../services/comprobantes.service';
 import { pedirMotivoRechazo } from '../../shared/utils/motivo-rechazo';
 import { AuthService } from '../../auth/services/auth.service';
 
@@ -56,7 +56,7 @@ export class MultasComponent implements OnInit {
     private route: ActivatedRoute,
     private multasService: MultasService,
     private departamentosService: DepartamentosService,
-    private securityUrlService: SecurityUrlService,
+    private comprobantesService: ComprobantesService,
     authService: AuthService
   ) {
     this.esTesorero = authService.getUserRole() === 'tesorero';
@@ -440,10 +440,8 @@ export class MultasComponent implements OnInit {
     return `${torre} / Dep. ${departamento}`;
   }
 
-  getPagoComprobanteUrl(pago: PagoMulta): string {
-    const rawUrl = String(pago.comprobante_url || '').trim();
-
-    return this.securityUrlService.resolveUploadUrl(rawUrl);
+  verComprobante(event: Event, pago: PagoMulta): void {
+    this.comprobantesService.abrir(event, pago.comprobante_url);
   }
 
   getPagoPersonaEtiqueta(detalle: PagoMultaDetalle): string {

@@ -120,9 +120,8 @@
           <label>Comprobante</label>
           <a
             class="detail-link"
-            [href]="getComprobanteUrl(reservaSeleccionada)"
-            target="_blank"
-            rel="noopener noreferrer"
+            href="#"
+            (click)="verComprobante($event, reservaSeleccionada)"
           >
             Ver comprobante de pago
           </a>

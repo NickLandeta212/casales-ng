@@ -62,7 +62,7 @@
             </span>
           </td>
           <td>
-            <a *ngIf="pago.comprobanteUrl" [href]="getComprobanteUrl(pago)" target="_blank" rel="noopener">Ver foto</a>
+            <a *ngIf="pago.comprobanteUrl" href="#" (click)="verComprobante($event, pago)">Ver foto</a>
             <span *ngIf="!pago.comprobanteUrl">Sin comprobante</span>
           </td>
           <td>

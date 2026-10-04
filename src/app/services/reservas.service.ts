@@ -24,7 +24,6 @@ export interface ReservaResponse {
 export interface ReservaComprobanteResponse {
   message: string;
   reserva: ReservaResponse;
-  comprobante_url: string;
 }
 
 @Injectable({

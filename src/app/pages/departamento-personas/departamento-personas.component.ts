@@ -5,7 +5,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AlicuotaPago, AlicuotasService } from '../../services/alicuotas.service';
 import { Multa, MultasService } from '../../services/multas.service';
 import { Persona, PersonasService } from '../../services/personas.service';
-import { SecurityUrlService } from '../../services/security-url.service';
+import { ComprobantesService } from '../../services/comprobantes.service';
 import { AuthService } from '../../auth/services/auth.service';
 
 @Component({
@@ -39,7 +39,7 @@ export class DepartamentoPersonasComponent implements OnInit {
     private personasService: PersonasService,
     private multasService: MultasService,
     private alicuotasService: AlicuotasService,
-    private securityUrlService: SecurityUrlService,
+    private comprobantesService: ComprobantesService,
     authService: AuthService
   ) {
     this.esTesorero = authService.getUserRole() === 'tesorero';
@@ -170,10 +170,8 @@ export class DepartamentoPersonasComponent implements OnInit {
     return pago.fechaPago ? String(pago.fechaPago).slice(0, 10) : '-';
   }
 
-  getComprobanteUrl(pago: AlicuotaPago): string {
-    const rawUrl = String(pago.comprobanteUrl || '').trim();
-
-    return this.securityUrlService.resolveUploadUrl(rawUrl);
+  verComprobante(event: Event, pago: AlicuotaPago): void {
+    this.comprobantesService.abrir(event, pago.comprobanteUrl);
   }
 
   private cargarPagosAlicuotas(): void {

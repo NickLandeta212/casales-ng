@@ -3,7 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { Observable } from 'rxjs';
 import { ReservaResponse, ReservasService } from '../../services/reservas.service';
-import { SecurityUrlService } from '../../services/security-url.service';
+import { ComprobantesService } from '../../services/comprobantes.service';
 import { AuthService } from '../../auth/services/auth.service';
 import { pedirMotivoRechazo } from '../../shared/utils/motivo-rechazo';
 
@@ -25,7 +25,7 @@ export class ReservasComponent implements OnInit {
 
   constructor(
     private reservasService: ReservasService,
-    private securityUrlService: SecurityUrlService,
+    private comprobantesService: ComprobantesService,
     authService: AuthService
   ) {
     this.puedeGestionar = authService.hasRole(['admin_general', 'admin_conjunto']);
@@ -121,15 +121,19 @@ export class ReservasComponent implements OnInit {
     return labels[estado] || estado;
   }
 
-  getComprobanteUrl(reserva: ReservaResponse): string {
+  // La API guarda el comprobante de la reserva dentro de las observaciones.
+  private getComprobante(reserva: ReservaResponse): string {
     const match = String(reserva.observaciones || '').match(/Comprobante:\s*([^|]+)/i);
-    const rawUrl = match?.[1]?.trim() || '';
 
-    return this.securityUrlService.resolveUploadUrl(rawUrl);
+    return this.comprobantesService.getArchivo(match?.[1]);
   }
 
   tieneComprobante(reserva: ReservaResponse): boolean {
-    return !!this.getComprobanteUrl(reserva);
+    return !!this.getComprobante(reserva);
+  }
+
+  verComprobante(event: Event, reserva: ReservaResponse): void {
+    this.comprobantesService.abrir(event, this.getComprobante(reserva));
   }
 
 }

@@ -5,6 +5,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { startWith } from 'rxjs';
 import { AlicuotaTorrePago, AlicuotasService } from '../../services/alicuotas.service';
 import { TorresService } from '../../services/torres.service';
+import { ComprobantesService } from '../../services/comprobantes.service';
 import { SecurityUrlService } from '../../services/security-url.service';
 import { pedirMotivoRechazo } from '../../shared/utils/motivo-rechazo';
 
@@ -25,7 +26,8 @@ export class TorrePagosConjuntoComponent implements OnInit {
     private route: ActivatedRoute,
     private torresService: TorresService,
     private alicuotasService: AlicuotasService,
-    private securityUrlService: SecurityUrlService
+    private securityUrlService: SecurityUrlService,
+    private comprobantesService: ComprobantesService
   ) {}
 
   ngOnInit(): void {
@@ -129,10 +131,8 @@ export class TorrePagosConjuntoComponent implements OnInit {
     return labels[estado] || estado;
   }
 
-  getComprobanteUrl(pago: AlicuotaTorrePago): string {
-    const rawUrl = String(pago.comprobanteUrl || '').trim();
-
-    return this.securityUrlService.resolveUploadUrl(rawUrl);
+  verComprobante(event: Event, pago: AlicuotaTorrePago): void {
+    this.comprobantesService.abrir(event, pago.comprobanteUrl);
   }
 
 }

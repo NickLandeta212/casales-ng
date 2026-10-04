@@ -6,7 +6,7 @@ import { startWith } from 'rxjs';
 import { AuthService } from '../../auth/services/auth.service';
 import { AlicuotaPago, AlicuotasService } from '../../services/alicuotas.service';
 import { TorresService } from '../../services/torres.service';
-import { SecurityUrlService } from '../../services/security-url.service';
+import { ComprobantesService } from '../../services/comprobantes.service';
 import { pedirMotivoRechazo } from '../../shared/utils/motivo-rechazo';
 
 @Component({
@@ -32,7 +32,7 @@ export class TorrePagosAlicuotaComponent implements OnInit {
     private torresService: TorresService,
     private authService: AuthService,
     private alicuotasService: AlicuotasService,
-    private securityUrlService: SecurityUrlService
+    private comprobantesService: ComprobantesService
   ) { }
 
   ngOnInit(): void {
@@ -158,10 +158,8 @@ export class TorrePagosAlicuotaComponent implements OnInit {
     return labels[estado] || estado;
   }
 
-  getComprobanteUrl(pago: AlicuotaPago): string {
-    const rawUrl = String(pago.comprobanteUrl || '').trim();
-
-    return this.securityUrlService.resolveUploadUrl(rawUrl);
+  verComprobante(event: Event, pago: AlicuotaPago): void {
+    this.comprobantesService.abrir(event, pago.comprobanteUrl);
   }
 
   private aplicarTorresAutorizadas(): void {
