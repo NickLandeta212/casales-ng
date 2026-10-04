@@ -39,6 +39,12 @@ export const routes: Routes = [
                     data: { roles: ['admin_general', 'admin_conjunto', 'tesorero', 'guardia', 'condomino'] }
                },
                {
+                    path: 'porteria',
+                    loadComponent: () => import('./pages/porteria/porteria.component').then(m => m.PorteriaComponent),
+                    canActivate: [AuthGuard, RoleGuard],
+                    data: { roles: ['admin_general', 'admin_conjunto', 'guardia', 'condomino'] }
+               },
+               {
                     path: 'morosidad',
                     loadComponent: () => import('./pages/morosidad/morosidad.component').then(m => m.MorosidadComponent),
                     canActivate: [AuthGuard, RoleGuard],

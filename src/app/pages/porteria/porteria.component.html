@@ -1,0 +1,152 @@
+<div class="porteria-container">
+  <header class="porteria-card porteria-header">
+    <h1>{{ esResidente ? 'Visitas y paquetes' : 'Portería' }}</h1>
+    <p *ngIf="esResidente">Anuncia a tus visitas para que la guardia las deje pasar, y revisa si tienes paquetes por retirar.</p>
+    <p *ngIf="!esResidente">Visitas que los residentes anunciaron y paquetes recibidos en portería.</p>
+  </header>
+
+  <p class="msg error" *ngIf="errorMessage">{{ errorMessage }}</p>
+  <p class="msg success" *ngIf="successMessage">{{ successMessage }}</p>
+
+  <!-- Residente -->
+  <div class="porteria-layout" *ngIf="esResidente">
+    <form class="porteria-card porteria-form" [formGroup]="visitaForm" (ngSubmit)="anunciarVisita()">
+      <h2>Anunciar una visita</h2>
+
+      <label>
+        <span>Nombre del visitante</span>
+        <input type="text" formControlName="visitante" maxlength="120" />
+      </label>
+
+      <label>
+        <span>Fecha de la visita</span>
+        <input type="date" formControlName="fecha" [min]="hoy" [max]="fechaMaxima" />
+      </label>
+
+      <label>
+        <span>Cédula (opcional)</span>
+        <input type="text" formControlName="documento" maxlength="40" />
+      </label>
+
+      <label>
+        <span>Placa del vehículo (opcional)</span>
+        <input type="text" formControlName="placa_vehiculo" maxlength="20" />
+      </label>
+
+      <label>
+        <span>Nota para la guardia (opcional)</span>
+        <input type="text" formControlName="nota" maxlength="300" placeholder="Ej: llega a las 5 de la tarde" />
+      </label>
+
+      <button type="submit" class="btn-principal" [disabled]="visitaForm.invalid || guardando">
+        {{ guardando ? 'Guardando...' : 'Anunciar visita' }}
+      </button>
+    </form>
+
+    <div class="porteria-columna">
+      <section class="porteria-card">
+        <h2>Paquetes por retirar ({{ paquetesEnPorteria.length }})</h2>
+        <p class="empty" *ngIf="!paquetesEnPorteria.length">No tienes paquetes en portería.</p>
+        <div class="item pendiente" *ngFor="let paquete of paquetesEnPorteria">
+          <strong>{{ paquete.descripcion }}</strong>
+          <small>Llegó el {{ paquete.created_at | date:'dd/MM/yyyy HH:mm' }}</small>
+        </div>
+        <div class="item" *ngFor="let paquete of paquetesEntregados">
+          <strong>{{ paquete.descripcion }}</strong>
+          <small>Entregado a {{ paquete.entregado_a }} el {{ paquete.entregado_at | date:'dd/MM/yyyy HH:mm' }}</small>
+        </div>
+      </section>
+
+      <section class="porteria-card">
+        <h2>Mis visitas</h2>
+        <p class="empty" *ngIf="!visitas.length">No has anunciado visitas.</p>
+        <div class="item" *ngFor="let visita of visitas" [class.pendiente]="visita.estado === 'anunciada'">
+          <div class="item-top">
+            <strong>{{ visita.visitante }}</strong>
+            <span class="estado" [ngClass]="visita.estado">{{ estadoVisita(visita) }}</span>
+          </div>
+          <small>{{ visita.fecha | date:'dd/MM/yyyy' }}<ng-container *ngIf="visita.nota"> · {{ visita.nota }}</ng-container></small>
+          <button type="button" *ngIf="visita.estado === 'anunciada'" [disabled]="guardando" (click)="cancelarVisita(visita)">Cancelar</button>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- Guardia y administracion -->
+  <div class="porteria-layout" *ngIf="!esResidente">
+    <div class="porteria-columna">
+      <form class="porteria-card porteria-form" [formGroup]="paqueteForm" (ngSubmit)="registrarPaquete()">
+        <h2>Registrar un paquete</h2>
+
+        <label>
+          <span>Torre</span>
+          <select formControlName="torre" (change)="alCambiarTorre()">
+            <option [ngValue]="null">Selecciona</option>
+            <option *ngFor="let torre of torres" [ngValue]="torre">Torre {{ torre }}</option>
+          </select>
+        </label>
+
+        <label>
+          <span>Departamento</span>
+          <select formControlName="departamento_id">
+            <option [ngValue]="null">Selecciona</option>
+            <option *ngFor="let departamento of departamentosDeTorre" [ngValue]="departamento.id">{{ departamento.numero }}</option>
+          </select>
+        </label>
+
+        <label>
+          <span>Descripción</span>
+          <input type="text" formControlName="descripcion" maxlength="200" placeholder="Ej: caja de Servientrega" />
+        </label>
+
+        <button type="submit" class="btn-principal" [disabled]="paqueteForm.invalid || guardando">
+          {{ guardando ? 'Guardando...' : 'Registrar paquete' }}
+        </button>
+      </form>
+
+      <section class="porteria-card">
+        <h2>Paquetes en portería ({{ paquetesEnPorteria.length }})</h2>
+        <p class="empty" *ngIf="!paquetesEnPorteria.length">No hay paquetes por entregar.</p>
+        <div class="item pendiente" *ngFor="let paquete of paquetesEnPorteria">
+          <strong>Torre {{ paquete.torre_numero }}, {{ paquete.departamento_numero }}</strong>
+          <small>{{ paquete.descripcion }} · llegó el {{ paquete.created_at | date:'dd/MM HH:mm' }}</small>
+          <button type="button" [disabled]="guardando" (click)="entregarPaquete(paquete)">Entregar</button>
+        </div>
+        <div class="item" *ngFor="let paquete of paquetesEntregados">
+          <strong>Torre {{ paquete.torre_numero }}, {{ paquete.departamento_numero }}</strong>
+          <small>{{ paquete.descripcion }} · entregado a {{ paquete.entregado_a }} el {{ paquete.entregado_at | date:'dd/MM HH:mm' }}</small>
+        </div>
+      </section>
+    </div>
+
+    <div class="porteria-columna">
+      <section class="porteria-card">
+        <h2>Visitas anunciadas para hoy ({{ visitasHoy.length }})</h2>
+        <p class="empty" *ngIf="!visitasHoy.length">No hay visitas anunciadas para hoy.</p>
+        <div class="item" *ngFor="let visita of visitasHoy" [class.pendiente]="visita.estado === 'anunciada'">
+          <div class="item-top">
+            <strong>{{ visita.visitante }}</strong>
+            <span class="estado" [ngClass]="visita.estado">{{ estadoVisita(visita) }}</span>
+          </div>
+          <small>
+            Torre {{ visita.torre_numero }}, {{ visita.departamento_numero }}
+            <ng-container *ngIf="visita.documento"> · CI {{ visita.documento }}</ng-container>
+            <ng-container *ngIf="visita.placa_vehiculo"> · Placa {{ visita.placa_vehiculo }}</ng-container>
+            <ng-container *ngIf="visita.nota"> · {{ visita.nota }}</ng-container>
+          </small>
+          <button type="button" class="btn-principal" *ngIf="visita.estado === 'anunciada'" [disabled]="guardando" (click)="registrarIngreso(visita)">
+            Registrar ingreso
+          </button>
+        </div>
+      </section>
+
+      <section class="porteria-card" *ngIf="visitasProximas.length">
+        <h2>Próximos días</h2>
+        <div class="item" *ngFor="let visita of visitasProximas">
+          <strong>{{ visita.visitante }}</strong>
+          <small>{{ visita.fecha | date:'dd/MM/yyyy' }} · Torre {{ visita.torre_numero }}, {{ visita.departamento_numero }}</small>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>

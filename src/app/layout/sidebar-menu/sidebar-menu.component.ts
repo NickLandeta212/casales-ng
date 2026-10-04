@@ -116,6 +116,19 @@ export class SidebarMenuComponent implements OnInit {
       permission: 'control_acceso'
     },
     {
+      title: 'Portería',
+      icon: 'bi bi-box-seam',
+      link: '/dashboard/porteria',
+      roles: CASALES_SECURITY_ROLES,
+      permission: 'control_acceso'
+    },
+    {
+      title: 'Visitas y paquetes',
+      icon: 'bi bi-box-seam',
+      link: '/dashboard/porteria',
+      roles: ['condomino']
+    },
+    {
       title: 'Reservas',
       icon: 'bi bi-calendar-check',
       roles: CASALES_RESIDENT_ROLES,
