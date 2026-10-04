@@ -1,0 +1,83 @@
+<div class="morosidad-container">
+  <header class="morosidad-card morosidad-header">
+    <h1>Morosidad</h1>
+    <p>
+      Deuda de los departamentos de tus torres<ng-container *ngIf="reporte"> de enero a {{ mesCorteLabel }}</ng-container>:
+      meses sin pago o con el pago rechazado, más las multas pendientes. Los pagos en revisión no cuentan como deuda.
+    </p>
+  </header>
+
+  <p class="msg error" *ngIf="errorMessage">{{ errorMessage }}</p>
+  <p class="morosidad-card empty" *ngIf="cargando">Cargando morosidad...</p>
+
+  <ng-container *ngIf="reporte as r">
+    <section class="resumen-grid">
+      <article class="morosidad-card resumen">
+        <span>Total adeudado</span>
+        <strong>{{ r.resumen.total_adeudado | currency:'USD' }}</strong>
+        <small>{{ r.resumen.alicuotas_adeudadas | currency:'USD' }} en alícuotas · {{ r.resumen.multas_adeudadas | currency:'USD' }} en multas</small>
+      </article>
+      <article class="morosidad-card resumen">
+        <span>Departamentos con deuda</span>
+        <strong>{{ r.resumen.morosos }}</strong>
+        <small>de {{ r.resumen.departamentos }} departamentos</small>
+      </article>
+      <article class="morosidad-card resumen">
+        <span>Departamentos al día</span>
+        <strong>{{ r.resumen.al_dia }}</strong>
+        <small>sin alícuotas ni multas pendientes</small>
+      </article>
+    </section>
+
+    <section class="morosidad-card">
+      <div class="tabla-acciones">
+        <input type="search" [(ngModel)]="busqueda" placeholder="Buscar por departamento o titular" />
+        <label class="check">
+          <input type="checkbox" [(ngModel)]="soloMorosos" />
+          <span>Solo con deuda</span>
+        </label>
+        <button type="button" (click)="exportarCsv()" [disabled]="!departamentos.length">Descargar para Excel</button>
+      </div>
+
+      <div class="tabla-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Departamento</th>
+              <th>Titular</th>
+              <th>Meses adeudados</th>
+              <th class="num">Alícuotas</th>
+              <th class="num">Multas</th>
+              <th class="num">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let d of departamentos">
+              <td>
+                <strong>{{ d.departamento_numero }}</strong>
+                <small>Torre {{ d.torre_numero }}</small>
+              </td>
+              <td>{{ d.titular || 'Sin titular' }}</td>
+              <td>
+                <ng-container *ngIf="d.meses_adeudados.length; else sinMeses">
+                  {{ d.meses_adeudados.length }}: {{ mesesLabel(d.meses_adeudados) }}
+                </ng-container>
+                <ng-template #sinMeses>Ninguno</ng-template>
+                <small *ngIf="d.meses_en_revision">{{ d.meses_en_revision }} en revisión</small>
+              </td>
+              <td class="num">{{ d.alicuotas_adeudadas | currency:'USD' }}</td>
+              <td class="num">
+                {{ d.multas_adeudadas | currency:'USD' }}
+                <small *ngIf="d.multas_pendientes">{{ d.multas_pendientes }} multa(s)</small>
+              </td>
+              <td class="num total">{{ d.total_adeudado | currency:'USD' }}</td>
+            </tr>
+            <tr *ngIf="!departamentos.length">
+              <td colspan="6" class="empty">No hay departamentos en esta vista.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </ng-container>
+</div>

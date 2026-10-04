@@ -1,0 +1,237 @@
+.solicitudes-container {
+  min-height: calc(100vh - 56px);
+  padding: 24px;
+  background: var(--sl-color-page);
+}
+
+.solicitudes-card {
+  padding: 18px;
+  border: 1px solid var(--sl-color-border-soft);
+  border-radius: var(--sl-radius-lg);
+  background: #fff;
+  box-shadow: var(--sl-shadow-sm);
+
+  h2 {
+    margin: 0 0 12px;
+    color: var(--sl-color-primary-dark);
+    font-size: 16px;
+    font-weight: 800;
+  }
+}
+
+.solicitudes-header {
+  margin-bottom: 16px;
+
+  h1 {
+    margin: 0 0 6px;
+    color: var(--sl-color-primary-dark);
+    font-size: 24px;
+    font-weight: 800;
+  }
+
+  p {
+    margin: 0;
+    color: var(--sl-color-text-soft);
+  }
+}
+
+.solicitudes-layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 380px) 1fr;
+  gap: 16px;
+  align-items: start;
+
+  &.una-columna {
+    grid-template-columns: minmax(0, 900px);
+  }
+}
+
+.solicitudes-form,
+.atencion {
+  display: grid;
+  gap: 12px;
+
+  label {
+    display: grid;
+    gap: 4px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--sl-color-text-soft);
+  }
+
+  input[type='text'],
+  select,
+  textarea {
+    padding: 9px 10px;
+    border: 1px solid var(--sl-color-border);
+    border-radius: var(--sl-radius-sm);
+    font-size: 14px;
+    font-family: inherit;
+  }
+
+  textarea {
+    resize: vertical;
+  }
+}
+
+.atencion {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--sl-color-border-soft);
+}
+
+button {
+  padding: 7px 12px;
+  border: 1px solid var(--sl-color-border);
+  border-radius: var(--sl-radius-sm);
+  background: #fff;
+  color: var(--sl-color-text);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.btn-principal {
+  padding: 10px 14px;
+  border-color: var(--sl-color-primary);
+  background: var(--sl-color-primary);
+  color: #fff;
+  font-weight: 700;
+}
+
+.msg {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+
+  &.error {
+    color: var(--sl-color-danger);
+  }
+
+  &.success {
+    color: var(--sl-color-primary-dark);
+  }
+}
+
+.solicitudes-lista {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+
+  .empty {
+    margin: 0;
+    text-align: center;
+    color: var(--sl-color-muted);
+  }
+}
+
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px;
+
+  .activo {
+    border-color: var(--sl-color-primary);
+    background: var(--sl-color-primary-soft);
+    color: var(--sl-color-primary-dark);
+  }
+}
+
+.solicitud h3 {
+  margin: 0;
+  color: var(--sl-color-primary-dark);
+  font-size: 16px;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.solicitud-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.estado {
+  flex-shrink: 0;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+
+  &.recibida {
+    background: #fff4d6;
+    color: var(--sl-color-warning);
+  }
+
+  &.en_proceso {
+    background: #e3ecff;
+    color: var(--sl-color-info);
+  }
+
+  &.resuelta {
+    background: var(--sl-color-primary-soft);
+    color: var(--sl-color-primary-dark);
+  }
+}
+
+.solicitud-meta {
+  margin: 4px 0 10px;
+  color: var(--sl-color-muted);
+  font-size: 12px;
+}
+
+.solicitud-texto {
+  margin: 0;
+  color: var(--sl-color-text);
+  font-size: 14px;
+  line-height: 1.55;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.respuesta {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-left: 3px solid var(--sl-color-primary);
+  border-radius: var(--sl-radius-sm);
+  background: var(--sl-color-panel);
+
+  strong {
+    display: block;
+    margin-bottom: 4px;
+    color: var(--sl-color-primary-dark);
+    font-size: 12px;
+  }
+}
+
+.solicitud-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--sl-color-border-soft);
+
+  &.sin-borde {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
+  }
+}
+
+@media (max-width: 900px) {
+  .solicitudes-container {
+    padding: 14px;
+  }
+
+  .solicitudes-layout {
+    grid-template-columns: 1fr;
+  }
+}

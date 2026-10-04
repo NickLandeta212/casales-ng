@@ -39,6 +39,18 @@ export const routes: Routes = [
                     data: { roles: ['admin_general', 'admin_conjunto', 'tesorero', 'guardia', 'condomino'] }
                },
                {
+                    path: 'morosidad',
+                    loadComponent: () => import('./pages/morosidad/morosidad.component').then(m => m.MorosidadComponent),
+                    canActivate: [AuthGuard, RoleGuard],
+                    data: { roles: ['tesorero'], permission: 'pagos_departamentos' }
+               },
+               {
+                    path: 'solicitudes',
+                    loadComponent: () => import('./pages/solicitudes/solicitudes.component').then(m => m.SolicitudesComponent),
+                    canActivate: [AuthGuard, RoleGuard],
+                    data: { roles: ['admin_general', 'admin_conjunto', 'tesorero', 'condomino'] }
+               },
+               {
                     path: 'torres', loadComponent: () => import('./pages/torres/torres.component').then(m => m.TorresComponent),
                     canActivate: [AuthGuard, RoleGuard],
                     data: { roles: ['admin_general', 'admin_conjunto', 'tesorero'], permission: 'torres' }

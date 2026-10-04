@@ -37,6 +37,12 @@ export class SidebarMenuComponent implements OnInit {
       roles: TODOS
     },
     {
+      title: 'Solicitudes',
+      icon: 'bi bi-chat-left-text',
+      link: '/dashboard/solicitudes',
+      roles: CASALES_RESIDENT_ROLES
+    },
+    {
       title: 'Mi cuenta',
       icon: 'bi bi-wallet2',
       link: '/dashboard/mi-cuenta',
@@ -90,6 +96,13 @@ export class SidebarMenuComponent implements OnInit {
           title: 'Pagos departamentos',
           icon: 'bi bi-receipt-cutoff',
           link: '/dashboard/departamentos/pagos-alicuota',
+          roles: ['tesorero'],
+          permission: 'pagos_departamentos'
+        },
+        {
+          title: 'Morosidad',
+          icon: 'bi bi-graph-down-arrow',
+          link: '/dashboard/morosidad',
           roles: ['tesorero'],
           permission: 'pagos_departamentos'
         }

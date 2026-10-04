@@ -1,0 +1,100 @@
+<div class="solicitudes-container">
+  <header class="solicitudes-card solicitudes-header">
+    <h1>Solicitudes y reclamos</h1>
+    <p *ngIf="esResidente">Reporta un daño, un reclamo o una sugerencia y sigue su estado aquí.</p>
+    <p *ngIf="!esResidente">Solicitudes que envían los residentes desde su cuenta.</p>
+  </header>
+
+  <div class="solicitudes-layout" [class.una-columna]="!esResidente">
+    <form *ngIf="esResidente" class="solicitudes-card solicitudes-form" [formGroup]="form" (ngSubmit)="enviar()">
+      <h2>Nueva solicitud</h2>
+
+      <label>
+        <span>Tipo</span>
+        <select formControlName="tipo">
+          <option *ngFor="let tipo of tipos" [value]="tipo">{{ tipoLabels[tipo] }}</option>
+        </select>
+      </label>
+
+      <label>
+        <span>Asunto</span>
+        <input type="text" formControlName="asunto" maxlength="150" placeholder="Ej: Fuga de agua en el pasillo" />
+      </label>
+
+      <label>
+        <span>Descripción</span>
+        <textarea formControlName="descripcion" rows="6" maxlength="2000" placeholder="Cuéntanos qué pasa y dónde"></textarea>
+      </label>
+
+      <p class="msg error" *ngIf="errorMessage">{{ errorMessage }}</p>
+      <p class="msg success" *ngIf="successMessage">{{ successMessage }}</p>
+
+      <button type="submit" class="btn-principal" [disabled]="form.invalid || guardando">
+        {{ guardando ? 'Enviando...' : 'Enviar solicitud' }}
+      </button>
+    </form>
+
+    <section class="solicitudes-lista">
+      <div class="solicitudes-card filtros">
+        <button type="button" [class.activo]="filtroEstado === ''" (click)="filtroEstado = ''">
+          Todas ({{ solicitudes.length }})
+        </button>
+        <button type="button" *ngFor="let estado of estados" [class.activo]="filtroEstado === estado" (click)="filtroEstado = estado">
+          {{ estadoLabels[estado] }} ({{ contar(estado) }})
+        </button>
+      </div>
+
+      <p class="msg error" *ngIf="!esResidente && errorMessage && !atendiendo">{{ errorMessage }}</p>
+      <p class="solicitudes-card empty" *ngIf="cargando">Cargando solicitudes...</p>
+      <p class="solicitudes-card empty" *ngIf="!cargando && !solicitudesFiltradas.length">No hay solicitudes en esta vista.</p>
+
+      <article class="solicitudes-card solicitud" *ngFor="let solicitud of solicitudesFiltradas">
+        <div class="solicitud-top">
+          <h3>{{ solicitud.asunto }}</h3>
+          <span class="estado" [ngClass]="solicitud.estado">{{ estadoLabels[solicitud.estado] }}</span>
+        </div>
+
+        <p class="solicitud-meta">
+          {{ tipoLabels[solicitud.tipo] }} · {{ solicitud.created_at | date:'dd/MM/yyyy HH:mm' }}
+          <ng-container *ngIf="!esResidente"> · Torre {{ solicitud.torre_numero }}, {{ solicitud.departamento_numero }}</ng-container>
+        </p>
+
+        <p class="solicitud-texto">{{ solicitud.descripcion }}</p>
+
+        <div class="respuesta" *ngIf="solicitud.respuesta && atendiendo?.id !== solicitud.id">
+          <strong>Respuesta<ng-container *ngIf="solicitud.atendido_por_nombre"> de {{ solicitud.atendido_por_nombre }}</ng-container></strong>
+          <p class="solicitud-texto">{{ solicitud.respuesta }}</p>
+        </div>
+
+        <ng-container *ngIf="puedeAtender">
+          <div class="solicitud-acciones" *ngIf="atendiendo?.id !== solicitud.id">
+            <button type="button" (click)="abrirAtencion(solicitud)">{{ solicitud.respuesta ? 'Cambiar respuesta' : 'Atender' }}</button>
+          </div>
+
+          <div class="atencion" *ngIf="atendiendo?.id === solicitud.id">
+            <label>
+              <span>Estado</span>
+              <select [(ngModel)]="borradorEstado">
+                <option *ngFor="let estado of estados" [value]="estado">{{ estadoLabels[estado] }}</option>
+              </select>
+            </label>
+
+            <label>
+              <span>Respuesta para el residente</span>
+              <textarea [(ngModel)]="borradorRespuesta" rows="4" maxlength="2000"></textarea>
+            </label>
+
+            <p class="msg error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+            <div class="solicitud-acciones sin-borde">
+              <button type="button" class="btn-principal" [disabled]="guardando" (click)="guardarAtencion()">
+                {{ guardando ? 'Guardando...' : 'Guardar' }}
+              </button>
+              <button type="button" (click)="cancelarAtencion()">Cancelar</button>
+            </div>
+          </div>
+        </ng-container>
+      </article>
+    </section>
+  </div>
+</div>
