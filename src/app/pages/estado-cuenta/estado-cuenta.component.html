@@ -1,0 +1,145 @@
+<div class="panel-container">
+  <header class="panel-card panel-header">
+    <div>
+      <h1>Estado de cuenta</h1>
+      <p>Consulta lo que debe y lo que ha pagado cada departamento. Descárgalo en PDF o emite el paz y salvo.</p>
+    </div>
+    <label class="selector">
+      <span>Departamento</span>
+      <select [value]="departamentoId || ''" (change)="onSeleccion($any($event.target).value)">
+        <option value="">Selecciona un departamento</option>
+        <option *ngFor="let d of departamentos" [value]="d.id" [selected]="d.id === departamentoId">Torre {{ d.torre_numero }} · {{ d.numero }}</option>
+      </select>
+    </label>
+  </header>
+
+  <p class="msg error" *ngIf="errorMessage">{{ errorMessage }}</p>
+  <p class="msg success" *ngIf="successMessage">{{ successMessage }}</p>
+
+  <section class="panel-card" *ngIf="!departamentoId">
+    <div class="empty-state">
+      <i class="bi bi-person-vcard"></i>
+      <strong>Elige un departamento</strong>
+      <span>Verás sus alícuotas del año, multas, cargos extraordinarios y pagos enviados.</span>
+    </div>
+  </section>
+
+  <p class="msg" *ngIf="cargando && !cuenta">Cargando estado de cuenta...</p>
+
+  <ng-container *ngIf="cuenta">
+    <section class="panel-card resumen-card">
+      <div class="titulo">
+        <h2>Torre {{ cuenta.departamento.torre_numero }} · {{ cuenta.departamento.numero }}</h2>
+        <span>{{ cuenta.departamento.titular || 'Sin titular registrado' }}</span>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat" [class.alerta]="cuenta.resumen.total_adeudado > 0">
+          <span>{{ cuenta.resumen.total_adeudado > 0 ? 'Debe a la fecha' : 'Al día' }}</span>
+          <strong>{{ cuenta.resumen.total_adeudado | currency:'USD' }}</strong>
+          <small>Corte {{ cuenta.resumen.anio }}</small>
+        </div>
+        <div class="stat">
+          <span>Alícuotas vencidas</span>
+          <strong>{{ cuenta.resumen.alicuotas_adeudadas | currency:'USD' }}</strong>
+          <small>{{ cuenta.resumen.meses_adeudados.length }} mes(es)</small>
+        </div>
+        <div class="stat">
+          <span>Multas pendientes</span>
+          <strong>{{ cuenta.resumen.multas_adeudadas | currency:'USD' }}</strong>
+        </div>
+        <div class="stat">
+          <span>Cargos extra pendientes</span>
+          <strong>{{ cuenta.resumen.cargos_adeudados | currency:'USD' }}</strong>
+        </div>
+        <div class="stat">
+          <span>Pagos en revisión</span>
+          <strong>{{ cuenta.resumen.pagos_en_revision }}</strong>
+        </div>
+      </div>
+
+      <div class="acciones-cuenta">
+        <button class="btn" type="button" (click)="descargarPdf()"><i class="bi bi-file-earmark-pdf"></i> Descargar estado de cuenta</button>
+        <button class="btn primary" type="button" [disabled]="!puedeEmitirPazYSalvo || emitiendo" (click)="emitirPazYSalvo()">
+          <i class="bi bi-patch-check"></i> {{ emitiendo ? 'Emitiendo...' : 'Emitir paz y salvo' }}
+        </button>
+        <small class="motivo" *ngIf="motivoBloqueo">{{ motivoBloqueo }}</small>
+      </div>
+    </section>
+
+    <section class="panel-card">
+      <div class="section-head">
+        <h2>Alícuotas {{ anio }}</h2>
+        <div class="anio-nav">
+          <button type="button" (click)="cambiarAnio(-1)" aria-label="Año anterior">‹</button>
+          <span>{{ anio }}</span>
+          <button type="button" (click)="cambiarAnio(1)" [disabled]="anio >= anioActual + 1" aria-label="Año siguiente">›</button>
+        </div>
+      </div>
+      <div class="meses-grid">
+        <div
+          class="mes"
+          *ngFor="let mes of cuenta.alicuotas"
+          [class.pagado]="mes.estado === 'aprobado'"
+          [class.revision]="mes.estado === 'en_revision'"
+          [class.vencido]="vencido(mes)"
+        >
+          <span>{{ nombreMes(mes.mes) }}</span>
+          <strong>{{ mes.valor | currency:'USD' }}</strong>
+          <small>{{ vencido(mes) ? 'Vencido' : estadoMes(mes) }}</small>
+        </div>
+      </div>
+    </section>
+
+    <div class="dos-columnas">
+      <section class="panel-card">
+        <h2>Cargos extraordinarios</h2>
+        <table class="panel-table" *ngIf="cargosVigentes.length; else sinCargos">
+          <thead><tr><th>Concepto</th><th>Mes</th><th class="num">Valor</th><th>Estado</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let cargo of cargosVigentes">
+              <td>{{ cargo.concepto }}</td>
+              <td>{{ nombreMes(cargo.mes) }} {{ cargo.anio }}</td>
+              <td class="num">{{ cargo.valor | currency:'USD' }}</td>
+              <td><span class="pill" [class.ok]="cargo.estado === 'pagado'" [class.review]="cargo.estado === 'en_pago'">{{ estadoItem(cargo.estado) }}</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <ng-template #sinCargos><p class="vacio">Sin cargos extraordinarios.</p></ng-template>
+      </section>
+
+      <section class="panel-card">
+        <h2>Multas</h2>
+        <table class="panel-table" *ngIf="cuenta.multas.length; else sinMultas">
+          <thead><tr><th>Motivo</th><th>Fecha</th><th class="num">Valor</th><th>Estado</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let multa of cuenta.multas">
+              <td>{{ multa.motivo_nombre }}</td>
+              <td>{{ multa.fecha | date:'dd/MM/yyyy' }}</td>
+              <td class="num">{{ multa.monto | currency:'USD' }}</td>
+              <td><span class="pill" [class.ok]="multa.estado === 'pagada'" [class.review]="multa.estado === 'en_pago'">{{ estadoItem(multa.estado) }}</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <ng-template #sinMultas><p class="vacio">Sin multas registradas.</p></ng-template>
+      </section>
+    </div>
+  </ng-container>
+
+  <section class="panel-card">
+    <h2>Certificados de paz y salvo emitidos{{ departamentoId ? ' para este departamento' : '' }}</h2>
+    <table class="panel-table" *ngIf="certificadosDelDepartamento.length; else sinCertificados">
+      <thead><tr><th>Número</th><th>Departamento</th><th>Titular</th><th>Emitido</th><th></th></tr></thead>
+      <tbody>
+        <tr *ngFor="let c of certificadosDelDepartamento">
+          <td>{{ c.numero }}</td>
+          <td>Torre {{ c.torre_numero }} · {{ c.departamento_numero }}</td>
+          <td>{{ c.titular || '-' }}</td>
+          <td>{{ c.created_at | date:'dd/MM/yyyy HH:mm' }} · {{ c.emitido_por_nombre || 'Sistema' }}</td>
+          <td><button class="btn small" type="button" (click)="descargarCertificado(c)">PDF</button></td>
+        </tr>
+      </tbody>
+    </table>
+    <ng-template #sinCertificados><p class="vacio">Aún no se han emitido certificados.</p></ng-template>
+  </section>
+</div>

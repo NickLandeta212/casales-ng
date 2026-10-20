@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { MorosidadDepartamento, MorosidadReporte, MorosidadService } from '../../services/morosidad.service';
 
 const MESES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
@@ -8,7 +9,7 @@ const MESES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'O
 @Component({
   selector: 'app-morosidad',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './morosidad.component.html',
   styleUrl: './morosidad.component.scss'
 })
@@ -55,7 +56,7 @@ export class MorosidadComponent implements OnInit {
   // Descarga lo que se ve en la tabla, para abrirlo en Excel.
   exportarCsv(): void {
     const filas = [
-      ['Torre', 'Departamento', 'Titular', 'Meses adeudados', 'Alicuotas', 'Multas', 'Total'],
+      ['Torre', 'Departamento', 'Titular', 'Meses adeudados', 'Alicuotas', 'Multas', 'Cargos', 'Total'],
       ...this.departamentos.map((d) => [
         `Torre ${d.torre_numero}`,
         d.departamento_numero,
@@ -63,6 +64,7 @@ export class MorosidadComponent implements OnInit {
         this.mesesLabel(d.meses_adeudados),
         d.alicuotas_adeudadas.toFixed(2),
         d.multas_adeudadas.toFixed(2),
+        (d.cargos_adeudados || 0).toFixed(2),
         d.total_adeudado.toFixed(2)
       ])
     ];

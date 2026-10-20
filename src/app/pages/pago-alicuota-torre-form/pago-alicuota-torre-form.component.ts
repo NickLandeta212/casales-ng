@@ -4,7 +4,10 @@ import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { AlicuotaTorrePago, AlicuotasService } from '../../services/alicuotas.service';
 import { TorresService } from '../../services/torres.service';
-import { PublicFormSecurityService } from '../../services/public-form-security.service';
+
+// Pago que una torre hace al conjunto: el tesorero (o la administracion) escoge el mes,
+// sube el comprobante y queda en revision para la administracion.
+// Esta dentro del panel, asi que usa la sesion abierta: no pide iniciar sesion otra vez.
 
 @Component({
   selector: 'app-pago-alicuota-torre-form',
@@ -15,7 +18,6 @@ import { PublicFormSecurityService } from '../../services/public-form-security.s
 })
 export class PagoAlicuotaTorreFormComponent implements OnInit {
   private readonly maxComprobanteSize = 4 * 1024 * 1024;
-  private readonly formStartedAt = Date.now();
   torreId = 0;
   torreNumero = '';
   torres: any[] = [];
@@ -28,13 +30,11 @@ export class PagoAlicuotaTorreFormComponent implements OnInit {
   loading = false;
   successMessage = '';
   errorMessage = '';
-  website = '';
 
   constructor(
     private route: ActivatedRoute,
     private alicuotasService: AlicuotasService,
-    private torresService: TorresService,
-    private publicFormSecurity: PublicFormSecurityService
+    private torresService: TorresService
   ) {}
 
   ngOnInit(): void {
@@ -92,13 +92,6 @@ export class PagoAlicuotaTorreFormComponent implements OnInit {
 
     this.successMessage = '';
     this.errorMessage = '';
-    const securityError = this.publicFormSecurity.validateSubmission('pago-alicuota-torre', this.formStartedAt, this.website);
-
-    if (securityError) {
-      this.errorMessage = securityError;
-      return;
-    }
-
     const valor = Number(this.valorControl.value);
 
     if (!this.selectedPago || !this.comprobanteBase64 || this.valorControl.invalid || !Number.isFinite(valor)) {
@@ -108,7 +101,6 @@ export class PagoAlicuotaTorreFormComponent implements OnInit {
     }
 
     this.loading = true;
-    this.publicFormSecurity.markSubmitted('pago-alicuota-torre');
     this.alicuotasService.registrarComprobanteTorre(this.selectedPago, this.comprobanteBase64, this.comprobanteNombre, valor).subscribe({
       next: () => {
         this.successMessage = 'Pago enviado correctamente. Ahora aparece en Aprobar pagos para que el administrador del conjunto lo revise.';
@@ -158,14 +150,10 @@ export class PagoAlicuotaTorreFormComponent implements OnInit {
     });
   }
 
+  // El servidor ya devuelve solo las torres que el usuario puede ver (el tesorero, las suyas).
+  // Si el enlace no trae torre, se preselecciona la primera.
   private cargarTorres(): void {
     this.loading = true;
-
-    if (!this.torreId) {
-      this.loading = false;
-      this.errorMessage = 'Link de pago invalido. Usa el enlace enviado por la administracion.';
-      return;
-    }
 
     this.torresService.list().subscribe({
       next: (res: any) => {
@@ -173,8 +161,12 @@ export class PagoAlicuotaTorreFormComponent implements OnInit {
         this.torres = Array.isArray(raw) ? raw : [];
         this.loading = false;
 
-        if (this.torreId) {
-          this.torreControl.setValue(String(this.torreId));
+        const torreInicial = this.torreId || Number(this.torres[0]?.id) || 0;
+
+        if (torreInicial) {
+          this.torreControl.setValue(String(torreInicial));
+        } else {
+          this.errorMessage = 'No tienes torres asignadas para registrar pagos.';
         }
       },
       error: () => {

@@ -2,7 +2,7 @@ import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators, FormGroup } from '@angular/forms';
 import { LoginService } from '../services/login.service';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 
 @Component({
@@ -26,6 +26,7 @@ export class LoginComponent implements OnInit {
     private fb: FormBuilder,
     private loginService: LoginService,
     private router: Router,
+    private route: ActivatedRoute,
     private authService: AuthService
   ) {
     this.loginForm = this.fb.group({
@@ -79,10 +80,7 @@ export class LoginComponent implements OnInit {
           );
           this.authService.applySessionUser(res.user);
 
-          const destino = this.authService.mustChangePassword()
-            ? '/dashboard/settings'
-            : this.authService.getUserRole() === 'condomino' ? '/dashboard/mi-cuenta' : '/dashboard';
-          this.router.navigate([destino]);
+          this.router.navigateByUrl(this.getDestinoTrasLogin());
         } else {
           this.errorMessage = 'Respuesta inválida del servidor';
         }
@@ -105,6 +103,22 @@ export class LoginComponent implements OnInit {
         this.errorMessage = this.getLoginErrorMessage(err);
       }
     });
+  }
+
+  // Vuelve a la pagina que se pidio antes del login (por ejemplo, un enlace de pago compartido).
+  // Solo se aceptan rutas internas del panel para no redirigir a sitios externos.
+  private getDestinoTrasLogin(): string {
+    if (this.authService.mustChangePassword()) {
+      return '/dashboard/settings';
+    }
+
+    const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') || '';
+
+    if (returnUrl.startsWith('/dashboard/')) {
+      return returnUrl;
+    }
+
+    return this.authService.getUserRole() === 'condomino' ? '/dashboard/mi-cuenta' : '/dashboard';
   }
 
   togglePassword(): void {

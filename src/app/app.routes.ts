@@ -3,6 +3,13 @@ import { LoginComponent } from './auth/login/login.component';
 import { DashboardComponent } from './layout/dashboard/dashboard.component';
 import { RoleGuard } from './guards/role.guard';
 import { AuthGuard } from './guards/auth.guard';
+import { GESTION } from './auth/permisos';
+
+// Formulario para registrar el pago que una torre hace al conjunto. Vive dentro del panel
+// para usar la sesion abierta (antes se abria en otra pestana y pedia iniciar sesion de nuevo).
+const pagoAlicuotaTorre = () =>
+     import('./pages/pago-alicuota-torre-form/pago-alicuota-torre-form.component').then(m => m.PagoAlicuotaTorreFormComponent);
+const pagoAlicuotaTorreData = { roles: GESTION, permission: 'pagos_alicuota_torre' };
 
 export const routes: Routes = [
      { path: '', component: LoginComponent, pathMatch: 'full' }, // Ruta raíz
@@ -10,14 +17,9 @@ export const routes: Routes = [
           path: 'reserva',
           loadComponent: () => import('./pages/reserva/reserva.component').then(m => m.ReservaComponent)
      },
-          {
-               path: 'pago-alicuota-torre',
-               loadComponent: () => import('./pages/pago-alicuota-torre-form/pago-alicuota-torre-form.component').then(m => m.PagoAlicuotaTorreFormComponent)
-          },
-          {
-               path: 'pago-alicuota-torre/:torreId',
-               loadComponent: () => import('./pages/pago-alicuota-torre-form/pago-alicuota-torre-form.component').then(m => m.PagoAlicuotaTorreFormComponent)
-          },
+     // Enlaces antiguos del link de pago: siguen funcionando y llevan al formulario dentro del panel.
+     { path: 'pago-alicuota-torre', redirectTo: 'dashboard/torres/pagar-alicuota', pathMatch: 'full' },
+     { path: 'pago-alicuota-torre/:torreId', redirectTo: 'dashboard/torres/pagar-alicuota/:torreId' },
      {
           path: 'dashboard', component: DashboardComponent, canActivate: [AuthGuard], children: [
                { path: '', redirectTo: 'home', pathMatch: 'full' },
@@ -54,7 +56,25 @@ export const routes: Routes = [
                     path: 'morosidad',
                     loadComponent: () => import('./pages/morosidad/morosidad.component').then(m => m.MorosidadComponent),
                     canActivate: [AuthGuard, RoleGuard],
-                    data: { roles: ['tesorero'], permission: 'pagos_departamentos' }
+                    data: { roles: GESTION, permission: 'pagos_departamentos' }
+               },
+               {
+                    path: 'revision-pagos',
+                    loadComponent: () => import('./pages/revision-pagos/revision-pagos.component').then(m => m.RevisionPagosComponent),
+                    canActivate: [AuthGuard, RoleGuard],
+                    data: { roles: GESTION, permission: 'pagos_departamentos' }
+               },
+               {
+                    path: 'estado-cuenta',
+                    loadComponent: () => import('./pages/estado-cuenta/estado-cuenta.component').then(m => m.EstadoCuentaComponent),
+                    canActivate: [AuthGuard, RoleGuard],
+                    data: { roles: GESTION, permission: 'pagos_departamentos' }
+               },
+               {
+                    path: 'cargos',
+                    loadComponent: () => import('./pages/cargos/cargos.component').then(m => m.CargosComponent),
+                    canActivate: [AuthGuard, RoleGuard],
+                    data: { roles: ['admin_general', 'admin_conjunto', 'tesorero'], permission: 'cargos' }
                },
                {
                     path: 'solicitudes',
@@ -77,19 +97,27 @@ export const routes: Routes = [
                     path: 'torres/pagos-departamentos',
                     loadComponent: () => import('./pages/torre-pagos-alicuota/torre-pagos-alicuota.component').then(m => m.TorrePagosAlicuotaComponent),
                     canActivate: [AuthGuard, RoleGuard],
-                    data: { roles: ['tesorero'], permission: 'pagos_departamentos' }
+                    data: { roles: GESTION, permission: 'pagos_departamentos' }
                },
                {
                     path: 'departamentos/pagos-alicuota',
                     loadComponent: () => import('./pages/torre-pagos-alicuota/torre-pagos-alicuota.component').then(m => m.TorrePagosAlicuotaComponent),
                     canActivate: [AuthGuard, RoleGuard],
-                    data: { roles: ['tesorero'], permission: 'pagos_departamentos' }
+                    data: { roles: GESTION, permission: 'pagos_departamentos' }
                },
                {
                     path: 'torres/:id/pagos-departamentos',
                     loadComponent: () => import('./pages/torre-pagos-alicuota/torre-pagos-alicuota.component').then(m => m.TorrePagosAlicuotaComponent),
                     canActivate: [AuthGuard, RoleGuard],
-                    data: { roles: ['tesorero'], permission: 'pagos_departamentos' }
+                    data: { roles: GESTION, permission: 'pagos_departamentos' }
+               },
+               {
+                    path: 'torres/pagar-alicuota', loadComponent: pagoAlicuotaTorre,
+                    canActivate: [AuthGuard, RoleGuard], data: pagoAlicuotaTorreData
+               },
+               {
+                    path: 'torres/pagar-alicuota/:torreId', loadComponent: pagoAlicuotaTorre,
+                    canActivate: [AuthGuard, RoleGuard], data: pagoAlicuotaTorreData
                },
                {
                     path: 'departamentos', loadComponent: () => import('./pages/departamentos/departamentos.component').then(m => m.DepartamentosComponent),
@@ -160,7 +188,7 @@ export const routes: Routes = [
                     path: 'valores-alicuota',
                     loadComponent: () => import('./pages/valores-alicuota/valores-alicuota.component').then(m => m.ValoresAlicuotaComponent),
                     canActivate: [AuthGuard, RoleGuard],
-                    data: { roles: ['admin_general', 'admin_conjunto'], permission: 'valores_alicuota' }
+                    data: { roles: GESTION, permission: 'valores_alicuota' }
                },
                {
                     path: 'auditoria',

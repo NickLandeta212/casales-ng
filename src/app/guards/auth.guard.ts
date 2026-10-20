@@ -11,8 +11,9 @@ export class AuthGuard implements CanActivate {
   constructor(private authService: AuthService, private router: Router) {}
 
   canActivate(_route: unknown, state: RouterStateSnapshot): boolean | UrlTree {
+    // Sin sesion se va al login recordando la pagina pedida, para volver a ella al entrar.
     if (!this.authService.isAuthenticated()) {
-      return this.router.parseUrl('');
+      return this.router.createUrlTree([''], { queryParams: { returnUrl: state.url } });
     }
 
     // Con contrasena temporal solo se permite la pagina para cambiarla.

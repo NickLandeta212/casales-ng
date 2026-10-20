@@ -75,11 +75,9 @@ export class SidebarMenuComponent implements OnInit {
           permission: 'pagos_alicuota'
         },
         {
-          title: 'Link de pago',
+          title: 'Pagar alícuota de torre',
           icon: 'bi bi-credit-card',
-          link: '/pago-alicuota-torre',
-          dynamicLink: 'pago-alicuota-torre-tesorero',
-          target: '_blank',
+          link: '/dashboard/torres/pagar-alicuota',
           roles: ['admin_general', 'tesorero'],
           permission: 'pagos_alicuota_torre'
         }
@@ -99,17 +97,31 @@ export class SidebarMenuComponent implements OnInit {
           permission: 'departamentos'
         },
         {
+          title: 'Revisión de pagos',
+          icon: 'bi bi-inboxes',
+          link: '/dashboard/revision-pagos',
+          roles: CASALES_FINANCE_ROLES,
+          permission: 'pagos_departamentos'
+        },
+        {
+          title: 'Estado de cuenta',
+          icon: 'bi bi-person-vcard',
+          link: '/dashboard/estado-cuenta',
+          roles: CASALES_FINANCE_ROLES,
+          permission: 'pagos_departamentos'
+        },
+        {
           title: 'Pagos departamentos',
           icon: 'bi bi-receipt-cutoff',
           link: '/dashboard/departamentos/pagos-alicuota',
-          roles: ['tesorero'],
+          roles: CASALES_FINANCE_ROLES,
           permission: 'pagos_departamentos'
         },
         {
           title: 'Morosidad',
           icon: 'bi bi-graph-down-arrow',
           link: '/dashboard/morosidad',
-          roles: ['tesorero'],
+          roles: CASALES_FINANCE_ROLES,
           permission: 'pagos_departamentos'
         }
       ]
@@ -207,7 +219,8 @@ export class SidebarMenuComponent implements OnInit {
       permission: 'gastos_comunes',
       children: [
         { title: 'Finanzas del conjunto', icon: 'bi bi-bank', link: '/dashboard/finanzas/conjunto', roles: CASALES_ADMIN_ROLES, permission: 'gastos_comunes' },
-        { title: 'Finanzas de torres', icon: 'bi bi-building-check', link: '/dashboard/finanzas/torres', roles: ['tesorero'], permission: 'gastos_comunes' }
+        { title: 'Finanzas de torres', icon: 'bi bi-building-check', link: '/dashboard/finanzas/torres', roles: ['tesorero'], permission: 'gastos_comunes' },
+        { title: 'Cargos del mes', icon: 'bi bi-receipt', link: '/dashboard/cargos', roles: CASALES_FINANCE_ROLES, permission: 'cargos' }
       ]
     },
     {
@@ -235,13 +248,13 @@ export class SidebarMenuComponent implements OnInit {
     {
       title: 'Ajustes',
       icon: 'bi bi-sliders',
-      roles: CASALES_ADMIN_ROLES,
+      roles: CASALES_FINANCE_ROLES,
       children: [
         {
           title: 'Valor de alícuotas',
           icon: 'bi bi-currency-dollar',
           link: '/dashboard/valores-alicuota',
-          roles: CASALES_ADMIN_ROLES,
+          roles: CASALES_FINANCE_ROLES,
           permission: 'valores_alicuota'
         },
         {
@@ -260,11 +273,6 @@ export class SidebarMenuComponent implements OnInit {
   }
 
   getLink(item: any): string {
-    if (item?.dynamicLink === 'pago-alicuota-torre-tesorero') {
-      const [torreId] = this.authService.getAuthorizedTorreIds();
-      return torreId ? `/pago-alicuota-torre/${torreId}` : '/pago-alicuota-torre';
-    }
-
     return item?.link || '/dashboard/home';
   }
 }

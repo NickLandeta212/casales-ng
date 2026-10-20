@@ -80,6 +80,12 @@ export class AuthService {
     }
   }
 
+  // Los pagos de departamentos los consultan la administracion y el tesorero,
+  // pero solo el tesorero de la torre los aprueba o rechaza.
+  canReviewDepartmentPayments(): boolean {
+    return this.getUserRole() === 'tesorero';
+  }
+
   hasRole(allowedRoles: string[]): boolean {
     if (!allowedRoles || allowedRoles.length === 0) {
       return true;

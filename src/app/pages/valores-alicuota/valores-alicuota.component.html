@@ -3,6 +3,7 @@
     <div>
       <h1>Valor de alícuotas</h1>
       <p>El valor rige desde el año indicado hasta que se defina uno nuevo. Un valor por torre reemplaza al general.</p>
+      <p *ngIf="!esAdmin">Puedes cambiar el valor de tus torres. El valor general lo define la administración.</p>
     </div>
   </header>
 
@@ -13,7 +14,7 @@
       <label>
         <span>Aplica a</span>
         <select formControlName="torre_id">
-          <option [ngValue]="null">Todas las torres (valor general)</option>
+          <option *ngIf="esAdmin" [ngValue]="null">Todas las torres (valor general)</option>
           <option *ngFor="let torre of torres" [ngValue]="torre.id">Torre {{ torre.numero }}</option>
         </select>
       </label>
@@ -61,7 +62,7 @@
             <td>{{ valor.torre_numero ? 'Torre ' + valor.torre_numero : 'Todas las torres' }}</td>
             <td>{{ valor.valor | currency:'USD' }}</td>
             <td>{{ valor.updated_by_nombre || 'Sistema' }}</td>
-            <td><button type="button" class="btn-rechazar" (click)="eliminar(valor)">Eliminar</button></td>
+            <td><button *ngIf="puedeEditar(valor)" type="button" class="btn-rechazar" (click)="eliminar(valor)">Eliminar</button></td>
           </tr>
           <tr *ngIf="!valores.length">
             <td colspan="5" class="empty">No hay valores definidos.</td>

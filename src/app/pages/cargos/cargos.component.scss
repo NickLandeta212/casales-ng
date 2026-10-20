@@ -1,0 +1,65 @@
+@use '../../shared/styles/panel';
+
+.cargos-layout {
+  display: grid;
+  gap: 16px;
+}
+
+.emitir-form .campos {
+  display: grid;
+  grid-template-columns: minmax(150px, 180px) minmax(150px, 190px) minmax(220px, 1fr) minmax(140px, 170px) auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.lista-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+
+  .check {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    font-size: 13px;
+    color: var(--sl-color-text-soft);
+  }
+}
+
+.avance {
+  display: grid;
+  gap: 4px;
+  min-width: 120px;
+
+  small {
+    color: var(--sl-color-muted);
+    font-size: 12px;
+  }
+}
+
+.barra {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--sl-color-border-soft);
+  overflow: hidden;
+
+  i {
+    display: block;
+    height: 100%;
+    background: var(--sl-color-primary);
+  }
+}
+
+@media (max-width: 1000px) {
+  .emitir-form .campos {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .emitir-form .campos {
+    grid-template-columns: 1fr;
+  }
+}

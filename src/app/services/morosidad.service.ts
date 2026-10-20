@@ -15,6 +15,8 @@ export interface MorosidadDepartamento {
   valor_alicuota: number;
   alicuotas_adeudadas: number;
   multas_adeudadas: number;
+  cargos_pendientes: number;
+  cargos_adeudados: number;
   total_adeudado: number;
 }
 
@@ -27,6 +29,7 @@ export interface MorosidadReporte {
     morosos: number;
     alicuotas_adeudadas: number;
     multas_adeudadas: number;
+    cargos_adeudados: number;
     total_adeudado: number;
   };
   departamentos: MorosidadDepartamento[];

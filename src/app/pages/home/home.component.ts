@@ -11,6 +11,9 @@ import { environment } from '../../../environments/environment';
 import { AuthService } from '../../auth/services/auth.service';
 import { GESTION, SEGURIDAD } from '../../auth/permisos';
 import { Comunicado, ComunicadosService } from '../../services/comunicados.service';
+import { Indicadores, IndicadoresService } from '../../services/indicadores.service';
+
+const MESES_CORTOS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
 interface HomeCalendarDay {
   label: number;
@@ -50,6 +53,7 @@ export class HomeComponent implements OnInit {
   homeCalendarDays: HomeCalendarDay[] = [];
   homeCalendarMonth = new Date();
   reservedDates = new Set<string>();
+  indicadores: Indicadores | null = null;
   alertasOperativas: Array<{ title: string; value: string; detail: string; level: 'ok' | 'warning' | 'info' }> = [];
 
   constructor(
@@ -57,11 +61,19 @@ export class HomeComponent implements OnInit {
     private torresService: TorresService,
     private departamentosService: DepartamentosService,
     private authService: AuthService,
-    private comunicadosService: ComunicadosService
+    private comunicadosService: ComunicadosService,
+    private indicadoresService: IndicadoresService
   ) { }
 
   ngOnInit(): void {
     this.cargarEstadisticas();
+
+    // Cifras reales de cobranza para administracion y tesoreria.
+    if (this.authService.hasRole(GESTION)) {
+      this.indicadoresService.obtener().pipe(catchError(() => of(null))).subscribe((indicadores) => {
+        this.indicadores = indicadores;
+      });
+    }
     this.comunicadosService.listar(3).pipe(catchError(() => of([]))).subscribe((comunicados) => {
       this.comunicadosRecientes = comunicados;
     });
@@ -128,6 +140,23 @@ export class HomeComponent implements OnInit {
       },
       error: (error) => console.error('Error cargando estadisticas:', error)
     });
+  }
+
+  get esTesorero(): boolean {
+    return this.authService.getUserRole() === 'tesorero';
+  }
+
+  get maxRecaudacionMensual(): number {
+    return Math.max(1, ...(this.indicadores?.recaudacion_mensual || []).map((m) => m.total));
+  }
+
+  mesCorto(mes: number): string {
+    return MESES_CORTOS[mes - 1] || String(mes);
+  }
+
+  porcentajeCartera(valor: number): number {
+    const total = this.indicadores?.cartera.total || 0;
+    return total > 0 ? Math.round((valor / total) * 100) : 0;
   }
 
   get homeMonthLabel(): string {

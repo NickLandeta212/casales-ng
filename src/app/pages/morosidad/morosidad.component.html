@@ -2,8 +2,8 @@
   <header class="morosidad-card morosidad-header">
     <h1>Morosidad</h1>
     <p>
-      Deuda de los departamentos de tus torres<ng-container *ngIf="reporte"> de enero a {{ mesCorteLabel }}</ng-container>:
-      meses sin pago o con el pago rechazado, más las multas pendientes. Los pagos en revisión no cuentan como deuda.
+      Deuda de los departamentos<ng-container *ngIf="reporte"> de enero a {{ mesCorteLabel }}</ng-container>:
+      meses sin pago o con el pago rechazado, más las multas y los cargos extraordinarios pendientes. Los pagos en revisión no cuentan como deuda.
     </p>
   </header>
 
@@ -15,7 +15,7 @@
       <article class="morosidad-card resumen">
         <span>Total adeudado</span>
         <strong>{{ r.resumen.total_adeudado | currency:'USD' }}</strong>
-        <small>{{ r.resumen.alicuotas_adeudadas | currency:'USD' }} en alícuotas · {{ r.resumen.multas_adeudadas | currency:'USD' }} en multas</small>
+        <small>{{ r.resumen.alicuotas_adeudadas | currency:'USD' }} en alícuotas · {{ r.resumen.multas_adeudadas | currency:'USD' }} en multas<ng-container *ngIf="r.resumen.cargos_adeudados"> · {{ r.resumen.cargos_adeudados | currency:'USD' }} en cargos</ng-container></small>
       </article>
       <article class="morosidad-card resumen">
         <span>Departamentos con deuda</span>
@@ -48,7 +48,9 @@
               <th>Meses adeudados</th>
               <th class="num">Alícuotas</th>
               <th class="num">Multas</th>
+              <th class="num">Cargos</th>
               <th class="num">Total</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
@@ -70,10 +72,12 @@
                 {{ d.multas_adeudadas | currency:'USD' }}
                 <small *ngIf="d.multas_pendientes">{{ d.multas_pendientes }} multa(s)</small>
               </td>
+              <td class="num">{{ d.cargos_adeudados | currency:'USD' }}</td>
               <td class="num total">{{ d.total_adeudado | currency:'USD' }}</td>
+              <td><a [routerLink]="['/dashboard/estado-cuenta']" [queryParams]="{ departamento: d.departamento_id }">Ver estado</a></td>
             </tr>
             <tr *ngIf="!departamentos.length">
-              <td colspan="6" class="empty">No hay departamentos en esta vista.</td>
+              <td colspan="8" class="empty">No hay departamentos en esta vista.</td>
             </tr>
           </tbody>
         </table>

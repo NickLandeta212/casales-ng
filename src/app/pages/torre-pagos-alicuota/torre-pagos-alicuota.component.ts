@@ -26,6 +26,7 @@ export class TorrePagosAlicuotaComponent implements OnInit {
   estadoFilterControl = new FormControl('en_revision');
   approvingPagoId: string | number | null = null;
   errorMessage = '';
+  readonly puedeRevisar: boolean;
 
   constructor(
     private route: ActivatedRoute,
@@ -33,7 +34,9 @@ export class TorrePagosAlicuotaComponent implements OnInit {
     private authService: AuthService,
     private alicuotasService: AlicuotasService,
     private comprobantesService: ComprobantesService
-  ) { }
+  ) {
+    this.puedeRevisar = this.authService.canReviewDepartmentPayments();
+  }
 
   ngOnInit(): void {
     this.torreId = Number(this.route.snapshot.paramMap.get('id')) || null;
@@ -162,12 +165,9 @@ export class TorrePagosAlicuotaComponent implements OnInit {
     this.comprobantesService.abrir(event, pago.comprobanteUrl);
   }
 
+  // El servidor ya devuelve solo las torres visibles (la administracion, todas; el tesorero, las suyas).
   private aplicarTorresAutorizadas(): void {
-    const authorizedIds = this.authService.getAuthorizedTorreIds();
-
-    this.torresAutorizadas = this.authService.getUserRole() === 'admin_general' || authorizedIds.length === 0
-      ? this.torres
-      : this.torres.filter((torre) => authorizedIds.includes(Number(torre.id)));
+    this.torresAutorizadas = this.torres;
   }
 
   private aplicarFiltrosLocales(): void {

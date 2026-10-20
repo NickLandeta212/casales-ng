@@ -2,7 +2,8 @@
   <div class="header-row">
     <div>
       <h2>Pagos de alicuotas por departamentos</h2>
-      <p>Los residentes pagan desde su cuenta; aqui revisas y apruebas los comprobantes de tus torres. Cada pago aprobado entra a las finanzas de la torre.</p>
+      <p *ngIf="puedeRevisar">Los residentes pagan desde su cuenta; aqui revisas y apruebas los comprobantes de tus torres. Cada pago aprobado entra a las finanzas de la torre.</p>
+      <p *ngIf="!puedeRevisar">Los residentes pagan desde su cuenta y el tesorero de cada torre aprueba los comprobantes. Aqui ves los pagos de todo el conjunto.</p>
     </div>
     <a class="btn-volver" routerLink="/dashboard/departamentos">Volver a departamentos</a>
   </div>
@@ -84,7 +85,7 @@
             <span *ngIf="!pago.comprobanteUrl">Sin comprobante</span>
           </td>
           <td>
-            <ng-container *ngIf="pago.estado === 'en_revision'; else sinAccion">
+            <ng-container *ngIf="puedeRevisar && pago.estado === 'en_revision'; else sinAccion">
               <button
                 class="btn-aprobar"
                 type="button"

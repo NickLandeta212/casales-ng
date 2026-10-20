@@ -1,0 +1,109 @@
+<div class="panel-container">
+  <header class="panel-card panel-header">
+    <div>
+      <h1>Revisión de pagos</h1>
+      <p *ngIf="puedeRevisar">Todos los comprobantes que envían los departamentos de tus torres en un solo lugar: alícuotas, multas y cargos extraordinarios.</p>
+      <p *ngIf="!puedeRevisar">Comprobantes de todos los departamentos del conjunto: alícuotas, multas y cargos extraordinarios. Los aprueba o rechaza el tesorero de cada torre.</p>
+    </div>
+    <button class="btn" type="button" (click)="cargar()" [disabled]="cargando">
+      <i class="bi bi-arrow-clockwise"></i> {{ cargando ? 'Actualizando...' : 'Actualizar' }}
+    </button>
+  </header>
+
+  <p class="msg error" *ngIf="errorMessage">{{ errorMessage }}</p>
+  <p class="msg error" *ngIf="fallos.length">No se pudieron cargar los pagos de {{ fallos.join(', ') }}.</p>
+  <p class="msg success" *ngIf="successMessage">{{ successMessage }}</p>
+
+  <section class="panel-card">
+    <nav class="tabs" role="tablist">
+      <button
+        *ngFor="let tab of pestanas"
+        type="button"
+        role="tab"
+        [class.activa]="pestana === tab.key"
+        [attr.aria-selected]="pestana === tab.key"
+        (click)="pestana = tab.key"
+      >
+        {{ tab.label }}
+        <span class="contador" [class.urgente]="tab.key === 'por_revisar' && contar(tab.key) > 0">{{ contar(tab.key) }}</span>
+      </button>
+    </nav>
+
+    <div class="filtros">
+      <div class="chips">
+        <button type="button" [class.activo]="tipo === 'todos'" (click)="tipo = 'todos'">Todos</button>
+        <button type="button" [class.activo]="tipo === 'alicuota'" (click)="tipo = 'alicuota'">Alícuotas</button>
+        <button type="button" [class.activo]="tipo === 'multa'" (click)="tipo = 'multa'">Multas</button>
+        <button type="button" [class.activo]="tipo === 'cargo'" (click)="tipo = 'cargo'">Cargos extra</button>
+      </div>
+      <input type="search" placeholder="Buscar departamento o concepto" [value]="busqueda" (input)="busqueda = $any($event.target).value" />
+    </div>
+
+    <div class="table-wrapper" *ngIf="visibles.length; else vacio">
+      <table class="panel-table">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Tipo</th>
+            <th>Departamento</th>
+            <th>Detalle</th>
+            <th class="num">Valor</th>
+            <th>Comprobante</th>
+            <th>Estado</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let pago of visibles">
+            <td>{{ pago.fecha ? (pago.fecha | date:'dd/MM/yyyy HH:mm') : '-' }}</td>
+            <td><span class="tipo" [attr.data-tipo]="pago.tipo">{{ tipos[pago.tipo] }}</span></td>
+            <td>
+              <strong>{{ pago.departamentoNumero }}</strong>
+              <small class="motivo">Torre {{ pago.torreNumero }}</small>
+            </td>
+            <td>
+              {{ pago.detalle }}
+              <small class="motivo" *ngIf="pago.email">Factura a {{ pago.email }}</small>
+            </td>
+            <td class="num">{{ pago.valor | currency:'USD' }}</td>
+            <td>
+              <a *ngIf="pago.comprobanteUrl" href="#" (click)="verComprobante($event, pago)">Ver foto</a>
+              <span *ngIf="!pago.comprobanteUrl">-</span>
+            </td>
+            <td>
+              <span class="pill" [class.review]="pago.estado === 'por_revisar'" [class.ok]="pago.estado === 'aprobado'" [class.bad]="pago.estado === 'rechazado'">
+                {{ etiquetaEstado(pago) }}
+              </span>
+              <small class="motivo" *ngIf="pago.motivoRechazo">{{ pago.motivoRechazo }}</small>
+            </td>
+            <td>
+              <div class="acciones" *ngIf="puedeRevisar && pago.estado === 'por_revisar'">
+                <button class="btn primary small" type="button" [disabled]="procesando !== null" (click)="aprobar(pago)">
+                  {{ procesando === pago.clave ? 'Guardando...' : 'Aprobar' }}
+                </button>
+                <button class="btn danger small" type="button" [disabled]="procesando !== null" (click)="rechazar(pago)">Rechazar</button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="4">{{ visibles.length }} pago(s)</td>
+            <td class="num"><strong>{{ totalVisible | currency:'USD' }}</strong></td>
+            <td colspan="3"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <ng-template #vacio>
+      <div class="empty-state">
+        <i class="bi" [class.bi-check2-circle]="pestana === 'por_revisar'" [class.bi-inbox]="pestana !== 'por_revisar'"></i>
+        <strong *ngIf="cargando">Cargando pagos...</strong>
+        <strong *ngIf="!cargando && pestana === 'por_revisar'">No hay pagos por revisar</strong>
+        <strong *ngIf="!cargando && pestana !== 'por_revisar'">No hay pagos en esta pestaña</strong>
+        <span *ngIf="!cargando">Cuando un departamento envíe un comprobante desde Mi cuenta, aparecerá aquí. También puedes ver la <a routerLink="/dashboard/morosidad">morosidad</a>.</span>
+      </div>
+    </ng-template>
+  </section>
+</div>

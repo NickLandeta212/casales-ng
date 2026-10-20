@@ -15,7 +15,61 @@
     </div>
   </div>
 
-  <section class="executive-grid" aria-label="Indicadores gerenciales">
+  <ng-container *ngIf="indicadores as ind">
+    <section class="kpi-grid" aria-label="Indicadores de cobranza">
+      <article class="kpi-card">
+        <span>Departamentos al día</span>
+        <strong>{{ ind.departamentos.porcentaje_al_dia }}%</strong>
+        <div class="kpi-bar"><i [style.width.%]="ind.departamentos.porcentaje_al_dia"></i></div>
+        <small>{{ ind.departamentos.al_dia }} al día · {{ ind.departamentos.morosos }} con deuda de {{ ind.departamentos.total }}</small>
+      </article>
+      <article class="kpi-card" [class.alerta]="ind.cartera.total > 0">
+        <span>Cartera por cobrar</span>
+        <strong>{{ ind.cartera.total | currency:'USD':'symbol':'1.0-2' }}</strong>
+        <small>Vencido a {{ mesCorto(ind.mes_corte).toLowerCase() }} {{ ind.anio }}{{ ind.alcance === 'torres' ? ' en tus torres' : '' }}</small>
+      </article>
+      <article class="kpi-card">
+        <span>Recaudado este mes</span>
+        <strong>{{ ind.recaudacion.mes | currency:'USD':'symbol':'1.0-2' }}</strong>
+        <small>{{ ind.recaudacion.semana | currency:'USD':'symbol':'1.0-2' }} en los últimos 7 días</small>
+      </article>
+      <a class="kpi-card link" [class.pendiente]="ind.por_revisar.total > 0"
+         [routerLink]="esTesorero ? '/dashboard/revision-pagos' : (ind.por_revisar.torres ? '/dashboard/torres/pagos-alicuota' : '/dashboard/revision-pagos')">
+        <span>Pagos por revisar</span>
+        <strong>{{ ind.por_revisar.total }}</strong>
+        <small *ngIf="esTesorero">{{ ind.por_revisar.alicuotas }} alícuotas · {{ ind.por_revisar.multas }} multas · {{ ind.por_revisar.cargos }} cargos</small>
+        <small *ngIf="!esTesorero">{{ ind.por_revisar.torres }} de torres al conjunto · {{ ind.por_revisar.alicuotas + ind.por_revisar.multas + ind.por_revisar.cargos }} de departamentos en tesorería</small>
+      </a>
+    </section>
+
+    <section class="kpi-detalle">
+      <article class="activity-card">
+        <h3>Cartera por concepto</h3>
+        <div class="concepto" *ngFor="let c of [
+          { label: 'Alícuotas', valor: ind.cartera.alicuotas },
+          { label: 'Multas', valor: ind.cartera.multas },
+          { label: 'Cargos extraordinarios', valor: ind.cartera.cargos }
+        ]">
+          <div class="concepto-head"><span>{{ c.label }}</span><strong>{{ c.valor | currency:'USD':'symbol':'1.0-2' }}</strong></div>
+          <div class="kpi-bar"><i [style.width.%]="porcentajeCartera(c.valor)"></i></div>
+        </div>
+        <p class="kpi-vacio" *ngIf="ind.cartera.total === 0">No hay deuda pendiente. 🎉</p>
+      </article>
+      <article class="activity-card">
+        <h3>Recaudación de los últimos 6 meses</h3>
+        <div class="barras" role="img" [attr.aria-label]="'Recaudación mensual'">
+          <div class="barra-mes" *ngFor="let m of ind.recaudacion_mensual" [title]="mesCorto(m.mes) + ' ' + m.anio + ': $' + m.total.toFixed(2)">
+            <small class="valor">{{ m.total > 0 ? (m.total | currency:'USD':'symbol':'1.0-0') : '' }}</small>
+            <div class="columna"><i [style.height.%]="(m.total / maxRecaudacionMensual) * 100"></i></div>
+            <span>{{ mesCorto(m.mes) }}</span>
+          </div>
+        </div>
+        <small class="kpi-nota">Pagos aprobados de alícuotas, multas y cargos.</small>
+      </article>
+    </section>
+  </ng-container>
+
+  <section class="executive-grid" aria-label="Indicadores gerenciales" *ngIf="!indicadores">
     <article class="executive-card">
       <span>Salud financiera</span>
       <strong>{{ financialHealth }}%</strong>

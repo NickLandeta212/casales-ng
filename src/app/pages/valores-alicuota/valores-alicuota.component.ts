@@ -1,9 +1,13 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AuthService } from '../../auth/services/auth.service';
+import { ADMINS } from '../../auth/permisos';
 import { AlicuotasService, AlicuotaValor } from '../../services/alicuotas.service';
 import { TorresService } from '../../services/torres.service';
 
+// Valor mensual de la alicuota. La administracion define el valor general y el de cualquier torre;
+// el tesorero solo el de sus torres (ve el general, pero no lo cambia). El servidor aplica la misma regla.
 @Component({
   selector: 'app-valores-alicuota',
   standalone: true,
@@ -15,6 +19,7 @@ export class ValoresAlicuotaComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly alicuotasService = inject(AlicuotasService);
   private readonly torresService = inject(TorresService);
+  readonly esAdmin = inject(AuthService).hasRole(ADMINS);
 
   valores: AlicuotaValor[] = [];
   torres: Array<{ id: number; numero: number }> = [];
@@ -36,6 +41,11 @@ export class ValoresAlicuotaComponent implements OnInit {
         this.torres = lista
           .map((torre: any) => ({ id: Number(torre.id), numero: Number(torre.numero) }))
           .sort((a: { numero: number }, b: { numero: number }) => a.numero - b.numero);
+
+        // El tesorero no puede usar "Todas las torres": se preselecciona su primera torre.
+        if (!this.esAdmin && this.torres.length) {
+          this.form.patchValue({ torre_id: this.torres[0].id });
+        }
       }
     });
   }
@@ -51,6 +61,11 @@ export class ValoresAlicuotaComponent implements OnInit {
       const v = vigente(torre.id);
       return { torre: `Torre ${torre.numero}`, valor: v ? Number(v.valor) : 45, desde: v?.anio ?? 0 };
     });
+  }
+
+  // El tesorero solo modifica los valores de sus torres (el servidor solo le muestra esas y el general).
+  puedeEditar(valor: AlicuotaValor): boolean {
+    return this.esAdmin || valor.torre_id !== null;
   }
 
   cargar(): void {

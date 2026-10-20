@@ -20,11 +20,9 @@
               <a
                 *ngIf="puedeVerLinkPago()"
                 class="btn-link-pago"
-                [href]="getLinkPagoTorre(torre)"
-                target="_blank"
-                rel="noopener"
+                [routerLink]="['/dashboard/torres/pagar-alicuota', torre.id]"
               >
-                Link de pago
+                Pagar alícuota
               </a>
             </td>
           </tr>

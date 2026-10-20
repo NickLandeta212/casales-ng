@@ -1,9 +1,9 @@
-<main class="alicuota-public-page">
+<main class="alicuota-torre-page">
   <section class="payment-shell">
     <header class="payment-header">
       <span>Casales San Pedro</span>
-      <h1>Pago de alicuota por torre</h1>
-      <p>Formulario publico para registrar el pago de una torre al conjunto.</p>
+      <h1>Pago de alícuota por torre</h1>
+      <p>Registra el pago mensual que la torre hace al conjunto. La administración lo revisa y aprueba.</p>
     </header>
 
     <p class="alert-error" *ngIf="errorMessage">{{ errorMessage }}</p>
@@ -11,11 +11,6 @@
     <p class="loading-message" *ngIf="loading">Cargando informacion...</p>
 
     <section class="payment-card" *ngIf="!loading">
-      <label class="field-block" style="display: none;" aria-hidden="true">
-        Sitio web
-        <input type="text" tabindex="-1" autocomplete="off" [value]="website" (input)="website = $any($event.target).value" />
-      </label>
-
       <label class="field-block">
         Torre
         <select [formControl]="torreControl">

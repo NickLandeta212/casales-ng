@@ -10,7 +10,12 @@
         <span>{{ cuenta.resumen.total_adeudado === 0 ? 'Estás al día' : 'Pendiente a la fecha (' + cuenta.resumen.anio + ')' }}</span>
         <strong>{{ cuenta.resumen.total_adeudado | currency:'USD' }}</strong>
       </div>
-      <small>Alícuotas {{ cuenta.resumen.alicuotas_adeudadas | currency:'USD' }} · Multas {{ cuenta.resumen.multas_adeudadas | currency:'USD' }}</small>
+      <small>
+        Alícuotas {{ cuenta.resumen.alicuotas_adeudadas | currency:'USD' }} · Multas {{ cuenta.resumen.multas_adeudadas | currency:'USD' }}
+        <ng-container *ngIf="cuenta.resumen.cargos_adeudados > 0"> · Cargos {{ cuenta.resumen.cargos_adeudados | currency:'USD' }}</ng-container>
+      </small>
+      <small *ngIf="cuenta.resumen.pagos_en_revision > 0">{{ cuenta.resumen.pagos_en_revision }} pago(s) en revisión</small>
+      <button type="button" class="link" (click)="descargarEstado()">Descargar estado de cuenta (PDF)</button>
     </div>
   </header>
 
@@ -71,6 +76,60 @@
           {{ enviando ? 'Enviando...' : 'Enviar pago' }}
         </button>
       </div>
+    </section>
+
+    <section class="cuenta-card" *ngIf="cargosPendientes.length || cuenta.pagos_cargos.length">
+      <div class="section-head">
+        <h2>Cargos extraordinarios</h2>
+      </div>
+
+      <p class="vacio" *ngIf="!cargosPendientes.length">No tienes cargos extraordinarios pendientes.</p>
+
+      <label class="multa" *ngFor="let cargo of cargosPendientes" [class.revision]="cargo.estado === 'en_pago'">
+        <input
+          type="checkbox"
+          [checked]="cargosSeleccionados.has(cargo.id)"
+          [disabled]="cargo.estado !== 'pendiente'"
+          (change)="toggleCargo(cargo)"
+        />
+        <div>
+          <strong>{{ cargo.concepto }}</strong>
+          <span>{{ nombreCargo(cargo) }}</span>
+        </div>
+        <b>{{ cargo.valor | currency:'USD' }}</b>
+        <small *ngIf="cargo.estado === 'en_pago'">Pago en revisión</small>
+      </label>
+
+      <div class="pago-panel" *ngIf="cargosSeleccionados.size">
+        <p>{{ cargosSeleccionados.size }} cargo(s) seleccionado(s): <strong>{{ totalCargosSeleccionados | currency:'USD' }}</strong></p>
+        <label class="file">
+          <input type="file" accept="image/png,image/jpeg,image/webp" (change)="onComprobante($event, 'cargos')" />
+          <span>{{ comprobanteCargos?.nombre || 'Subir comprobante' }}</span>
+        </label>
+        <button type="button" class="primary" [disabled]="enviando" (click)="pagarCargos()">
+          {{ enviando ? 'Enviando...' : 'Enviar pago' }}
+        </button>
+      </div>
+
+      <ng-container *ngIf="cuenta.pagos_cargos.length">
+        <h3>Historial de pagos de cargos</h3>
+        <table>
+          <thead>
+            <tr><th>Fecha</th><th>Concepto</th><th>Total</th><th>Estado</th></tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let pago of cuenta.pagos_cargos">
+              <td>{{ pago.created_at | date:'dd/MM/yyyy' }}</td>
+              <td>{{ conceptosPago(pago) }}</td>
+              <td>{{ pago.total | currency:'USD' }}</td>
+              <td>
+                <span class="estado" [class.pagado]="pago.estado === 'aprobado'" [class.rechazado]="pago.estado === 'rechazado'">{{ estadoPago(pago) }}</span>
+                <small class="motivo" *ngIf="pago.motivo_rechazo">{{ pago.motivo_rechazo }}</small>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </ng-container>
     </section>
 
     <section class="cuenta-card">

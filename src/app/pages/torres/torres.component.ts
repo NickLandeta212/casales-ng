@@ -1,12 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../auth/services/auth.service';
 import { TorresService } from '../../services/torres.service';
 
 @Component({
   selector: 'app-torres',
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './torres.component.html',
   styleUrl: './torres.component.scss'
 })
@@ -55,11 +55,6 @@ export class TorresComponent implements OnInit {
 
   puedeVerLinkPago(): boolean {
     return this.authService.getUserRole() === 'tesorero';
-  }
-
-  getLinkPagoTorre(torre: any): string {
-    const torreId = torre?.id ?? torre?.numero;
-    return torreId ? `/pago-alicuota-torre/${torreId}` : '/pago-alicuota-torre';
   }
 
   cerrarDetalles() {

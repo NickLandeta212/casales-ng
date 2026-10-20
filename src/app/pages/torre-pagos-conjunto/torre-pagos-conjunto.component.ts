@@ -6,7 +6,6 @@ import { startWith } from 'rxjs';
 import { AlicuotaTorrePago, AlicuotasService } from '../../services/alicuotas.service';
 import { TorresService } from '../../services/torres.service';
 import { ComprobantesService } from '../../services/comprobantes.service';
-import { SecurityUrlService } from '../../services/security-url.service';
 import { pedirMotivoRechazo } from '../../shared/utils/motivo-rechazo';
 
 @Component({
@@ -26,7 +25,6 @@ export class TorrePagosConjuntoComponent implements OnInit {
     private route: ActivatedRoute,
     private torresService: TorresService,
     private alicuotasService: AlicuotasService,
-    private securityUrlService: SecurityUrlService,
     private comprobantesService: ComprobantesService
   ) {}
 
@@ -113,11 +111,6 @@ export class TorrePagosConjuntoComponent implements OnInit {
         window.alert(error?.error?.message || 'No se pudo rechazar el pago.');
       }
     });
-  }
-
-  getPaymentLink(torre: any): string {
-    const id = torre?.id ?? torre?.numero;
-    return this.securityUrlService.buildPublicLink(`/pago-alicuota-torre/${id}`);
   }
 
   getEstadoLabel(estado: string): string {

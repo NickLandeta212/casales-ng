@@ -9,17 +9,15 @@
 
   <section class="links-section">
     <div class="section-heading">
-      <h3>Link de cobro para torres</h3>
-      <p>Comparte el enlace de la torre correspondiente para que el responsable suba el comprobante.</p>
+      <h3>Formulario de pago por torre</h3>
+      <p>Abre el formulario de pago de cada torre en esta misma ventana. Si compartes su dirección, quien la abra solo inicia sesión si aún no lo hizo.</p>
     </div>
 
     <div class="payment-link-list">
       <a
         class="btn-payment-link"
         *ngFor="let torre of torres"
-        [href]="getPaymentLink(torre)"
-        target="_blank"
-        rel="noopener"
+        [routerLink]="['/dashboard/torres/pagar-alicuota', torre.id]"
       >
         Torre {{ torre.numero }}
       </a>

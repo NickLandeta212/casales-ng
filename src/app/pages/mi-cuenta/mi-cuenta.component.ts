@@ -3,7 +3,8 @@ import { Component, OnInit, inject } from '@angular/core';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Observable } from 'rxjs';
 import { LoginService } from '../../auth/services/login.service';
-import { EstadoCuenta, MesAlicuota, MiCuentaService, MultaCuenta, PagoMultasCuenta } from '../../services/mi-cuenta.service';
+import { CargoCuenta, EstadoCuenta, MesAlicuota, MiCuentaService, MultaCuenta, PagoCargosCuenta, PagoMultasCuenta } from '../../services/mi-cuenta.service';
+import { descargarArchivo } from '../../shared/utils/descargar-archivo';
 
 const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 const MAX_COMPROBANTE_BYTES = 4 * 1024 * 1024;
@@ -34,8 +35,10 @@ export class MiCuentaComponent implements OnInit {
 
   mesesSeleccionados = new Set<number>();
   multasSeleccionadas = new Set<number>();
+  cargosSeleccionados = new Set<number>();
   comprobanteAlicuotas: Comprobante | null = null;
   comprobanteMultas: Comprobante | null = null;
+  comprobanteCargos: Comprobante | null = null;
 
   // Las cuentas de departamento usan un correo tecnico (@casales.app); la factura necesita uno real.
   readonly emailControl = new FormControl('', [Validators.required, Validators.email]);
@@ -55,6 +58,16 @@ export class MiCuentaComponent implements OnInit {
 
   get multasPendientes(): MultaCuenta[] {
     return (this.cuenta?.multas || []).filter((multa) => multa.estado !== 'pagada');
+  }
+
+  get cargosPendientes(): CargoCuenta[] {
+    return (this.cuenta?.cargos || []).filter((cargo) => cargo.estado === 'pendiente' || cargo.estado === 'en_pago');
+  }
+
+  get totalCargosSeleccionados(): number {
+    return this.cargosPendientes
+      .filter((cargo) => this.cargosSeleccionados.has(cargo.id))
+      .reduce((total, cargo) => total + Number(cargo.valor), 0);
   }
 
   get totalMesesSeleccionados(): number {
@@ -79,6 +92,7 @@ export class MiCuentaComponent implements OnInit {
         this.cargando = false;
         this.mesesSeleccionados.clear();
         this.multasSeleccionadas.clear();
+        this.cargosSeleccionados.clear();
       },
       error: (error) => {
         this.cargando = false;
@@ -101,7 +115,7 @@ export class MiCuentaComponent implements OnInit {
     return { pendiente: 'Pendiente', en_revision: 'En revision', aprobado: 'Pagado', rechazado: 'Rechazado' }[mes.estado];
   }
 
-  estadoPago(pago: PagoMultasCuenta): string {
+  estadoPago(pago: PagoMultasCuenta | PagoCargosCuenta): string {
     return { en_proceso: 'En revision', aprobado: 'Aprobado', rechazado: 'Rechazado' }[pago.estado];
   }
 
@@ -125,7 +139,23 @@ export class MiCuentaComponent implements OnInit {
     this.toggle(this.multasSeleccionadas, multa.id);
   }
 
-  onComprobante(event: Event, tipo: 'alicuotas' | 'multas'): void {
+  toggleCargo(cargo: CargoCuenta): void {
+    if (cargo.estado !== 'pendiente') {
+      return;
+    }
+
+    this.toggle(this.cargosSeleccionados, cargo.id);
+  }
+
+  nombreCargo(cargo: CargoCuenta): string {
+    return `${this.nombreMes(cargo.mes)} ${cargo.anio}`;
+  }
+
+  conceptosPago(pago: PagoCargosCuenta): string {
+    return (pago.cargos || []).map((cargo) => cargo.concepto).join(', ');
+  }
+
+  onComprobante(event: Event, tipo: 'alicuotas' | 'multas' | 'cargos'): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     this.setComprobante(tipo, null);
@@ -173,6 +203,28 @@ export class MiCuentaComponent implements OnInit {
       comprobante_base64: this.comprobanteMultas!.base64,
       email_destinatario: String(this.emailControl.value || '').trim()
     }), () => { this.comprobanteMultas = null; });
+  }
+
+  pagarCargos(): void {
+    if (!this.validarEnvio(this.cargosSeleccionados.size, this.comprobanteCargos)) {
+      return;
+    }
+
+    this.enviar(this.miCuentaService.pagarCargos({
+      cargo_ids: Array.from(this.cargosSeleccionados),
+      total: this.totalCargosSeleccionados,
+      comprobante_base64: this.comprobanteCargos!.base64,
+      email_destinatario: String(this.emailControl.value || '').trim()
+    }), () => { this.comprobanteCargos = null; });
+  }
+
+  descargarEstado(): void {
+    this.miCuentaService.descargarEstado(this.anio).subscribe({
+      next: (blob) => descargarArchivo(blob, `estado-cuenta-${this.cuenta?.departamento.numero || 'departamento'}-${this.anio}.pdf`),
+      error: () => {
+        this.errorMessage = 'No se pudo descargar el estado de cuenta.';
+      }
+    });
   }
 
   descargarFactura(tipo: 'alicuotas' | 'multas', id: number | null): void {
@@ -235,11 +287,13 @@ export class MiCuentaComponent implements OnInit {
     });
   }
 
-  private setComprobante(tipo: 'alicuotas' | 'multas', valor: Comprobante | null): void {
+  private setComprobante(tipo: 'alicuotas' | 'multas' | 'cargos', valor: Comprobante | null): void {
     if (tipo === 'alicuotas') {
       this.comprobanteAlicuotas = valor;
-    } else {
+    } else if (tipo === 'multas') {
       this.comprobanteMultas = valor;
+    } else {
+      this.comprobanteCargos = valor;
     }
   }
 

@@ -1,0 +1,141 @@
+@use '../../shared/styles/panel';
+
+.selector {
+  display: grid;
+  gap: 4px;
+  min-width: 260px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--sl-color-text-soft);
+}
+
+.resumen-card {
+  display: grid;
+  gap: 14px;
+
+  .titulo {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 10px;
+
+    h2 {
+      margin: 0;
+      font-size: 20px;
+    }
+
+    span {
+      color: var(--sl-color-text-soft);
+    }
+  }
+}
+
+.acciones-cuenta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+
+  .motivo {
+    margin: 0;
+  }
+}
+
+.section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+
+  h2 {
+    margin: 0;
+  }
+}
+
+.anio-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+
+  button {
+    width: 30px;
+    height: 30px;
+    border: 1px solid var(--sl-color-border);
+    border-radius: var(--sl-radius-sm);
+    background: #fff;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.4;
+    }
+  }
+}
+
+.meses-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 8px;
+}
+
+.mes {
+  display: grid;
+  gap: 2px;
+  padding: 10px;
+  border: 1px solid var(--sl-color-border-soft);
+  border-radius: var(--sl-radius-md);
+  background: #fafcf9;
+
+  span,
+  small {
+    font-size: 12px;
+    color: var(--sl-color-text-soft);
+  }
+
+  strong {
+    font-size: 15px;
+  }
+
+  &.pagado {
+    background: var(--sl-color-primary-soft);
+    border-color: var(--sl-color-section-border);
+  }
+
+  &.revision {
+    background: #fff8e6;
+    border-color: #f3dfa6;
+  }
+
+  &.vencido {
+    background: #fdf0ee;
+    border-color: #f1c4bf;
+
+    small {
+      color: var(--sl-color-danger);
+      font-weight: 700;
+    }
+  }
+}
+
+.dos-columnas {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.vacio {
+  margin: 0;
+  color: var(--sl-color-muted);
+  font-size: 13px;
+}
+
+@media (max-width: 900px) {
+  .dos-columnas {
+    grid-template-columns: 1fr;
+  }
+
+  .selector {
+    min-width: 0;
+    width: 100%;
+  }
+}

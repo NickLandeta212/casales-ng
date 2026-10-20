@@ -14,7 +14,7 @@
           <ul class="nav flex-column">
             <ng-container *ngFor="let child of item.children">
               <li class="nav-item" *ngIf="canShow(child)">
-                <a [routerLink]="getLink(child)" [attr.target]="child.target || null" routerLinkActive="active" class="nav-link">
+                <a [routerLink]="getLink(child)" routerLinkActive="active" class="nav-link">
                   <i [class]="child.icon"></i> {{ child.title }}
                 </a>
               </li>
