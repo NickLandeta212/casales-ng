@@ -1,0 +1,115 @@
+<div class="panel-container">
+  <header class="panel-card panel-header">
+    <div>
+      <h1>Asambleas</h1>
+      <p *ngIf="esAdmin">Convoca asambleas con su orden del día. Se publica un comunicado y se envía la convocatoria en PDF por correo.</p>
+      <p *ngIf="!esAdmin">Convocatorias y resultados de las asambleas de copropietarios.</p>
+    </div>
+    <button *ngIf="esAdmin" class="btn" [class.primary]="!mostrarFormulario" type="button" (click)="mostrarFormulario = !mostrarFormulario">
+      <i class="bi" [class.bi-plus-lg]="!mostrarFormulario" [class.bi-x-lg]="mostrarFormulario"></i>
+      {{ mostrarFormulario ? 'Cerrar' : 'Convocar asamblea' }}
+    </button>
+  </header>
+
+  <p class="msg error" *ngIf="errorMessage" role="alert">{{ errorMessage }}</p>
+  <p class="msg success" *ngIf="successMessage" role="status">{{ successMessage }}</p>
+
+  <form *ngIf="esAdmin && mostrarFormulario" class="panel-card panel-form" (ngSubmit)="convocar()">
+    <h2>Nueva convocatoria</h2>
+    <div class="form-grid">
+      <label class="ancho">
+        <span>Título</span>
+        <input type="text" name="titulo" [(ngModel)]="nueva.titulo" maxlength="150" placeholder="Ej: Asamblea general ordinaria 2026" />
+      </label>
+      <label>
+        <span>Tipo</span>
+        <select name="tipo" [(ngModel)]="nueva.tipo">
+          <option value="ordinaria">Ordinaria</option>
+          <option value="extraordinaria">Extraordinaria</option>
+        </select>
+      </label>
+      <label>
+        <span>Fecha y hora</span>
+        <input type="datetime-local" name="fecha_hora" [(ngModel)]="nueva.fecha_hora" [min]="minFechaHora" />
+      </label>
+      <label>
+        <span>Lugar</span>
+        <input type="text" name="lugar" [(ngModel)]="nueva.lugar" maxlength="150" />
+      </label>
+    </div>
+
+    <fieldset class="orden">
+      <legend>Orden del día</legend>
+      <div class="punto" *ngFor="let punto of nueva.puntos; let i = index; trackBy: trackIndex">
+        <span class="numero">{{ i + 1 }}.</span>
+        <input type="text" [name]="'punto' + i" [(ngModel)]="nueva.puntos[i]" maxlength="300" [attr.aria-label]="'Punto ' + (i + 1)" />
+        <button class="btn small" type="button" (click)="quitarPunto(i)" [attr.aria-label]="'Quitar punto ' + (i + 1)" [disabled]="nueva.puntos.length === 1">
+          <i class="bi bi-trash"></i>
+        </button>
+      </div>
+      <button class="btn small" type="button" (click)="agregarPunto()" [disabled]="nueva.puntos.length >= 20"><i class="bi bi-plus"></i> Agregar punto</button>
+    </fieldset>
+
+    <div class="opciones">
+      <label class="check"><input type="checkbox" name="publicar" [(ngModel)]="nueva.publicar_comunicado" /> Publicar en Comunicados (fijado)</label>
+      <label class="check"><input type="checkbox" name="correo" [(ngModel)]="nueva.enviar_correo" /> Enviar por correo con el PDF</label>
+    </div>
+    <div class="form-actions">
+      <button class="btn primary" type="submit" [disabled]="!puedeConvocar || guardando">{{ guardando ? 'Convocando...' : 'Convocar' }}</button>
+    </div>
+  </form>
+
+  <section class="panel-card">
+    <h2>Próximas</h2>
+    <div class="lista" *ngIf="proximas.length; else sinProximas">
+      <article class="asamblea" *ngFor="let asamblea of proximas">
+        <div class="fecha">
+          <strong>{{ asamblea.fecha_hora | date:'dd':'-0500' }}</strong>
+          <span>{{ mesCorto(asamblea.fecha_hora) }}</span>
+        </div>
+        <div class="detalle">
+          <h3>{{ asamblea.titulo }}</h3>
+          <p class="meta">
+            <span class="pill review">{{ asamblea.tipo === 'ordinaria' ? 'Ordinaria' : 'Extraordinaria' }}</span>
+            {{ asamblea.fecha_hora | date:'dd/MM/yyyy, HH:mm':'-0500' }} · {{ asamblea.lugar }}
+          </p>
+          <ol>
+            <li *ngFor="let punto of asamblea.orden_del_dia">{{ punto }}</li>
+          </ol>
+          <small class="motivo" *ngIf="esAdmin && asamblea.correos_enviados">Convocatoria enviada a {{ asamblea.correos_enviados }} correo(s).</small>
+        </div>
+        <div class="acciones">
+          <button class="btn small" type="button" (click)="descargar(asamblea)"><i class="bi bi-file-earmark-pdf"></i> Convocatoria</button>
+          <ng-container *ngIf="esAdmin">
+            <button class="btn small primary" type="button" [disabled]="procesandoId !== null" (click)="cerrar(asamblea, 'realizada')">Marcar realizada</button>
+            <button class="btn small danger" type="button" [disabled]="procesandoId !== null" (click)="cerrar(asamblea, 'cancelada')">Cancelar</button>
+          </ng-container>
+        </div>
+      </article>
+    </div>
+    <ng-template #sinProximas>
+      <div class="empty-state">
+        <i class="bi bi-people"></i>
+        <strong>{{ cargando ? 'Cargando...' : 'No hay asambleas convocadas' }}</strong>
+      </div>
+    </ng-template>
+  </section>
+
+  <section class="panel-card" *ngIf="anteriores.length">
+    <h2>Anteriores</h2>
+    <div class="table-wrapper">
+      <table class="panel-table">
+        <thead><tr><th>Fecha</th><th>Asamblea</th><th>Estado</th><th>Resultado</th><th></th></tr></thead>
+        <tbody>
+          <tr *ngFor="let asamblea of anteriores">
+            <td>{{ asamblea.fecha_hora | date:'dd/MM/yyyy':'-0500' }}</td>
+            <td>{{ asamblea.titulo }}<small class="motivo">{{ asamblea.lugar }}</small></td>
+            <td><span class="pill" [class.ok]="asamblea.estado === 'realizada'" [class.bad]="asamblea.estado === 'cancelada'">{{ estados[asamblea.estado] }}</span></td>
+            <td class="resultado">{{ asamblea.resultado }}</td>
+            <td><button class="btn small" type="button" (click)="descargar(asamblea)" aria-label="Descargar convocatoria"><i class="bi bi-file-earmark-pdf"></i></button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>

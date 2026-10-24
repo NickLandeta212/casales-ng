@@ -40,7 +40,7 @@ export class SidebarMenuComponent implements OnInit {
       title: 'Solicitudes',
       icon: 'bi bi-chat-left-text',
       link: '/dashboard/solicitudes',
-      roles: CASALES_RESIDENT_ROLES
+      roles: TODOS
     },
     {
       title: 'Encuestas',
@@ -141,6 +141,13 @@ export class SidebarMenuComponent implements OnInit {
       permission: 'control_acceso'
     },
     {
+      title: 'Bitácora de guardia',
+      icon: 'bi bi-journal-check',
+      link: '/dashboard/bitacora',
+      roles: CASALES_SECURITY_ROLES,
+      permission: 'control_acceso'
+    },
+    {
       title: 'Visitas y paquetes',
       icon: 'bi bi-box-seam',
       link: '/dashboard/porteria',
@@ -220,7 +227,19 @@ export class SidebarMenuComponent implements OnInit {
       children: [
         { title: 'Finanzas del conjunto', icon: 'bi bi-bank', link: '/dashboard/finanzas/conjunto', roles: CASALES_ADMIN_ROLES, permission: 'gastos_comunes' },
         { title: 'Finanzas de torres', icon: 'bi bi-building-check', link: '/dashboard/finanzas/torres', roles: ['tesorero'], permission: 'gastos_comunes' },
-        { title: 'Cargos del mes', icon: 'bi bi-receipt', link: '/dashboard/cargos', roles: CASALES_FINANCE_ROLES, permission: 'cargos' }
+        { title: 'Cargos del mes', icon: 'bi bi-receipt', link: '/dashboard/cargos', roles: CASALES_FINANCE_ROLES, permission: 'cargos' },
+        { title: 'Egresos', icon: 'bi bi-cart-check', link: '/dashboard/egresos', roles: CASALES_FINANCE_ROLES, permission: 'egresos' },
+        { title: 'Presupuesto', icon: 'bi bi-pie-chart', link: '/dashboard/presupuesto', roles: CASALES_FINANCE_ROLES, permission: 'presupuesto' }
+      ]
+    },
+    {
+      title: 'Administración',
+      icon: 'bi bi-briefcase',
+      roles: TODOS,
+      children: [
+        { title: 'Asambleas', icon: 'bi bi-people', link: '/dashboard/asambleas', roles: CASALES_RESIDENT_ROLES },
+        { title: 'Documentos', icon: 'bi bi-folder2-open', link: '/dashboard/documentos', roles: TODOS },
+        { title: 'Mantenimientos', icon: 'bi bi-tools', link: '/dashboard/mantenimientos', roles: CASALES_ADMIN_ROLES, permission: 'mantenimientos' }
       ]
     },
     {

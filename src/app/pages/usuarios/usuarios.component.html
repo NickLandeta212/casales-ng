@@ -99,7 +99,7 @@
 				<div class="detail-item">
 					<label>Rol</label>
 					<select class="field-select" [formControl]="editRoleControl">
-						<option value="admin_general">Admin general</option>
+						<option value="admin_general" *ngIf="esAdminGeneral">Admin general</option>
 						<option value="admin_conjunto">Admin conjunto</option>
 						<option value="guardia">Guardia</option>
 						<option value="tesorero">Tesorero</option>
@@ -154,10 +154,13 @@
 					</ul>
 				</div>
 
-				<div class="detail-actions">
+				<div class="detail-actions" *ngIf="puedeGestionar(usuarioSeleccionado); else soloAdminGeneral">
 					<button class="btn-action btn-primary" (click)="guardarAutorizaciones()">Guardar cambios</button>
 					<button class="btn-action btn-ghost" (click)="eliminarUsuarioSeleccionado()">Eliminar usuario</button>
 				</div>
+				<ng-template #soloAdminGeneral>
+					<p class="field-hint">Solo el administrador general puede modificar o eliminar a otro administrador general.</p>
+				</ng-template>
 
 				<div class="detail-item" *ngIf="usuarioSeleccionado.departamentos.length > 0">
 					<label>Departamentos</label>
@@ -210,7 +213,7 @@
 						</td>
 						<td>
 							<select class="field-select" [formControl]="createRoleControl">
-								<option value="admin_general">Admin general</option>
+								<option value="admin_general" *ngIf="esAdminGeneral">Admin general</option>
 								<option value="admin_conjunto">Admin conjunto</option>
 								<option value="guardia">Guardia</option>
 								<option value="tesorero">Tesorero</option>

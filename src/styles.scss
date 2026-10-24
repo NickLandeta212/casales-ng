@@ -117,7 +117,8 @@
 .personas-table-wrapper,
 .usuarios-table-wrapper,
 .multas-table-wrapper {
-  overflow: hidden;
+  /* En el celular las tablas se desplazan de lado en vez de cortarse. */
+  overflow-x: auto;
 }
 
 .table-section thead,

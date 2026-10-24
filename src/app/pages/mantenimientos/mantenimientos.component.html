@@ -1,0 +1,159 @@
+<div class="panel-container">
+  <header class="panel-card panel-header">
+    <div>
+      <h1>Mantenimientos</h1>
+      <p>
+        Programa los mantenimientos del conjunto (ascensores, bombas, jardines, extintores). La app avisa por correo a la
+        administración cuando se acerca la fecha y, al marcarlos realizados, programa la siguiente.
+      </p>
+    </div>
+    <button class="btn primary" type="button" (click)="mostrarFormulario && !editandoId ? (mostrarFormulario = false) : nuevo()">
+      <i class="bi bi-plus-lg"></i> Programar mantenimiento
+    </button>
+  </header>
+
+  <p class="msg error" *ngIf="errorMessage" role="alert">{{ errorMessage }}</p>
+  <p class="msg success" *ngIf="successMessage" role="status">{{ successMessage }}</p>
+
+  <div class="stats-row">
+    <div class="stat" [class.alerta]="atrasados > 0"><span>Atrasados</span><strong>{{ atrasados }}</strong></div>
+    <div class="stat"><span>Próximos 30 días</span><strong>{{ proximos30 }}</strong></div>
+  </div>
+
+  <form *ngIf="mostrarFormulario" class="panel-card panel-form" [formGroup]="form" (ngSubmit)="guardar()">
+    <h2>{{ editandoId ? 'Editar mantenimiento' : 'Programar mantenimiento' }}</h2>
+    <div class="form-grid">
+      <label class="ancho">
+        <span>Qué se hace</span>
+        <input type="text" formControlName="titulo" maxlength="150" placeholder="Ej: Revisión de ascensores" />
+      </label>
+      <label>
+        <span>Área o equipo (opcional)</span>
+        <input type="text" formControlName="area" maxlength="100" placeholder="Ej: Torre 1" />
+      </label>
+      <label>
+        <span>Proveedor (opcional)</span>
+        <select formControlName="proveedor_id">
+          <option [ngValue]="null">Sin proveedor</option>
+          <option *ngFor="let proveedor of proveedores" [ngValue]="proveedor.id">{{ proveedor.nombre }}</option>
+        </select>
+      </label>
+      <label>
+        <span>Frecuencia</span>
+        <select formControlName="frecuencia">
+          <option *ngFor="let key of frecuenciaKeys" [value]="key">{{ frecuencias[key] }}</option>
+        </select>
+      </label>
+      <label>
+        <span>Próxima fecha</span>
+        <input type="date" formControlName="proxima_fecha" />
+      </label>
+      <label>
+        <span>Avisar con (días de anticipación)</span>
+        <input type="number" formControlName="dias_aviso" min="0" max="60" />
+      </label>
+      <label>
+        <span>Costo estimado (opcional)</span>
+        <input type="number" formControlName="costo_estimado" min="0" step="0.01" />
+      </label>
+      <label class="ancho">
+        <span>Notas (opcional)</span>
+        <textarea formControlName="descripcion" rows="2" maxlength="1000"></textarea>
+      </label>
+    </div>
+    <div class="form-actions">
+      <button class="btn" type="button" (click)="mostrarFormulario = false; editandoId = null">Cancelar</button>
+      <button class="btn primary" type="submit" [disabled]="form.invalid || guardando">{{ guardando ? 'Guardando...' : 'Guardar' }}</button>
+    </div>
+  </form>
+
+  <section class="panel-card" *ngIf="realizando">
+    <h2>Marcar realizado: {{ realizando.titulo }}</h2>
+    <div class="panel-form form-grid">
+      <label>
+        <span>Fecha en que se hizo</span>
+        <input type="date" [(ngModel)]="ejecucion.fecha" />
+      </label>
+      <label>
+        <span>Costo (opcional)</span>
+        <input type="number" [(ngModel)]="ejecucion.costo" min="0" step="0.01" />
+      </label>
+      <label class="ancho">
+        <span>Observaciones (opcional)</span>
+        <input type="text" [(ngModel)]="ejecucion.observaciones" maxlength="1000" />
+      </label>
+      <div class="form-actions ancho">
+        <button class="btn" type="button" (click)="realizando = null">Cancelar</button>
+        <button class="btn primary" type="button" [disabled]="!ejecucion.fecha || guardando" (click)="confirmarRealizado()">
+          {{ guardando ? 'Guardando...' : 'Registrar' }}
+        </button>
+      </div>
+    </div>
+    <small class="motivo">Si hubo un gasto, regístralo también en Egresos para que cuente en Finanzas y en el presupuesto.</small>
+  </section>
+
+  <section class="panel-card">
+    <div class="card-head">
+      <h2>Calendario</h2>
+      <label class="check" *ngIf="inactivos">
+        <input type="checkbox" [(ngModel)]="mostrarInactivos" /> Mostrar inactivos ({{ inactivos }})
+      </label>
+    </div>
+
+    <div class="table-wrapper" *ngIf="visibles.length; else vacio">
+      <table class="panel-table">
+        <thead>
+          <tr><th>Mantenimiento</th><th>Frecuencia</th><th>Próxima fecha</th><th>Proveedor</th><th class="num">Costo est.</th><th>Acciones</th></tr>
+        </thead>
+        <tbody>
+          <ng-container *ngFor="let m of visibles">
+            <tr>
+              <td>
+                {{ m.titulo }}
+                <small class="motivo" *ngIf="m.area || m.ultima_ejecucion">
+                  {{ m.area }}<ng-container *ngIf="m.area && m.ultima_ejecucion"> · </ng-container>
+                  <ng-container *ngIf="m.ultima_ejecucion">Último: {{ m.ultima_ejecucion | date:'dd/MM/yyyy' }}</ng-container>
+                </small>
+              </td>
+              <td>{{ frecuencias[m.frecuencia] }}</td>
+              <td>
+                {{ m.proxima_fecha | date:'dd/MM/yyyy' }}
+                <span class="pill" [ngClass]="estadoClase(m)">{{ cuando(m) }}</span>
+              </td>
+              <td>{{ m.proveedor_nombre || '-' }}</td>
+              <td class="num">{{ m.costo_estimado !== null ? (m.costo_estimado | currency:'USD') : '-' }}</td>
+              <td>
+                <div class="acciones">
+                  <button *ngIf="m.activo" class="btn primary small" type="button" (click)="abrirRealizado(m)">Realizado</button>
+                  <button class="btn small" type="button" (click)="editar(m)">Editar</button>
+                  <button class="btn small" type="button" (click)="verHistorial(m)" [attr.aria-expanded]="historialDe === m.id">Historial</button>
+                  <button class="btn small" [class.danger]="m.activo" type="button" (click)="cambiarActivo(m)">{{ m.activo ? 'Desactivar' : 'Activar' }}</button>
+                </div>
+              </td>
+            </tr>
+            <tr *ngIf="historialDe === m.id" class="historial">
+              <td colspan="6">
+                <span *ngIf="!historial.length">Aún no se ha registrado ninguna ejecución.</span>
+                <ul *ngIf="historial.length">
+                  <li *ngFor="let e of historial">
+                    <strong>{{ e.fecha | date:'dd/MM/yyyy' }}</strong>
+                    <ng-container *ngIf="e.costo !== null"> · {{ e.costo | currency:'USD' }}</ng-container>
+                    <ng-container *ngIf="e.observaciones"> · {{ e.observaciones }}</ng-container>
+                    <small> ({{ e.registrado_por_nombre || 'Sistema' }})</small>
+                  </li>
+                </ul>
+              </td>
+            </tr>
+          </ng-container>
+        </tbody>
+      </table>
+    </div>
+    <ng-template #vacio>
+      <div class="empty-state">
+        <i class="bi bi-tools"></i>
+        <strong>{{ cargando ? 'Cargando...' : 'No hay mantenimientos programados' }}</strong>
+        <span *ngIf="!cargando">Usa "Programar mantenimiento" para crear el primero.</span>
+      </div>
+    </ng-template>
+  </section>
+</div>

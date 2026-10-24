@@ -39,19 +39,6 @@
   }
 }
 
-.barra {
-  height: 6px;
-  border-radius: 999px;
-  background: var(--sl-color-border-soft);
-  overflow: hidden;
-
-  i {
-    display: block;
-    height: 100%;
-    background: var(--sl-color-primary);
-  }
-}
-
 @media (max-width: 1000px) {
   .emitir-form .campos {
     grid-template-columns: 1fr 1fr;

@@ -9,6 +9,7 @@ import { concatMap, toArray } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { TorresService } from '../../services/torres.service';
 import { UsuarioDraft, UsuariosService } from '../../services/usuarios.service';
+import { AuthService } from '../../auth/services/auth.service';
 
 interface UsuarioItem {
   id: number;
@@ -113,8 +114,18 @@ export class UsuariosComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private torresService: TorresService,
-    private usuariosService: UsuariosService
+    private usuariosService: UsuariosService,
+    private authService: AuthService
   ) { }
+
+  // El admin del conjunto gestiona usuarios, pero no crea ni modifica administradores generales.
+  get esAdminGeneral(): boolean {
+    return this.authService.getUserRole() === 'admin_general';
+  }
+
+  puedeGestionar(usuario: UsuarioItem): boolean {
+    return this.esAdminGeneral || usuario.role !== 'admin_general';
+  }
 
   ngOnInit(): void {
     this.editRoleControl.valueChanges.subscribe((role) => this.aplicarPermisosPorRol(role || 'tesorero'));
@@ -192,7 +203,6 @@ export class UsuariosComponent implements OnInit {
       error: (error) => {
         this.creandoUsuario = false;
         this.errorMessage = error?.error?.message || 'No se pudo crear el usuario ni enviar la confirmacion.';
-        console.error('Error creando usuario', error);
       }
     });
   }
@@ -300,7 +310,7 @@ export class UsuariosComponent implements OnInit {
         this.cargando = false;
       },
       error: (error) => {
-        console.error('Error cargando usuarios', error);
+        this.errorMessage = error?.error?.message || 'No se pudieron cargar los usuarios.';
         this.listaUsuarios = [];
         this.usuarioSeleccionado = null;
         this.cargando = false;
@@ -366,8 +376,12 @@ export class UsuariosComponent implements OnInit {
       ...(password ? { password } : {})
     };
 
+    this.errorMessage = '';
+    this.successMessage = '';
+
     this.usuariosService.updateUsuario(usuarioActual.id, payload).subscribe({
       next: (usuarios) => {
+        this.successMessage = `Cambios de ${usuarioActual.nombre} guardados.`;
         const actualizado = usuarios.find((usuario) => Number(usuario.id) === usuarioActual.id);
         if (actualizado) {
           this.usuarioSeleccionado = {
@@ -396,7 +410,7 @@ export class UsuariosComponent implements OnInit {
         }
       },
       error: (error) => {
-        console.error('Error guardando autorizaciones', error);
+        this.errorMessage = error?.error?.message || 'No se pudieron guardar los cambios.';
       }
     });
   }
@@ -413,8 +427,12 @@ export class UsuariosComponent implements OnInit {
       return;
     }
 
+    this.errorMessage = '';
+    this.successMessage = '';
+
     this.usuariosService.deleteUsuario(usuarioActual.id).subscribe({
       next: (usuarios) => {
+        this.successMessage = `Usuario ${usuarioActual.nombre} eliminado.`;
         this.listaUsuarios = usuarios.map((usuario: any) => ({
           id: Number(usuario.id),
           username: this.obtenerUsernameUsuario(usuario),
@@ -430,7 +448,7 @@ export class UsuariosComponent implements OnInit {
         this.usuarioSeleccionado = null;
       },
       error: (error) => {
-        console.error('Error eliminando usuario', error);
+        this.errorMessage = error?.error?.message || 'No se pudo eliminar el usuario.';
       }
     });
   }

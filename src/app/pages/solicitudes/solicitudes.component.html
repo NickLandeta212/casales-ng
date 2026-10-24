@@ -1,13 +1,22 @@
 <div class="solicitudes-container">
   <header class="solicitudes-card solicitudes-header">
     <h1>Solicitudes y reclamos</h1>
-    <p *ngIf="esResidente">Reporta un daño, un reclamo o una sugerencia y sigue su estado aquí.</p>
-    <p *ngIf="!esResidente">Solicitudes que envían los residentes desde su cuenta.</p>
+    <p *ngIf="puedeEnviar">Reporta un daño, un reclamo o una sugerencia, adjunta una foto como evidencia y sigue su estado aquí.</p>
+    <p *ngIf="!puedeEnviar">Solicitudes de los residentes, la tesorería y la guardia. Atiendes las de áreas comunales y de todo el conjunto; las de cada torre las atiende su tesorero.</p>
   </header>
 
-  <div class="solicitudes-layout" [class.una-columna]="!esResidente">
-    <form *ngIf="esResidente" class="solicitudes-card solicitudes-form" [formGroup]="form" (ngSubmit)="enviar()">
+  <div class="solicitudes-layout" [class.una-columna]="!puedeEnviar">
+    <form *ngIf="puedeEnviar" class="solicitudes-card solicitudes-form" [formGroup]="form" (ngSubmit)="enviar()">
       <h2>Nueva solicitud</h2>
+
+      <label>
+        <span>¿Para quién es?</span>
+        <select formControlName="destino">
+          <option [ngValue]="null" disabled>Elige a quién va dirigida</option>
+          <option *ngFor="let destino of destinos" [ngValue]="destino">{{ destinoLabel(destino) }}</option>
+        </select>
+        <small class="ayuda">Lo de áreas comunales o de todo el conjunto lo atiende la administración; lo de una torre, su tesorero.</small>
+      </label>
 
       <label>
         <span>Tipo</span>
@@ -23,8 +32,20 @@
 
       <label>
         <span>Descripción</span>
-        <textarea formControlName="descripcion" rows="6" maxlength="2000" placeholder="Cuéntanos qué pasa y dónde"></textarea>
+        <textarea formControlName="descripcion" rows="6" maxlength="2000" placeholder="Cuéntanos qué pasó, dónde y cuándo"></textarea>
       </label>
+
+      <label *ngIf="!foto">
+        <span>Foto de evidencia (opcional)</span>
+        <input type="file" accept="image/*" (change)="elegirFoto($event)" />
+      </label>
+
+      <div class="fotos" *ngIf="foto">
+        <figure>
+          <img [src]="foto" alt="Foto de evidencia" />
+          <button type="button" class="quitar" (click)="quitarFoto()" aria-label="Quitar foto"><i class="bi bi-x"></i></button>
+        </figure>
+      </div>
 
       <p class="msg error" *ngIf="errorMessage">{{ errorMessage }}</p>
       <p class="msg success" *ngIf="successMessage">{{ successMessage }}</p>
@@ -44,7 +65,7 @@
         </button>
       </div>
 
-      <p class="msg error" *ngIf="!esResidente && errorMessage && !atendiendo">{{ errorMessage }}</p>
+      <p class="msg error" *ngIf="!puedeEnviar && errorMessage && !atendiendo">{{ errorMessage }}</p>
       <p class="solicitudes-card empty" *ngIf="cargando">Cargando solicitudes...</p>
       <p class="solicitudes-card empty" *ngIf="!cargando && !solicitudesFiltradas.length">No hay solicitudes en esta vista.</p>
 
@@ -56,17 +77,24 @@
 
         <p class="solicitud-meta">
           {{ tipoLabels[solicitud.tipo] }} · {{ solicitud.created_at | date:'dd/MM/yyyy HH:mm' }}
-          <ng-container *ngIf="!esResidente"> · Torre {{ solicitud.torre_numero }}, {{ solicitud.departamento_numero }}</ng-container>
+          <ng-container *ngIf="!esResidente"> · De: {{ origen(solicitud) }}</ng-container>
+          <br />Para: {{ destinoLabel(solicitud) }}
         </p>
 
         <p class="solicitud-texto">{{ solicitud.descripcion }}</p>
+
+        <div class="evidencia" *ngIf="solicitud.fotos.length">
+          <button type="button" *ngFor="let foto of solicitud.fotos" (click)="verFoto($event, foto)">
+            <i class="bi bi-image"></i> Ver foto
+          </button>
+        </div>
 
         <div class="respuesta" *ngIf="solicitud.respuesta && atendiendo?.id !== solicitud.id">
           <strong>Respuesta<ng-container *ngIf="solicitud.atendido_por_nombre"> de {{ solicitud.atendido_por_nombre }}</ng-container></strong>
           <p class="solicitud-texto">{{ solicitud.respuesta }}</p>
         </div>
 
-        <ng-container *ngIf="puedeAtender">
+        <ng-container *ngIf="solicitud.puede_atender">
           <div class="solicitud-acciones" *ngIf="atendiendo?.id !== solicitud.id">
             <button type="button" (click)="abrirAtencion(solicitud)">{{ solicitud.respuesta ? 'Cambiar respuesta' : 'Atender' }}</button>
           </div>
@@ -80,7 +108,7 @@
             </label>
 
             <label>
-              <span>Respuesta para el residente</span>
+              <span>Respuesta</span>
               <textarea [(ngModel)]="borradorRespuesta" rows="4" maxlength="2000"></textarea>
             </label>
 

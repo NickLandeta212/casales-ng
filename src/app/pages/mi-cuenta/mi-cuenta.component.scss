@@ -1,5 +1,7 @@
 .cuenta-container {
   display: grid;
+  // minmax(0, 1fr): las tarjetas no se salen de la pantalla en el celular.
+  grid-template-columns: minmax(0, 1fr);
   gap: 16px;
   min-height: calc(100vh - 56px);
   padding: 24px;
@@ -13,6 +15,7 @@
   border-radius: var(--sl-radius-lg);
   background: #fff;
   box-shadow: var(--sl-shadow-sm);
+  min-width: 0;
 
   h2 {
     margin: 0;

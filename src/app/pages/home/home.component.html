@@ -1,15 +1,14 @@
 <div class="home-container">
-  <div class="home-header">
+  <div class="home-header" [class.sin-resumen]="!esGestion">
     <div class="welcome-copy">
       <span class="home-kicker">Casales San Pedro</span>
       <h1>Bienvenido, {{ userName }}</h1>
       <p class="subtitle">
-        Vista rapida del sistema y actividad reciente
-        <span *ngIf="authorizedTorreNumeros.length > 0">de Torre {{ authorizedTorreNumeros.join(', Torre ') }}</span>.
+        Vista rápida del conjunto y actividad reciente<span *ngIf="!esAdmin && authorizedTorreNumeros.length > 0"> de Torre {{ authorizedTorreNumeros.join(', Torre ') }}</span>.
       </p>
     </div>
-    <div class="welcome-summary">
-      <span class="summary-label">Gestion actual</span>
+    <div class="welcome-summary" *ngIf="esGestion">
+      <span class="summary-label">Gestión actual</span>
       <strong>{{ totalDepartamentos }}</strong>
       <span>departamentos activos</span>
     </div>
@@ -69,31 +68,13 @@
     </section>
   </ng-container>
 
-  <section class="executive-grid" aria-label="Indicadores gerenciales" *ngIf="!indicadores">
-    <article class="executive-card">
-      <span>Salud financiera</span>
-      <strong>{{ financialHealth }}%</strong>
-      <div class="progress-track"><i [style.width.%]="financialHealth"></i></div>
-      <small>Indicador estimado con base en departamentos y multas registradas.</small>
-    </article>
-    <article class="executive-card">
-      <span>Ingreso mensual base</span>
-      <strong>{{ estimatedMonthlyIncome | currency:'USD':'symbol':'1.0-2' }}</strong>
-      <small>Preparado para alícuotas, cuentas por cobrar y presupuesto.</small>
-    </article>
-    <article class="executive-card">
-      <span>Cartera por revisar</span>
-      <strong>{{ estimatedPendingIncome | currency:'USD':'symbol':'1.0-2' }}</strong>
-      <small>Mora, multas y recordatorios quedarán conectados a reportes.</small>
-    </article>
-    <article class="executive-card">
-      <span>Herramientas activas</span>
-      <strong>{{ managementReadiness }}%</strong>
-      <small>{{ herramientasActivas }} herramientas disponibles para operar el conjunto.</small>
-    </article>
-  </section>
+  <nav class="accesos-rapidos" *ngIf="esCondomino" aria-label="Accesos rápidos">
+    <a routerLink="/dashboard/mi-cuenta"><i class="bi bi-wallet2"></i> Mi cuenta y pagos</a>
+    <a routerLink="/dashboard/porteria"><i class="bi bi-box-seam"></i> Visitas y paquetes</a>
+    <a routerLink="/dashboard/documentos"><i class="bi bi-folder2-open"></i> Documentos</a>
+  </nav>
 
-  <section class="alerts-grid" aria-label="Alertas operativas">
+  <section class="alerts-grid" aria-label="Alertas operativas" *ngIf="alertasOperativas.length">
     <article class="alert-card" *ngFor="let alerta of alertasOperativas" [class.warning]="alerta.level === 'warning'" [class.info]="alerta.level === 'info'">
       <span>{{ alerta.title }}</span>
       <strong>{{ alerta.value }}</strong>
@@ -114,7 +95,22 @@
     </div>
   </section>
 
-  <div class="stats-grid">
+  <section class="agenda-grid" *ngIf="proximaAsamblea || mantenimientosProximos.length">
+    <a class="activity-card agenda" *ngIf="proximaAsamblea as asamblea" routerLink="/dashboard/asambleas">
+      <h3><i class="bi bi-people"></i> Próxima asamblea</h3>
+      <strong>{{ asamblea.titulo }}</strong>
+      <small>{{ asamblea.fecha_hora | date:'dd/MM/yyyy, HH:mm':'-0500' }} · {{ asamblea.lugar }}</small>
+    </a>
+    <a class="activity-card agenda" *ngIf="mantenimientosProximos.length" routerLink="/dashboard/mantenimientos">
+      <h3><i class="bi bi-tools"></i> Mantenimientos próximos</h3>
+      <div class="agenda-item" *ngFor="let m of mantenimientosProximos" [class.atrasado]="m.dias_restantes < 0">
+        <span>{{ m.titulo }}</span>
+        <small>{{ textoMantenimiento(m) }}</small>
+      </div>
+    </a>
+  </section>
+
+  <div class="stats-grid" *ngIf="esGestion">
     <div class="stat-card">
       <div class="stat-icon torres-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24">
@@ -196,7 +192,7 @@
     </div>
   </div>
 
-  <div class="activity-section">
+  <div class="activity-section" *ngIf="esGestion || esCondomino">
     <div class="activity-card reservations-calendar-card">
       <div class="calendar-card-header">
         <div>
@@ -248,7 +244,7 @@
       </p>
     </div>
 
-    <div class="activity-card">
+    <div class="activity-card" *ngIf="esGestion">
       <h3>Multas registradas</h3>
       <p class="activity-message" *ngIf="multasRecientes.length === 0">
         No hay multas registradas.

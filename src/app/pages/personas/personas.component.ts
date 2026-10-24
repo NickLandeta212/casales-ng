@@ -20,6 +20,9 @@ interface DepartamentoOption {
 })
 export class PersonasComponent implements OnInit {
   vistaActual: 'list' | 'create' = 'list';
+  errorMessage = '';
+  successMessage = '';
+  guardando = false;
   personaSeleccionada: Persona | null = null;
   personaSeleccionadaId: string | number | null = null;
 
@@ -88,8 +91,8 @@ export class PersonasComponent implements OnInit {
         this.cargando = false;
       },
       error: (err) => {
-        console.error('Error cargando personas', err);
         this.cargando = false;
+        this.errorMessage = err?.error?.message || 'No se pudieron cargar las personas.';
       }
     });
   }
@@ -208,7 +211,12 @@ export class PersonasComponent implements OnInit {
   }
 
   guardarEdicionPersona() {
-    if (this.personaSeleccionadaId === null || !this.formularioEdicionValido()) {
+    if (this.personaSeleccionadaId === null || this.guardando) {
+      return;
+    }
+
+    if (!this.formularioEdicionValido()) {
+      this.mostrarError('Completa todos los campos antes de guardar.');
       return;
     }
 
@@ -221,26 +229,32 @@ export class PersonasComponent implements OnInit {
       tipoResidencia: this.editTipoControl.value || 'dueno'
     };
 
+    this.iniciarGuardado();
     this.personasService.updatePersona(this.personaSeleccionadaId, personaActualizada).subscribe({
-      error: (err) => {
-        console.error('Error actualizando persona', err);
-      }
+      next: () => this.mostrarExito('Cambios guardados.'),
+      error: (err) => this.mostrarError(err?.error?.message || 'No se pudieron guardar los cambios.')
     });
   }
 
   eliminarPersonaSeleccionada() {
-    if (this.personaSeleccionadaId === null) {
+    if (this.personaSeleccionadaId === null || this.guardando) {
       return;
     }
 
+    const nombre = this.personaSeleccionada ? this.getNombreCompleto(this.personaSeleccionada) : 'esta persona';
+
+    if (!window.confirm(`Eliminar a ${nombre}? Esta acción no se puede deshacer.`)) {
+      return;
+    }
+
+    this.iniciarGuardado();
     this.personasService.deletePersona(this.personaSeleccionadaId).subscribe({
       next: () => {
         this.personaSeleccionada = null;
         this.personaSeleccionadaId = null;
+        this.mostrarExito(`${nombre} fue eliminada.`);
       },
-      error: (err) => {
-        console.error('Error eliminando persona', err);
-      }
+      error: (err) => this.mostrarError(err?.error?.message || 'No se pudo eliminar la persona.')
     });
   }
 
@@ -257,7 +271,12 @@ export class PersonasComponent implements OnInit {
   }
 
   crearPersona() {
+    if (this.guardando) {
+      return;
+    }
+
     if (!this.formularioValido()) {
+      this.mostrarError('Completa todos los campos para registrar a la persona.');
       return;
     }
 
@@ -270,15 +289,32 @@ export class PersonasComponent implements OnInit {
       tipoResidencia: this.tipoControl.value || 'dueno'
     };
 
+    this.iniciarGuardado();
     this.personasService.addPersona(payload).subscribe({
       next: () => {
         this.limpiarFormulario();
         this.vistaActual = 'list';
+        this.mostrarExito(`${payload.nombres} ${payload.apellidos} fue registrada.`);
       },
-      error: (err) => {
-        console.error('Error creando persona', err);
-      }
+      error: (err) => this.mostrarError(err?.error?.message || 'No se pudo registrar la persona.')
     });
+  }
+
+  // Mensajes de resultado: toda accion avisa si funciono o por que fallo.
+  private iniciarGuardado(): void {
+    this.guardando = true;
+    this.errorMessage = '';
+    this.successMessage = '';
+  }
+
+  private mostrarExito(mensaje: string): void {
+    this.guardando = false;
+    this.successMessage = mensaje;
+  }
+
+  private mostrarError(mensaje: string): void {
+    this.guardando = false;
+    this.errorMessage = mensaje;
   }
 
   private formularioValido(): boolean {

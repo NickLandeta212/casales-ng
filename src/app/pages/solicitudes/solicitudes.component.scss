@@ -1,3 +1,5 @@
+@use '../../shared/styles/fotos';
+
 .solicitudes-container {
   min-height: calc(100vh - 56px);
   padding: 24px;
@@ -71,6 +73,12 @@
 
   textarea {
     resize: vertical;
+  }
+
+  // Evita que una opcion larga ensanche el formulario en el celular.
+  select {
+    width: 100%;
+    min-width: 0;
   }
 }
 
@@ -211,6 +219,22 @@ button {
   }
 }
 
+.ayuda {
+  font-weight: 400;
+  color: var(--sl-color-muted);
+}
+
+.evidencia {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+
+  i {
+    color: var(--sl-color-primary);
+  }
+}
+
 .solicitud-acciones {
   display: flex;
   flex-wrap: wrap;
@@ -232,6 +256,6 @@ button {
   }
 
   .solicitudes-layout {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }

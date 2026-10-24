@@ -1,0 +1,89 @@
+<div class="panel-container">
+  <header class="panel-card panel-header">
+    <div>
+      <h1>Presupuesto anual</h1>
+      <p>
+        Define cuánto se planea gastar en cada categoría y compáralo con lo gastado. Lo ejecutado sale de los egresos pagados;
+        lo comprometido, de los egresos por pagar.
+      </p>
+    </div>
+    <div class="filtros-head">
+      <select *ngIf="!esAdmin && torres.length > 1" [(ngModel)]="torreId" (ngModelChange)="cargar()" aria-label="Torre">
+        <option *ngFor="let torre of torres" [ngValue]="torre.id">Torre {{ torre.numero }}</option>
+      </select>
+      <select [(ngModel)]="anio" (ngModelChange)="cargar()" aria-label="Año">
+        <option *ngFor="let a of [anioActual + 1, anioActual, anioActual - 1, anioActual - 2]" [ngValue]="a">{{ a }}</option>
+      </select>
+    </div>
+  </header>
+
+  <p class="msg error" *ngIf="errorMessage" role="alert">{{ errorMessage }}</p>
+  <p class="msg success" *ngIf="successMessage" role="status">{{ successMessage }}</p>
+
+  <ng-container *ngIf="resumen as r">
+    <div class="stats-row">
+      <div class="stat"><span>Presupuesto {{ r.anio }}</span><strong>{{ r.totales.presupuesto | currency:'USD' }}</strong></div>
+      <div class="stat">
+        <span>Ejecutado</span><strong>{{ r.totales.ejecutado | currency:'USD' }}</strong>
+        <small *ngIf="r.totales.porcentaje !== null">{{ r.totales.porcentaje }}% del presupuesto</small>
+      </div>
+      <div class="stat"><span>Comprometido</span><strong>{{ r.totales.comprometido | currency:'USD' }}</strong></div>
+      <div class="stat" [class.alerta]="r.totales.disponible < 0"><span>Disponible</span><strong>{{ r.totales.disponible | currency:'USD' }}</strong></div>
+    </div>
+
+    <section class="panel-card">
+      <div class="card-head">
+        <h2>Por categoría</h2>
+        <div class="filtros">
+          <ng-container *ngIf="!editando">
+            <button class="btn primary" type="button" (click)="editando = true"><i class="bi bi-pencil"></i> Editar presupuesto</button>
+          </ng-container>
+          <ng-container *ngIf="editando">
+            <span class="total-editado">Total: {{ totalEditado | currency:'USD' }}</span>
+            <button class="btn" type="button" (click)="cargar()">Cancelar</button>
+            <button class="btn primary" type="button" [disabled]="guardando" (click)="guardar()">{{ guardando ? 'Guardando...' : 'Guardar' }}</button>
+          </ng-container>
+        </div>
+      </div>
+
+      <div class="table-wrapper">
+        <table class="panel-table">
+          <thead>
+            <tr>
+              <th>Categoría</th>
+              <th class="num">Presupuesto</th>
+              <th class="num">Ejecutado</th>
+              <th class="num">Comprometido</th>
+              <th class="num">Disponible</th>
+              <th>Avance</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let linea of r.categorias">
+              <td>{{ linea.label }}</td>
+              <td class="num">
+                <input *ngIf="editando; else montoFijo" class="monto" type="number" min="0" step="0.01"
+                  [(ngModel)]="montos[linea.categoria]" [attr.aria-label]="'Presupuesto de ' + linea.label" />
+                <ng-template #montoFijo>{{ linea.presupuesto | currency:'USD' }}</ng-template>
+              </td>
+              <td class="num">{{ linea.ejecutado | currency:'USD' }}</td>
+              <td class="num">{{ linea.comprometido | currency:'USD' }}</td>
+              <td class="num" [class.negativo]="linea.disponible < 0">{{ linea.disponible | currency:'USD' }}</td>
+              <td>
+                <div class="avance" *ngIf="linea.presupuesto > 0 || linea.ejecutado > 0">
+                  <div class="barra" [class.excedida]="excedido(linea)"><i [style.width.%]="anchoBarra(linea)"></i></div>
+                  <small>{{ linea.porcentaje !== null ? linea.porcentaje + '%' : 'Sin presupuesto' }}</small>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <small class="motivo" *ngIf="!r.totales.presupuesto && !editando">Aún no hay presupuesto para {{ r.anio }}. Usa "Editar presupuesto" para definirlo.</small>
+    </section>
+  </ng-container>
+
+  <div class="panel-card empty-state" *ngIf="!resumen && cargando">
+    <strong>Cargando...</strong>
+  </div>
+</div>

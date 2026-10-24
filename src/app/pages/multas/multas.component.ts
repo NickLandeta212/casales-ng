@@ -51,6 +51,7 @@ export class MultasComponent implements OnInit {
   approvingPagoId: string | number | null = null;
   errorMessage = '';
   successMessage = '';
+  guardandoMulta = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -325,7 +326,21 @@ export class MultasComponent implements OnInit {
   }
 
   crearMulta() {
+    if (this.guardandoMulta) {
+      return;
+    }
+
+    this.errorMessage = '';
+    this.successMessage = '';
+
     if (!this.formularioValido()) {
+      this.errorMessage = 'Completa torre, departamento, persona, cédula, motivo, descripción y monto.';
+      return;
+    }
+
+    // El registro necesita nombre y apellido por separado.
+    if (!this.parsePersonaCompleta(this.personaControl.value).personaApellidos) {
+      this.errorMessage = 'Escribe el nombre y el apellido de la persona (por ejemplo: Juan Pérez).';
       return;
     }
 
@@ -338,13 +353,17 @@ export class MultasComponent implements OnInit {
       monto: Number(this.montoControl.value),
     };
 
+    this.guardandoMulta = true;
     this.multasService.addMulta(payload).subscribe({
       next: () => {
+        this.guardandoMulta = false;
         this.limpiarFormulario();
         this.vistaActual = 'list';
+        this.successMessage = 'Multa registrada. El residente la verá en su cuenta para pagarla.';
       },
       error: (err) => {
-        console.error('Error creando multa', err);
+        this.guardandoMulta = false;
+        this.errorMessage = err?.error?.message || 'No se pudo registrar la multa.';
       }
     });
   }

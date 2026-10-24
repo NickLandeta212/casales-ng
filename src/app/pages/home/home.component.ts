@@ -9,9 +9,11 @@ import { catchError } from 'rxjs/operators';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { AuthService } from '../../auth/services/auth.service';
-import { GESTION, SEGURIDAD } from '../../auth/permisos';
+import { ADMINS, GESTION, SEGURIDAD } from '../../auth/permisos';
 import { Comunicado, ComunicadosService } from '../../services/comunicados.service';
 import { Indicadores, IndicadoresService } from '../../services/indicadores.service';
+import { Asamblea, AsambleasService } from '../../services/asambleas.service';
+import { Mantenimiento, MantenimientosService } from '../../services/mantenimientos.service';
 
 const MESES_CORTOS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
@@ -39,12 +41,25 @@ export class HomeComponent implements OnInit {
   totalUsuarios = 0;
   totalReservas = 0;
   totalMultas = 0;
-  herramientasActivas = 14;
-  financialHealth = 0;
-  estimatedMonthlyIncome = 0;
-  estimatedPendingIncome = 0;
-  automationQueue = 0;
-  managementReadiness = 0;
+
+  // Cada rol solo ve (y solo pide a la API) lo que le corresponde.
+  get esGestion(): boolean {
+    return this.authService.hasRole(GESTION);
+  }
+
+  get esAdmin(): boolean {
+    return this.authService.hasRole(ADMINS);
+  }
+
+  get esSeguridad(): boolean {
+    return this.authService.hasRole(SEGURIDAD);
+  }
+
+  get esCondomino(): boolean {
+    return this.authService.getUserRole() === 'condomino';
+  }
+  proximaAsamblea: Asamblea | null = null;
+  mantenimientosProximos: Mantenimiento[] = [];
 
   reservasRecientes: any[] = [];
   multasRecientes: any[] = [];
@@ -62,14 +77,16 @@ export class HomeComponent implements OnInit {
     private departamentosService: DepartamentosService,
     private authService: AuthService,
     private comunicadosService: ComunicadosService,
-    private indicadoresService: IndicadoresService
+    private indicadoresService: IndicadoresService,
+    private asambleasService: AsambleasService,
+    private mantenimientosService: MantenimientosService
   ) { }
 
   ngOnInit(): void {
     this.cargarEstadisticas();
 
     // Cifras reales de cobranza para administracion y tesoreria.
-    if (this.authService.hasRole(GESTION)) {
+    if (this.esGestion) {
       this.indicadoresService.obtener().pipe(catchError(() => of(null))).subscribe((indicadores) => {
         this.indicadores = indicadores;
       });
@@ -77,21 +94,45 @@ export class HomeComponent implements OnInit {
     this.comunicadosService.listar(3).pipe(catchError(() => of([]))).subscribe((comunicados) => {
       this.comunicadosRecientes = comunicados;
     });
+
+    if (this.esGestion || this.esCondomino) {
+      this.asambleasService.listar().pipe(catchError(() => of([] as Asamblea[]))).subscribe((asambleas) => {
+        this.proximaAsamblea = asambleas
+          .filter((a) => a.estado === 'convocada')
+          .sort((a, b) => a.fecha_hora.localeCompare(b.fecha_hora))[0] || null;
+      });
+    }
+
+    if (this.esAdmin) {
+      this.mantenimientosService.proximos().pipe(catchError(() => of([] as Mantenimiento[]))).subscribe((mantenimientos) => {
+        this.mantenimientosProximos = mantenimientos.slice(0, 5);
+      });
+    }
+  }
+
+  textoMantenimiento(m: Mantenimiento): string {
+    if (m.dias_restantes < 0) {
+      return `Atrasado ${-m.dias_restantes} día(s)`;
+    }
+
+    return m.dias_restantes === 0 ? 'Hoy' : `En ${m.dias_restantes} día(s)`;
   }
 
   cargarEstadisticas() {
     this.userName = this.authService.getDisplayName();
     this.authorizedTorreIds = this.authService.getAuthorizedTorreIds();
 
+    const gestion = this.esGestion;
+
     forkJoin({
-      torres: this.torresService.list().pipe(catchError(() => of([]))),
-      departamentos: this.departamentosService.list().pipe(catchError(() => of([]))),
-      usuarios: this.fetchCollection('/usuarios'),
-      condominos: this.fetchCollection('/personas'),
-      reservas: this.fetchCollection('/reservas'),
-      multas: this.fetchCollection('/multas'),
-      accesos: this.authService.hasRole(SEGURIDAD) ? this.fetchCollection('/accesos') : of([]),
-      movimientos: this.authService.hasRole(GESTION) ? this.fetchCollection('/finanzas/movimientos') : of([])
+      torres: gestion ? this.torresService.list().pipe(catchError(() => of([]))) : of([]),
+      departamentos: gestion ? this.departamentosService.list().pipe(catchError(() => of([]))) : of([]),
+      usuarios: this.esAdmin ? this.fetchCollection('/usuarios') : of([]),
+      condominos: gestion ? this.fetchCollection('/personas') : of([]),
+      reservas: gestion || this.esCondomino ? this.fetchCollection('/reservas') : of([]),
+      multas: gestion ? this.fetchCollection('/multas') : of([]),
+      accesos: this.esSeguridad ? this.fetchCollection('/accesos') : of([]),
+      movimientos: gestion ? this.fetchCollection('/finanzas/movimientos') : of([])
     }).subscribe({
       next: (resultados: any) => {
         const torres = this.normalizeList(resultados.torres);
@@ -114,11 +155,6 @@ export class HomeComponent implements OnInit {
         this.totalCondominos = this.filterByAuthorizedTorres(condominos).length;
         this.totalReservas = reservasAutorizadas.length;
         this.totalMultas = multasAutorizadas.length;
-        this.financialHealth = this.calculateFinancialHealth(departamentosAutorizados, multasAutorizadas);
-        this.estimatedMonthlyIncome = this.calculateEstimatedIncome(departamentosAutorizados);
-        this.estimatedPendingIncome = this.calculateEstimatedPendingIncome(multasAutorizadas);
-        this.automationQueue = this.totalReservas + this.totalMultas;
-        this.managementReadiness = 100;
         this.reservasCalendario = reservasAutorizadas;
         this.reservasRecientes = [...reservasAutorizadas]
           .sort((a, b) => String(b.fecha || '').localeCompare(String(a.fecha || '')))
@@ -291,35 +327,6 @@ export class HomeComponent implements OnInit {
     return labels[String(reserva?.estado || '')] || String(reserva?.estado || 'Reserva');
   }
 
-  private calculateFinancialHealth(departamentos: any[], multas: any[]): number {
-    if (departamentos.length === 0) {
-      return 0;
-    }
-
-    const risk = Math.min(multas.length / Math.max(departamentos.length, 1), 1);
-    return Math.max(0, Math.round((1 - risk) * 100));
-  }
-
-  private calculateEstimatedIncome(departamentos: any[]): number {
-    return departamentos.reduce((total, departamento) => {
-      const value = Number(
-        departamento.alicuota ??
-        departamento.valor_alicuota ??
-        departamento.valorAlicuota ??
-        0
-      );
-
-      return total + (Number.isFinite(value) ? value : 0);
-    }, 0);
-  }
-
-  private calculateEstimatedPendingIncome(multas: any[]): number {
-    return multas.reduce((total, multa) => {
-      const value = Number(multa.valor ?? multa.monto ?? multa.total ?? 0);
-      return total + (Number.isFinite(value) ? value : 0);
-    }, 0);
-  }
-
   private buildOperationalAlerts(reservas: any[], multas: any[], accesos: any[], movimientos: any[]): void {
     const today = this.formatDate(new Date());
     const visitantesDentro = accesos.filter((item) => item.estado === 'ingreso').length;
@@ -332,31 +339,40 @@ export class HomeComponent implements OnInit {
       .reduce((total, item) => total + Number(item.valor || 0), 0);
     const saldo = ingresos - gastos;
 
-    this.alertasOperativas = [
-      {
+    const alertas: HomeComponent['alertasOperativas'] = [];
+
+    if (this.esSeguridad) {
+      alertas.push({
         title: 'Visitantes dentro',
         value: String(visitantesDentro),
         detail: visitantesDentro > 0 ? 'Revisar salidas pendientes en Acceso.' : 'Sin visitantes activos.',
         level: visitantesDentro > 0 ? 'warning' : 'ok'
-      },
-      {
+      });
+    }
+
+    if (this.esGestion || this.esCondomino) {
+      alertas.push({
         title: 'Reservas de hoy',
         value: String(reservasHoy),
-        detail: reservasHoy > 0 ? 'Hay áreas comunales por revisar hoy.' : 'Sin reservas para hoy.',
+        detail: reservasHoy > 0 ? 'Hay áreas comunales reservadas hoy.' : 'Sin reservas para hoy.',
         level: reservasHoy > 0 ? 'info' : 'ok'
-      },
-      {
-        title: 'Multas recientes',
-        value: String(multas.slice(0, 7).length),
-        detail: multas.length > 0 ? 'Hay registros de multas para seguimiento.' : 'Sin multas registradas.',
+      });
+    }
+
+    if (this.esGestion) {
+      alertas.push({
+        title: 'Multas registradas',
+        value: String(multas.length),
+        detail: multas.length > 0 ? 'Revisa su seguimiento en Multas.' : 'Sin multas registradas.',
         level: multas.length > 0 ? 'warning' : 'ok'
-      },
-      {
+      }, {
         title: 'Saldo financiero',
         value: `$${saldo.toFixed(2)}`,
-        detail: movimientos.length > 0 ? 'Calculado con movimientos manuales registrados.' : 'Sin movimientos financieros manuales.',
+        detail: movimientos.length > 0 ? 'Ingresos menos gastos registrados en Finanzas.' : 'Aún no hay movimientos en Finanzas.',
         level: saldo >= 0 ? 'ok' : 'warning'
-      }
-    ];
+      });
+    }
+
+    this.alertasOperativas = alertas;
   }
 }

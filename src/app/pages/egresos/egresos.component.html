@@ -1,0 +1,270 @@
+<div class="panel-container">
+  <header class="panel-card panel-header">
+    <div>
+      <h1>Egresos</h1>
+      <p>
+        Registra los gastos y órdenes de compra {{ esAdmin ? 'del conjunto' : 'de tu torre' }} con su proveedor, RUC y comprobante.
+        Al marcarlos como pagados pasan solos a Finanzas.
+      </p>
+    </div>
+    <div class="tabs" role="tablist">
+      <button type="button" role="tab" [class.activa]="vista === 'egresos'" [attr.aria-selected]="vista === 'egresos'" (click)="vista = 'egresos'">Egresos</button>
+      <button type="button" role="tab" [class.activa]="vista === 'proveedores'" [attr.aria-selected]="vista === 'proveedores'" (click)="vista = 'proveedores'">
+        Proveedores ({{ proveedoresActivos.length }})
+      </button>
+    </div>
+  </header>
+
+  <p class="msg error" *ngIf="errorMessage" role="alert">{{ errorMessage }}</p>
+  <p class="msg success" *ngIf="successMessage" role="status">{{ successMessage }}</p>
+
+  <!-- ===================== EGRESOS ===================== -->
+  <ng-container *ngIf="vista === 'egresos'">
+    <div class="stats-row">
+      <div class="stat"><span>Pagado en {{ anio }}</span><strong>{{ totalPagado | currency:'USD' }}</strong></div>
+      <div class="stat" [class.alerta]="cantidadPorPagar > 0">
+        <span>Por pagar</span><strong>{{ totalPorPagar | currency:'USD' }}</strong><small>{{ cantidadPorPagar }} egreso(s)</small>
+      </div>
+    </div>
+
+    <section class="panel-card" *ngIf="egresoAPagar">
+      <h2>Registrar pago de "{{ egresoAPagar.concepto }}"</h2>
+      <div class="panel-form form-grid">
+        <label>
+          <span>Fecha de pago</span>
+          <input type="date" [(ngModel)]="fechaPago" />
+        </label>
+        <label>
+          <span>Comprobante (opcional, imagen o PDF)</span>
+          <input type="file" accept="image/png,image/jpeg,image/webp,application/pdf" (change)="elegirComprobante($event, 'pago')" />
+        </label>
+        <div class="form-actions">
+          <button class="btn" type="button" (click)="egresoAPagar = null">Cancelar</button>
+          <button class="btn primary" type="button" [disabled]="!fechaPago || procesandoId !== null" (click)="confirmarPago()">
+            {{ procesandoId === egresoAPagar.id ? 'Guardando...' : 'Confirmar pago de ' + (egresoAPagar.valor | currency:'USD') }}
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel-card">
+      <div class="card-head">
+        <h2>Registrar egreso</h2>
+        <button class="btn" [class.primary]="!mostrarFormulario" type="button" (click)="mostrarFormulario = !mostrarFormulario">
+          <i class="bi" [class.bi-plus-lg]="!mostrarFormulario" [class.bi-x-lg]="mostrarFormulario"></i>
+          {{ mostrarFormulario ? 'Cerrar' : 'Nuevo egreso' }}
+        </button>
+      </div>
+
+      <form *ngIf="mostrarFormulario" class="panel-form" [formGroup]="form" (ngSubmit)="registrar()">
+        <p class="msg" *ngIf="!proveedoresActivos.length">
+          Primero agrega un proveedor en la pestaña <button type="button" class="link" (click)="vista = 'proveedores'">Proveedores</button>.
+        </p>
+        <div class="form-grid">
+          <label *ngIf="!esAdmin">
+            <span>Torre</span>
+            <select formControlName="torre_id">
+              <option *ngFor="let torre of torres" [ngValue]="torre.id">Torre {{ torre.numero }}</option>
+            </select>
+          </label>
+          <label>
+            <span>Proveedor</span>
+            <select formControlName="proveedor_id">
+              <option [ngValue]="null" disabled>Elige un proveedor</option>
+              <option *ngFor="let proveedor of proveedoresActivos" [ngValue]="proveedor.id">{{ proveedor.nombre }} · RUC {{ proveedor.ruc }}</option>
+            </select>
+          </label>
+          <label>
+            <span>Categoría</span>
+            <select formControlName="categoria">
+              <option value="" disabled>Elige una categoría</option>
+              <option *ngFor="let categoria of categorias" [value]="categoria.key">{{ categoria.label }}</option>
+            </select>
+          </label>
+          <label class="ancho">
+            <span>Concepto</span>
+            <input type="text" formControlName="concepto" maxlength="200" placeholder="Ej: Mantenimiento mensual del ascensor" />
+          </label>
+          <label>
+            <span>N.º de factura (opcional)</span>
+            <input type="text" formControlName="numero_documento" maxlength="40" placeholder="001-001-000000123" />
+          </label>
+          <label>
+            <span>Fecha de la factura</span>
+            <input type="date" formControlName="fecha" />
+          </label>
+          <label>
+            <span>Valor (USD)</span>
+            <input type="number" formControlName="valor" min="0.01" step="0.01" />
+          </label>
+          <label>
+            <span>Estado</span>
+            <select formControlName="estado">
+              <option value="pendiente">Por pagar (orden de compra)</option>
+              <option value="pagado">Ya pagado</option>
+            </select>
+          </label>
+          <label class="ancho">
+            <span>Comprobante o factura (opcional, imagen o PDF hasta 4MB)</span>
+            <input type="file" accept="image/png,image/jpeg,image/webp,application/pdf" (change)="elegirComprobante($event, 'nuevo')" />
+          </label>
+        </div>
+        <div class="form-actions">
+          <button class="btn primary" type="submit" [disabled]="form.invalid || guardando">
+            {{ guardando ? 'Guardando...' : 'Registrar egreso' }}
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <section class="panel-card">
+      <div class="card-head">
+        <h2>Egresos registrados</h2>
+        <div class="filtros">
+          <select [(ngModel)]="anio" (ngModelChange)="cargar()" aria-label="Año">
+            <option *ngFor="let a of [anio + 1, anio, anio - 1, anio - 2]" [ngValue]="a">{{ a }}</option>
+          </select>
+          <select [(ngModel)]="filtroEstado" aria-label="Estado">
+            <option value="">Todos los estados</option>
+            <option value="pendiente">Por pagar</option>
+            <option value="pagado">Pagados</option>
+            <option value="anulado">Anulados</option>
+          </select>
+          <select [(ngModel)]="filtroCategoria" aria-label="Categoría">
+            <option value="">Todas las categorías</option>
+            <option *ngFor="let categoria of categorias" [value]="categoria.key">{{ categoria.label }}</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="table-wrapper" *ngIf="egresosVisibles.length; else vacio">
+        <table class="panel-table">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Proveedor</th>
+              <th>Concepto</th>
+              <th *ngIf="!esAdmin">Torre</th>
+              <th class="num">Valor</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let egreso of egresosVisibles">
+              <td>{{ egreso.fecha | date:'dd/MM/yyyy' }}</td>
+              <td>
+                {{ egreso.proveedor_nombre }}
+                <small class="motivo">RUC {{ egreso.proveedor_ruc }}</small>
+              </td>
+              <td>
+                {{ egreso.concepto }}
+                <small class="motivo">
+                  {{ nombreCategoria(egreso.categoria) }}<ng-container *ngIf="egreso.numero_documento"> · Fact. {{ egreso.numero_documento }}</ng-container>
+                </small>
+              </td>
+              <td *ngIf="!esAdmin">Torre {{ egreso.torre_numero }}</td>
+              <td class="num">{{ egreso.valor | currency:'USD' }}</td>
+              <td>
+                <span class="pill" [class.ok]="egreso.estado === 'pagado'" [class.review]="egreso.estado === 'pendiente'" [class.bad]="egreso.estado === 'anulado'">
+                  {{ estados[egreso.estado] }}
+                </span>
+                <small class="motivo" *ngIf="egreso.fecha_pago && egreso.estado === 'pagado'">el {{ egreso.fecha_pago | date:'dd/MM/yyyy' }}</small>
+                <small class="motivo" *ngIf="egreso.motivo_anulacion">
+                  {{ egreso.motivo_anulacion }} ({{ egreso.anulado_por_nombre || 'Sistema' }})
+                </small>
+              </td>
+              <td>
+                <div class="acciones">
+                  <button *ngIf="egreso.comprobante_url" class="btn small" type="button" (click)="comprobantes.abrir($event, egreso.comprobante_url)">
+                    <i class="bi bi-paperclip"></i> Ver
+                  </button>
+                  <button *ngIf="egreso.estado === 'pendiente'" class="btn primary small" type="button" [disabled]="procesandoId !== null" (click)="abrirPago(egreso)">
+                    Pagar
+                  </button>
+                  <button *ngIf="egreso.estado !== 'anulado'" class="btn danger small" type="button" [disabled]="procesandoId !== null" (click)="anular(egreso)">
+                    {{ procesandoId === egreso.id ? 'Anulando...' : 'Anular' }}
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <ng-template #vacio>
+        <div class="empty-state">
+          <i class="bi bi-cart-check"></i>
+          <strong>{{ cargando ? 'Cargando...' : 'No hay egresos para estos filtros' }}</strong>
+          <span *ngIf="!cargando">Usa "Nuevo egreso" para registrar una factura u orden de compra.</span>
+        </div>
+      </ng-template>
+    </section>
+  </ng-container>
+
+  <!-- ===================== PROVEEDORES ===================== -->
+  <ng-container *ngIf="vista === 'proveedores'">
+    <form class="panel-card panel-form" [formGroup]="proveedorForm" (ngSubmit)="guardarProveedor()">
+      <h2>{{ proveedorEditandoId ? 'Editar proveedor' : 'Agregar proveedor' }}</h2>
+      <div class="form-grid">
+        <label>
+          <span>Nombre o razón social</span>
+          <input type="text" formControlName="nombre" maxlength="150" />
+        </label>
+        <label>
+          <span>RUC (13 dígitos) o cédula</span>
+          <input type="text" formControlName="ruc" inputmode="numeric" maxlength="13" />
+          <small class="hint" *ngIf="proveedorForm.controls.ruc.touched && proveedorForm.controls.ruc.invalid">Escribe 13 dígitos (o 10 si es cédula).</small>
+        </label>
+        <label>
+          <span>Teléfono (opcional)</span>
+          <input type="tel" formControlName="telefono" maxlength="30" />
+        </label>
+        <label>
+          <span>Correo (opcional)</span>
+          <input type="email" formControlName="email" maxlength="120" />
+        </label>
+      </div>
+      <div class="form-actions">
+        <button *ngIf="proveedorEditandoId" class="btn" type="button" (click)="cancelarProveedor()">Cancelar</button>
+        <button class="btn primary" type="submit" [disabled]="proveedorForm.invalid || guardando">
+          {{ guardando ? 'Guardando...' : proveedorEditandoId ? 'Guardar cambios' : 'Agregar proveedor' }}
+        </button>
+      </div>
+    </form>
+
+    <section class="panel-card">
+      <h2>Proveedores</h2>
+      <div class="table-wrapper" *ngIf="proveedores.length; else sinProveedores">
+        <table class="panel-table">
+          <thead>
+            <tr><th>Nombre</th><th>RUC</th><th>Contacto</th><th>Estado</th><th>Acciones</th></tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let proveedor of proveedores">
+              <td>{{ proveedor.nombre }}</td>
+              <td>{{ proveedor.ruc }}</td>
+              <td>{{ proveedor.telefono || '' }}<small class="motivo" *ngIf="proveedor.email">{{ proveedor.email }}</small></td>
+              <td><span class="pill" [class.ok]="proveedor.activo">{{ proveedor.activo ? 'Activo' : 'Inactivo' }}</span></td>
+              <td>
+                <div class="acciones">
+                  <button class="btn small" type="button" (click)="editarProveedor(proveedor)">Editar</button>
+                  <button class="btn small" [class.danger]="proveedor.activo" type="button" (click)="cambiarEstadoProveedor(proveedor)">
+                    {{ proveedor.activo ? 'Desactivar' : 'Activar' }}
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <ng-template #sinProveedores>
+        <div class="empty-state">
+          <i class="bi bi-truck"></i>
+          <strong>Aún no hay proveedores</strong>
+          <span>Agrega el primero con el formulario de arriba.</span>
+        </div>
+      </ng-template>
+    </section>
+  </ng-container>
+</div>

@@ -46,6 +46,12 @@ export class TorresComponent implements OnInit {
       return;
     }
 
+    // El tesorero revisa los pagos de los departamentos de su torre; la administracion, los pagos de la torre al conjunto.
+    if (this.authService.getUserRole() === 'tesorero') {
+      this.router.navigate(['/dashboard/torres', torreId, 'pagos-departamentos']);
+      return;
+    }
+
     this.router.navigate(['/dashboard/torres/pagos-alicuota'], {
       queryParams: {
         numero: torre?.numero ?? torreId

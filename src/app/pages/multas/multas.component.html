@@ -311,7 +311,7 @@
 			</div>
 			<div class="form-buttons">
 				<button class="btn-action btn-ghost" type="button" (click)="limpiarFormulario()">Limpiar</button>
-				<button class="btn-action btn-primary" type="button" (click)="crearMulta()">Guardar multa</button>
+				<button class="btn-action btn-primary" type="button" (click)="crearMulta()" [disabled]="guardandoMulta">{{ guardandoMulta ? 'Guardando...' : 'Guardar multa' }}</button>
 			</div>
 		</div>
 	</div>

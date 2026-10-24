@@ -3,7 +3,7 @@ import { LoginComponent } from './auth/login/login.component';
 import { DashboardComponent } from './layout/dashboard/dashboard.component';
 import { RoleGuard } from './guards/role.guard';
 import { AuthGuard } from './guards/auth.guard';
-import { GESTION } from './auth/permisos';
+import { ADMINS, GESTION, SEGURIDAD, TODOS } from './auth/permisos';
 
 // Formulario para registrar el pago que una torre hace al conjunto. Vive dentro del panel
 // para usar la sesion abierta (antes se abria en otra pestana y pedia iniciar sesion de nuevo).
@@ -80,7 +80,7 @@ export const routes: Routes = [
                     path: 'solicitudes',
                     loadComponent: () => import('./pages/solicitudes/solicitudes.component').then(m => m.SolicitudesComponent),
                     canActivate: [AuthGuard, RoleGuard],
-                    data: { roles: ['admin_general', 'admin_conjunto', 'tesorero', 'condomino'] }
+                    data: { roles: TODOS }
                },
                {
                     path: 'torres', loadComponent: () => import('./pages/torres/torres.component').then(m => m.TorresComponent),
@@ -183,6 +183,42 @@ export const routes: Routes = [
                     path: 'usuarios/crear', loadComponent: () => import('./pages/usuarios/usuarios.component').then(m => m.UsuariosComponent),
                     canActivate: [AuthGuard, RoleGuard],
                     data: { roles: ['admin_general', 'admin_conjunto'], permission: 'usuarios_crear', mode: 'create' }
+               },
+               {
+                    path: 'egresos',
+                    loadComponent: () => import('./pages/egresos/egresos.component').then(m => m.EgresosComponent),
+                    canActivate: [AuthGuard, RoleGuard],
+                    data: { roles: GESTION, permission: 'egresos' }
+               },
+               {
+                    path: 'presupuesto',
+                    loadComponent: () => import('./pages/presupuesto/presupuesto.component').then(m => m.PresupuestoComponent),
+                    canActivate: [AuthGuard, RoleGuard],
+                    data: { roles: GESTION, permission: 'presupuesto' }
+               },
+               {
+                    path: 'asambleas',
+                    loadComponent: () => import('./pages/asambleas/asambleas.component').then(m => m.AsambleasComponent),
+                    canActivate: [AuthGuard, RoleGuard],
+                    data: { roles: [...GESTION, 'condomino'] }
+               },
+               {
+                    path: 'mantenimientos',
+                    loadComponent: () => import('./pages/mantenimientos/mantenimientos.component').then(m => m.MantenimientosComponent),
+                    canActivate: [AuthGuard, RoleGuard],
+                    data: { roles: ADMINS, permission: 'mantenimientos' }
+               },
+               {
+                    path: 'documentos',
+                    loadComponent: () => import('./pages/documentos/documentos.component').then(m => m.DocumentosComponent),
+                    canActivate: [AuthGuard, RoleGuard],
+                    data: { roles: TODOS }
+               },
+               {
+                    path: 'bitacora',
+                    loadComponent: () => import('./pages/bitacora/bitacora.component').then(m => m.BitacoraComponent),
+                    canActivate: [AuthGuard, RoleGuard],
+                    data: { roles: SEGURIDAD, permission: 'control_acceso' }
                },
                {
                     path: 'valores-alicuota',

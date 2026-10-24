@@ -1,4 +1,6 @@
-// Estilos comunes de las pantallas de cobros (cargos, revision de pagos, estado de cuenta).
+// Estilos comunes de las pantallas del panel. Usalos en las paginas nuevas con:
+//   @use '../../shared/styles/panel';
+// y agrega en la hoja de la pagina solo lo que sea propio de ella.
 
 .panel-container {
   min-height: calc(100vh - 56px);
@@ -263,6 +265,116 @@ table.panel-table {
 
   strong {
     color: var(--sl-color-text);
+  }
+}
+
+// Campos de formulario en columnas que se acomodan solas al ancho disponible.
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  align-items: end;
+
+  .ancho {
+    grid-column: 1 / -1;
+  }
+}
+
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+// Pestanas simples dentro de una pagina.
+.tabs {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 4px;
+  border-radius: var(--sl-radius-md);
+  background: var(--sl-color-border-soft);
+
+  button {
+    padding: 7px 14px;
+    border: 0;
+    border-radius: var(--sl-radius-sm);
+    background: transparent;
+    color: var(--sl-color-text-soft);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+
+    &.activa {
+      background: #fff;
+      color: var(--sl-color-primary-dark);
+      box-shadow: var(--sl-shadow-sm);
+    }
+  }
+}
+
+// Cabecera de una tarjeta con titulo a la izquierda y filtros o acciones a la derecha.
+.card-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+
+  h2 {
+    margin: 0;
+  }
+
+  .filtros {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+}
+
+.check {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--sl-color-text-soft);
+
+  input {
+    width: auto;
+  }
+}
+
+// Boton con aspecto de enlace, para acciones dentro de un texto.
+.link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--sl-color-primary);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+// Barra de avance (porcentaje en [style.width.%]).
+.barra {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--sl-color-border-soft);
+  overflow: hidden;
+
+  i {
+    display: block;
+    height: 100%;
+    background: var(--sl-color-primary);
+  }
+
+  &.excedida i {
+    background: var(--sl-color-danger);
   }
 }
 

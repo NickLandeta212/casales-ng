@@ -36,6 +36,9 @@ export const PAGINAS: PaginaPermiso[] = [
   { key: 'gastos_comunes', label: 'Finanzas', description: 'Ganancias, gastos y reportes.' },
   { key: 'valores_alicuota', label: 'Valor de alicuotas', description: 'Valor mensual por anio y torre.' },
   { key: 'cargos', label: 'Cargos del mes', description: 'Cargos extraordinarios a los departamentos.' },
+  { key: 'egresos', label: 'Egresos', description: 'Gastos y ordenes de compra con proveedor y comprobante.' },
+  { key: 'presupuesto', label: 'Presupuesto', description: 'Presupuesto anual y su ejecucion.' },
+  { key: 'mantenimientos', label: 'Mantenimientos', description: 'Mantenimientos programados con recordatorio.' },
   { key: 'auditoria', label: 'Auditoria', description: 'Seguimiento de acciones importantes.' },
   { key: 'usuarios', label: 'Usuarios', description: 'Listado e inspeccion de usuarios.' },
   { key: 'usuarios_crear', label: 'Crear usuarios', description: 'Alta de usuarios y permisos.' }
@@ -49,11 +52,11 @@ export const PERMISOS_POR_ROL: Record<Rol, string[]> = {
   admin_conjunto: [
     'home', 'torres', 'pagos_alicuota', 'pagos_alicuota_torre', 'pagos_torres', 'pagos_departamentos', 'departamentos', 'control_acceso',
     'reservas', 'personas', 'personas_crear', 'multas', 'multas_crear', 'usuarios', 'usuarios_crear',
-    'gastos_comunes', 'valores_alicuota', 'cargos', 'auditoria'
+    'gastos_comunes', 'valores_alicuota', 'cargos', 'egresos', 'presupuesto', 'mantenimientos', 'auditoria'
   ],
   tesorero: [
     'home', 'torres', 'pagos_alicuota_torre', 'pagos_departamentos', 'departamentos', 'reservas', 'personas', 'multas',
-    'gastos_comunes', 'cargos', 'valores_alicuota'
+    'gastos_comunes', 'cargos', 'valores_alicuota', 'egresos', 'presupuesto'
   ],
   guardia: ['home', 'control_acceso'],
   condomino: ['home', 'reservas', 'pagos_alicuota']

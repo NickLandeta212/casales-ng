@@ -1,0 +1,88 @@
+<div class="panel-container">
+  <header class="panel-card panel-header">
+    <div>
+      <h1>Bitácora de guardia</h1>
+      <p>Novedades de cada turno: rondas, incidentes, daños y entregas de turno. Lo registrado queda como respaldo y no se puede modificar.</p>
+    </div>
+  </header>
+
+  <p class="msg error" *ngIf="errorMessage" role="alert">{{ errorMessage }}</p>
+  <p class="msg success" *ngIf="successMessage" role="status">{{ successMessage }}</p>
+
+  <form *ngIf="puedeRegistrar" class="panel-card panel-form" (ngSubmit)="registrar()">
+    <h2>Registrar novedad</h2>
+    <div class="tipos" role="radiogroup" aria-label="Tipo de novedad">
+      <button *ngFor="let key of tipoKeys" type="button" role="radio" [attr.aria-checked]="nueva.tipo === key"
+        [class.activo]="nueva.tipo === key" (click)="nueva.tipo = key">
+        <i class="bi" [ngClass]="tipos[key].icono"></i> {{ tipos[key].label }}
+      </button>
+    </div>
+    <label>
+      <span>Qué pasó</span>
+      <textarea name="descripcion" [(ngModel)]="nueva.descripcion" rows="3" maxlength="2000"
+        placeholder="Ej: Ronda nocturna sin novedades. Puerta del parqueadero quedó cerrada."></textarea>
+    </label>
+    <div class="form-grid">
+      <label>
+        <span>Departamento relacionado (opcional)</span>
+        <select name="departamento" [(ngModel)]="nueva.departamento_id">
+          <option [ngValue]="null">Ninguno</option>
+          <option *ngFor="let d of departamentos" [ngValue]="d.id">Torre {{ d.torre_numero }} - {{ d.numero }}</option>
+        </select>
+      </label>
+      <label>
+        <span>Fotos (hasta {{ fotosMax }})</span>
+        <input type="file" accept="image/*" capture="environment" multiple (change)="agregarFotos($event)" [disabled]="nueva.fotos.length >= fotosMax" />
+      </label>
+    </div>
+    <div class="fotos" *ngIf="nueva.fotos.length">
+      <figure *ngFor="let foto of nueva.fotos; let i = index">
+        <img [src]="foto" [alt]="'Foto ' + (i + 1)" />
+        <button type="button" class="quitar" (click)="quitarFoto(i)" [attr.aria-label]="'Quitar foto ' + (i + 1)"><i class="bi bi-x"></i></button>
+      </figure>
+    </div>
+    <div class="form-actions">
+      <button class="btn primary" type="submit" [disabled]="nueva.descripcion.trim().length < 5 || guardando">
+        {{ guardando ? 'Guardando...' : 'Registrar novedad' }}
+      </button>
+    </div>
+  </form>
+
+  <section class="panel-card">
+    <div class="card-head">
+      <h2>Novedades</h2>
+      <div class="filtros">
+        <input type="date" [(ngModel)]="filtros.desde" (change)="cargar()" aria-label="Desde" />
+        <input type="date" [(ngModel)]="filtros.hasta" (change)="cargar()" aria-label="Hasta" />
+        <select [(ngModel)]="filtros.tipo" (ngModelChange)="cargar()" aria-label="Tipo">
+          <option value="">Todos los tipos</option>
+          <option *ngFor="let key of tipoKeys" [value]="key">{{ tipos[key].label }}</option>
+        </select>
+      </div>
+    </div>
+
+    <ol class="linea" *ngIf="novedades.length; else vacio">
+      <li *ngFor="let n of novedades" [class.incidente]="n.tipo === 'incidente'">
+        <i class="bi punto" [ngClass]="tipos[n.tipo].icono" aria-hidden="true"></i>
+        <div>
+          <p class="meta">
+            <strong>{{ tipos[n.tipo].label }}</strong> · {{ n.created_at | date:'dd/MM/yyyy HH:mm':'-0500' }} · {{ n.registrado_por_nombre || 'Guardia' }}
+            <ng-container *ngIf="n.departamento_numero"> · Torre {{ n.torre_numero }} - {{ n.departamento_numero }}</ng-container>
+          </p>
+          <p class="texto">{{ n.descripcion }}</p>
+          <div class="acciones" *ngIf="n.fotos.length">
+            <button *ngFor="let foto of n.fotos; let i = index" class="btn small" type="button" (click)="verFoto($event, foto)">
+              <i class="bi bi-image"></i> Foto {{ i + 1 }}
+            </button>
+          </div>
+        </div>
+      </li>
+    </ol>
+    <ng-template #vacio>
+      <div class="empty-state">
+        <i class="bi bi-journal-check"></i>
+        <strong>{{ cargando ? 'Cargando...' : 'No hay novedades en estas fechas' }}</strong>
+      </div>
+    </ng-template>
+  </section>
+</div>

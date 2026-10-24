@@ -2,11 +2,13 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService } from '../../auth/services/auth.service';
-import { GESTION } from '../../auth/permisos';
+import { ComprobantesService } from '../../services/comprobantes.service';
+import { comprimirImagen } from '../../shared/utils/leer-archivo';
 import {
   SOLICITUD_ESTADO_LABELS,
   SOLICITUD_TIPO_LABELS,
   Solicitud,
+  SolicitudDestino,
   SolicitudEstado,
   SolicitudTipo,
   SolicitudesService
@@ -23,10 +25,14 @@ export class SolicitudesComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly solicitudesService = inject(SolicitudesService);
   private readonly authService = inject(AuthService);
+  private readonly comprobantesService = inject(ComprobantesService);
 
-  // El condomino envia solicitudes; tesoreria y administracion las atienden.
-  readonly esResidente = this.authService.getUserRole() === 'condomino';
-  readonly puedeAtender = this.authService.hasRole(GESTION);
+  // Envian solicitudes el condomino, el tesorero y la guardia. Las del conjunto (areas comunales) las atiende
+  // la administracion y las de una torre su tesorero. Cada solicitud trae puede_atender, calculado por la API.
+  readonly rol = this.authService.getUserRole();
+  readonly esResidente = this.rol === 'condomino';
+  readonly puedeEnviar = ['condomino', 'tesorero', 'guardia'].includes(this.rol);
+  readonly rolLabels: Record<string, string> = { tesorero: 'Tesorería', guardia: 'Guardia', condomino: 'Residente' };
 
   readonly tipos = Object.keys(SOLICITUD_TIPO_LABELS) as SolicitudTipo[];
   readonly estados = Object.keys(SOLICITUD_ESTADO_LABELS) as SolicitudEstado[];
@@ -45,7 +51,12 @@ export class SolicitudesComponent implements OnInit {
   borradorEstado: SolicitudEstado = 'en_proceso';
   borradorRespuesta = '';
 
+  // Destinos permitidos para el rol y foto de evidencia de la nueva solicitud (ya reducida).
+  destinos: SolicitudDestino[] = [];
+  foto: string | null = null;
+
   readonly form = this.fb.nonNullable.group({
+    destino: [null as SolicitudDestino | null, Validators.required],
     tipo: ['mantenimiento' as SolicitudTipo, Validators.required],
     asunto: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(150)]],
     descripcion: ['', [Validators.required, Validators.maxLength(2000)]]
@@ -53,6 +64,28 @@ export class SolicitudesComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargar();
+
+    if (this.puedeEnviar) {
+      this.solicitudesService.destinos().subscribe({
+        next: (destinos) => {
+          this.destinos = destinos;
+          // Si solo hay un destino (tesorero: la administracion) queda elegido.
+          if (destinos.length === 1) {
+            this.form.controls.destino.setValue(destinos[0]);
+          }
+        },
+        error: (error) => {
+          this.errorMessage = error?.error?.message || 'No se pudieron cargar los destinos.';
+        }
+      });
+    }
+  }
+
+  // Texto de a quien va dirigida una solicitud o un destino.
+  destinoLabel(destino: SolicitudDestino): string {
+    return destino.alcance === 'torre'
+      ? `Tesorería de la Torre ${destino.torre_numero}`
+      : 'Administración (áreas comunales o todo el conjunto)';
   }
 
   get solicitudesFiltradas(): Solicitud[] {
@@ -76,6 +109,40 @@ export class SolicitudesComponent implements OnInit {
     });
   }
 
+  async elegirFoto(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const archivo = input.files?.[0];
+    this.errorMessage = '';
+
+    if (archivo) {
+      try {
+        this.foto = await comprimirImagen(archivo);
+      } catch (mensaje) {
+        this.errorMessage = String(mensaje);
+      }
+    }
+
+    input.value = '';
+  }
+
+  quitarFoto(): void {
+    this.foto = null;
+  }
+
+  verFoto(event: Event, foto: string): void {
+    this.comprobantesService.abrirEnlace(this.solicitudesService.enlaceFoto(foto), event);
+  }
+
+  // Quien la envio: el departamento si es de un residente, o la persona y su rol si no.
+  origen(solicitud: Solicitud): string {
+    if (solicitud.departamento_numero) {
+      return `Torre ${solicitud.departamento_torre_numero}, ${solicitud.departamento_numero}`;
+    }
+
+    const rol = this.rolLabels[solicitud.creado_por_role || ''] || solicitud.creado_por_role || '';
+    return `${solicitud.creado_por_nombre || 'Usuario eliminado'}${rol ? ` (${rol})` : ''}`;
+  }
+
   enviar(): void {
     if (this.form.invalid || this.guardando) {
       this.form.markAllAsTouched();
@@ -86,11 +153,26 @@ export class SolicitudesComponent implements OnInit {
     this.errorMessage = '';
     this.successMessage = '';
 
-    this.solicitudesService.crear(this.form.getRawValue()).subscribe({
+    const { destino, tipo, asunto, descripcion } = this.form.getRawValue();
+
+    this.solicitudesService.crear({
+      alcance: destino!.alcance,
+      torre_id: destino!.torre_id,
+      tipo,
+      asunto,
+      descripcion,
+      fotos_base64: this.foto ? [this.foto] : []
+    }).subscribe({
       next: () => {
         this.guardando = false;
         this.successMessage = 'Solicitud enviada. Aquí verás la respuesta cuando la atiendan.';
-        this.form.reset({ tipo: 'mantenimiento', asunto: '', descripcion: '' });
+        this.form.reset({
+          destino: this.destinos.length === 1 ? this.destinos[0] : null,
+          tipo: 'mantenimiento',
+          asunto: '',
+          descripcion: ''
+        });
+        this.foto = null;
         this.cargar();
       },
       error: (error) => {
@@ -117,7 +199,7 @@ export class SolicitudesComponent implements OnInit {
     }
 
     if (this.borradorEstado === 'resuelta' && !this.borradorRespuesta.trim()) {
-      this.errorMessage = 'Escribe una respuesta para el residente antes de marcarla como resuelta.';
+      this.errorMessage = 'Escribe una respuesta antes de marcarla como resuelta.';
       return;
     }
 

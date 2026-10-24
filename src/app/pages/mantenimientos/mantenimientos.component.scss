@@ -1,0 +1,18 @@
+@use '../../shared/styles/panel';
+
+td .pill {
+  margin-left: 6px;
+}
+
+.historial td {
+  background: var(--sl-color-page);
+
+  ul {
+    margin: 0;
+    padding-left: 18px;
+  }
+
+  small {
+    color: var(--sl-color-muted);
+  }
+}

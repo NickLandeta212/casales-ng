@@ -1,0 +1,82 @@
+<div class="panel-container">
+  <header class="panel-card panel-header">
+    <div>
+      <h1>Documentos</h1>
+      <p>Reglamento interno, actas de asamblea, contratos y otros documentos del conjunto.</p>
+    </div>
+    <div class="head-acciones">
+      <input type="search" [(ngModel)]="busqueda" placeholder="Buscar documento" aria-label="Buscar documento" />
+      <button *ngIf="esAdmin" class="btn" [class.primary]="!mostrarFormulario" type="button" (click)="mostrarFormulario = !mostrarFormulario">
+        <i class="bi" [class.bi-upload]="!mostrarFormulario" [class.bi-x-lg]="mostrarFormulario"></i>
+        {{ mostrarFormulario ? 'Cerrar' : 'Subir documento' }}
+      </button>
+    </div>
+  </header>
+
+  <p class="msg error" *ngIf="errorMessage" role="alert">{{ errorMessage }}</p>
+  <p class="msg success" *ngIf="successMessage" role="status">{{ successMessage }}</p>
+
+  <form *ngIf="esAdmin && mostrarFormulario" class="panel-card panel-form" (ngSubmit)="subir()">
+    <h2>Subir documento</h2>
+    <div class="form-grid">
+      <label class="ancho">
+        <span>Archivo (PDF o imagen, hasta 4MB)</span>
+        <input type="file" accept="application/pdf,image/png,image/jpeg,image/webp" (change)="elegirArchivo($event)" />
+      </label>
+      <label>
+        <span>Título</span>
+        <input type="text" name="titulo" [(ngModel)]="nuevo.titulo" maxlength="150" />
+      </label>
+      <label>
+        <span>Categoría</span>
+        <select name="categoria" [(ngModel)]="nuevo.categoria">
+          <option *ngFor="let key of categoriaKeys" [value]="key">{{ categorias[key].label }}</option>
+        </select>
+      </label>
+      <label>
+        <span>Quién lo puede ver</span>
+        <select name="visibilidad" [(ngModel)]="nuevo.visibilidad">
+          <option value="todos">Todos los usuarios</option>
+          <option value="gestion">Solo administración y tesorería</option>
+        </select>
+      </label>
+      <label class="ancho">
+        <span>Descripción (opcional)</span>
+        <input type="text" name="descripcion" [(ngModel)]="nuevo.descripcion" maxlength="500" />
+      </label>
+    </div>
+    <div class="form-actions">
+      <button class="btn primary" type="submit" [disabled]="!nuevo.archivo || !nuevo.titulo.trim() || guardando">
+        {{ guardando ? 'Subiendo...' : 'Subir' }}
+      </button>
+    </div>
+  </form>
+
+  <ng-container *ngFor="let categoria of categoriaKeys">
+    <section class="panel-card" *ngIf="porCategoria(categoria).length">
+      <h2><i class="bi" [ngClass]="categorias[categoria].icono"></i> {{ categorias[categoria].label }}</h2>
+      <ul class="documentos">
+        <li *ngFor="let documento of porCategoria(categoria)">
+          <i class="bi icono" [class.bi-file-earmark-pdf]="esPdf(documento)" [class.bi-file-earmark-image]="!esPdf(documento)" aria-hidden="true"></i>
+          <div class="info">
+            <a href="#" (click)="abrir($event, documento)">{{ documento.titulo }}</a>
+            <small class="motivo">
+              {{ documento.created_at | date:'dd/MM/yyyy' }}<ng-container *ngIf="documento.descripcion"> · {{ documento.descripcion }}</ng-container>
+            </small>
+          </div>
+          <span class="pill" *ngIf="documento.visibilidad === 'gestion'" title="No lo ven los residentes ni la guardia">Solo gestión</span>
+          <button class="btn small" type="button" (click)="abrir($event, documento)">Abrir</button>
+          <button *ngIf="esAdmin" class="btn small danger" type="button" (click)="eliminar(documento)" [attr.aria-label]="'Eliminar ' + documento.titulo">
+            <i class="bi bi-trash"></i>
+          </button>
+        </li>
+      </ul>
+    </section>
+  </ng-container>
+
+  <div class="panel-card empty-state" *ngIf="!hayResultados">
+    <i class="bi bi-folder2-open"></i>
+    <strong>{{ cargando ? 'Cargando...' : busqueda ? 'Ningún documento coincide con la búsqueda' : 'Aún no hay documentos' }}</strong>
+    <span *ngIf="!cargando && !busqueda && esAdmin">Sube el reglamento interno para empezar.</span>
+  </div>
+</div>

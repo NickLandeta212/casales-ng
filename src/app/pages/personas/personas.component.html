@@ -1,4 +1,6 @@
 <div class="personas-container">
+	<div class="alert-error mensaje" *ngIf="errorMessage" role="alert">{{ errorMessage }}</div>
+	<div class="alert-success mensaje" *ngIf="successMessage" role="status">{{ successMessage }}</div>
 	<div class="personas-content" *ngIf="vistaActual === 'list'">
 		<div class="personas-table-wrapper table-section">
 			<table class="personas-table personas-list-table">
